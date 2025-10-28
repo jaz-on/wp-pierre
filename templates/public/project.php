@@ -19,19 +19,19 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pierre Dashboard - <?php echo esc_html($data['project_name'] ?? $data['project'] ?? 'Unknown'); ?> (<?php echo esc_html($data['locale'] ?? 'Unknown'); ?>) 🪨</title>
+    <title><?php echo esc_html(sprintf(__('Pierre Dashboard - %s (%s)', 'wp-pierre'), $data['project_name'] ?? $data['project'] ?? 'Unknown', $data['locale'] ?? 'Unknown')); ?> 🪨</title>
     <link rel="stylesheet" href="<?php echo esc_url(PIERRE_PLUGIN_URL . 'assets/css/public.css'); ?>">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body class="pierre-public-dashboard">
     <div class="pierre-container">
         <div class="pierre-header">
-            <h1><?php echo esc_html($data['project_name'] ?? $data['project'] ?? 'Unknown Project'); ?> 🪨</h1>
-            <p><?php echo esc_html($data['locale_name'] ?? $data['locale'] ?? 'Unknown'); ?> Translation Project</p>
+            <h1><?php echo esc_html($data['project_name'] ?? $data['project'] ?? 'Unknown'); ?> 🪨</h1>
+            <p><?php echo esc_html(sprintf(__('%s Translation Project', 'wp-pierre'), $data['locale_name'] ?? $data['locale'] ?? 'Unknown')); ?></p>
         </div>
 
         <div class="pierre-breadcrumb">
-            <a href="<?php echo esc_url(home_url('/pierre/')); ?>">Pierre Dashboard</a> 
+            <a href="<?php echo esc_url(home_url('/pierre/')); ?>"><?php echo esc_html__('Pierre Dashboard', 'wp-pierre'); ?></a> 
             &gt; 
             <a href="<?php echo esc_url(home_url('/pierre/' . $data['locale'] . '/')); ?>"><?php echo esc_html($data['locale_name'] ?? $data['locale'] ?? 'Unknown'); ?></a>
             &gt; 
@@ -57,7 +57,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
 
         <?php if (isset($data['assignments']) && !empty($data['assignments'])): ?>
         <div class="pierre-project-details">
-            <h2>Team Members 🪨</h2>
+            <h2><?php echo esc_html__('Team Members', 'wp-pierre'); ?> 🪨</h2>
             <div class="pierre-team-list">
                 <?php foreach ($data['assignments'] as $assignment): ?>
                 <div class="pierre-team-member">
@@ -82,7 +82,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
         <?php endif; ?>
 
         <div class="pierre-project-info">
-            <h2>Project Information 🪨</h2>
+            <h2><?php echo esc_html__('Project Information', 'wp-pierre'); ?> 🪨</h2>
             <div class="pierre-info-grid">
                 <div class="pierre-info-item">
                     <strong>Project:</strong> <?php echo esc_html($data['project'] ?? 'Unknown'); ?>
@@ -100,7 +100,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
         </div>
 
         <div class="pierre-project-actions">
-            <h2>Quick Actions 🪨</h2>
+            <h2><?php echo esc_html__('Quick Actions', 'wp-pierre'); ?> 🪨</h2>
             <div class="pierre-actions-grid">
                 <button class="pierre-button" id="pierre-refresh-project">
                     Refresh Project Data 🪨
@@ -120,7 +120,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
         </div>
 
         <div class="pierre-project-history">
-            <h2>Recent Activity 🪨</h2>
+            <h2><?php echo esc_html__('Recent Activity', 'wp-pierre'); ?> 🪨</h2>
             <div class="pierre-activity-list">
                 <div class="pierre-activity-item">
                     <div class="pierre-activity-icon">📈</div>
@@ -153,14 +153,14 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
 
         <div class="pierre-actions">
             <a href="<?php echo esc_url(home_url('/pierre/' . $data['locale'] . '/')); ?>" class="pierre-button">
-                Back to <?php echo esc_html($data['locale_name'] ?? $data['locale'] ?? 'Locale'); ?> 🪨
+                <?php echo esc_html(sprintf(__('Back to %s', 'wp-pierre'), $data['locale_name'] ?? $data['locale'] ?? 'Locale')); ?> 🪨
             </a>
             <a href="<?php echo esc_url(home_url('/pierre/')); ?>" class="pierre-button">
-                Back to Dashboard 🪨
+                <?php echo esc_html__('Back to Dashboard', 'wp-pierre'); ?> 🪨
             </a>
             <?php if (current_user_can('wpupdates_view_dashboard')): ?>
             <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-dashboard')); ?>" class="pierre-button">
-                Admin Dashboard 🪨
+                <?php echo esc_html__('Admin Dashboard', 'wp-pierre'); ?> 🪨
             </a>
             <?php endif; ?>
         </div>
@@ -168,7 +168,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
         <div class="pierre-footer">
             <p>
                 <strong>Pierre</strong> - WordPress Translation Monitor 🪨 | 
-                <a href="<?php echo esc_url(home_url()); ?>">Back to Site</a>
+                <a href="<?php echo esc_url(home_url()); ?>"><?php echo esc_html__('Back to Site', 'wp-pierre'); ?></a>
             </p>
         </div>
     </div>

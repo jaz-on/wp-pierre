@@ -74,7 +74,7 @@ class UserProjectLink {
     ): array {
         try {
             // Pierre validates permissions! 🪨
-            if (!$this->role_manager->user_has_capability($assigned_by, 'wpupdates_assign_projects')) {
+            if (!$this->role_manager->user_has_capability($assigned_by, 'pierre_assign_projects')) {
                 return [
                     'success' => false,
                     'message' => 'Pierre says: You don\'t have permission to assign projects! 😢'
@@ -150,7 +150,7 @@ class UserProjectLink {
     public function remove_user_from_project(int $user_id, string $project_slug, string $locale_code, int $removed_by): array {
         try {
             // Pierre validates permissions! 🪨
-            if (!$this->role_manager->user_has_capability($removed_by, 'wpupdates_assign_projects')) {
+            if (!$this->role_manager->user_has_capability($removed_by, 'pierre_assign_projects')) {
                 return [
                     'success' => false,
                     'message' => 'Pierre says: You don\'t have permission to remove project assignments! 😢'

@@ -237,11 +237,11 @@ class CronManager {
         
         return [
             'active' => $next_surveillance !== false,
-            'next_run' => $next_surveillance ? date('Y-m-d H:i:s', $next_surveillance) : null,
+            'next_run' => $next_surveillance ? gmdate('Y-m-d H:i:s', $next_surveillance) : null,
             'surveillance_scheduled' => $next_surveillance !== false,
-            'next_surveillance' => $next_surveillance ? date('Y-m-d H:i:s', $next_surveillance) : null,
+            'next_surveillance' => $next_surveillance ? gmdate('Y-m-d H:i:s', $next_surveillance) : null,
             'cleanup_scheduled' => $next_cleanup !== false,
-            'next_cleanup' => $next_cleanup ? date('Y-m-d H:i:s', $next_cleanup) : null,
+            'next_cleanup' => $next_cleanup ? gmdate('Y-m-d H:i:s', $next_cleanup) : null,
             'message' => 'Pierre\'s surveillance system is ' . ($next_surveillance ? 'active' : 'inactive') . '! 🪨'
         ];
     }
@@ -257,9 +257,9 @@ class CronManager {
         
         return [
             'active' => $next_cleanup !== false,
-            'next_run' => $next_cleanup ? date('Y-m-d H:i:s', $next_cleanup) : null,
+            'next_run' => $next_cleanup ? gmdate('Y-m-d H:i:s', $next_cleanup) : null,
             'cleanup_scheduled' => $next_cleanup !== false,
-            'next_cleanup' => $next_cleanup ? date('Y-m-d H:i:s', $next_cleanup) : null,
+            'next_cleanup' => $next_cleanup ? gmdate('Y-m-d H:i:s', $next_cleanup) : null,
             'message' => 'Pierre\'s cleanup system is ' . ($next_cleanup ? 'active' : 'inactive') . '! 🪨'
         ];
     }
@@ -277,8 +277,8 @@ class CronManager {
         return [
             'surveillance_scheduled' => $next_surveillance !== false,
             'cleanup_scheduled' => $next_cleanup !== false,
-            'next_surveillance' => $next_surveillance ? date('Y-m-d H:i:s', $next_surveillance) : null,
-            'next_cleanup' => $next_cleanup ? date('Y-m-d H:i:s', $next_cleanup) : null,
+            'next_surveillance' => $next_surveillance ? gmdate('Y-m-d H:i:s', $next_surveillance) : null,
+            'next_cleanup' => $next_cleanup ? gmdate('Y-m-d H:i:s', $next_cleanup) : null,
             'message' => 'Pierre\'s cron manager is ' . ($next_surveillance ? 'active' : 'inactive') . '! 🪨'
         ];
     }

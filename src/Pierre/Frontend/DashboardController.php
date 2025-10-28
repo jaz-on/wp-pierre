@@ -62,6 +62,9 @@ class DashboardController {
      */
     public function init(): void {
         try {
+            // Pierre enqueues his public assets! 🪨
+            add_action('wp_enqueue_scripts', [$this, 'enqueue_public_assets']);
+            
             // Pierre sets up his public routing! 🪨
             $this->setup_routing();
             
@@ -73,6 +76,45 @@ class DashboardController {
         } catch (\Exception $e) {
             error_log('Pierre encountered an error initializing public interface: ' . $e->getMessage() . ' 😢');
         }
+    }
+    
+    /**
+     * Pierre enqueues his public assets! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function enqueue_public_assets(): void {
+        // Pierre enqueues his CSS! 🪨
+        wp_enqueue_style(
+            'pierre-public-css',
+            PIERRE_PLUGIN_URL . 'assets/css/public.css',
+            [],
+            PIERRE_VERSION
+        );
+        
+        // Pierre enqueues jQuery from WordPress! 🪨
+        wp_enqueue_script('jquery');
+        
+        // Pierre enqueues his JavaScript! 🪨
+        wp_enqueue_script(
+            'pierre-public-js',
+            PIERRE_PLUGIN_URL . 'assets/js/public.js',
+            ['jquery'],
+            PIERRE_VERSION,
+            true
+        );
+        
+        // Pierre localizes his script! 🪨
+        wp_localize_script('pierre-public-js', 'pierreAjax', [
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('pierre_public_nonce'),
+            'strings' => [
+                'loading' => __('Loading...', 'wp-pierre'),
+                'error' => __('An error occurred', 'wp-pierre'),
+                'success' => __('Success!', 'wp-pierre')
+            ]
+        ]);
     }
     
     /**
@@ -427,7 +469,7 @@ class DashboardController {
      */
     public function ajax_get_stats(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
             wp_die('Pierre says: Invalid nonce! 😢');
         }
         
@@ -448,7 +490,7 @@ class DashboardController {
      */
     public function ajax_get_projects(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
             wp_die('Pierre says: Invalid nonce! 😢');
         }
         
@@ -469,7 +511,7 @@ class DashboardController {
      */
     public function ajax_test_notification(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
             wp_die('Pierre says: Invalid nonce! 😢');
         }
         

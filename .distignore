@@ -36,6 +36,16 @@ error_log
 *.tmp
 *.temp
 
+# Development scripts and configs
+create-dist.sh
+.distignore
+junit.xml
+phpcs.xml
+.editorconfig
+
+# Distribution directory (avoid recursion)
+dist/
+
 # Keep vendor/ for distribution (autoload.php is required)
 # Keep all PHP files
 # Keep templates/

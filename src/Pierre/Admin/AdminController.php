@@ -19,6 +19,31 @@ use Pierre\Security\SecurityManager;
 use Pierre\Security\CSRFProtection;
 use Pierre\Security\SecurityAuditor;
 
+// Pierre imports WordPress functions! 🪨
+use function __;
+use function _e;
+use function esc_html__;
+use function esc_attr__;
+use function sprintf;
+use function add_action;
+use function add_filter;
+use function add_menu_page;
+use function add_submenu_page;
+use function current_user_can;
+use function wp_die;
+use function admin_url;
+use function home_url;
+use function get_current_screen;
+use function get_users;
+use function wp_verify_nonce;
+use function wp_send_json_success;
+use function wp_send_json_error;
+use function absint;
+use function sanitize_key;
+use function sanitize_url;
+use function error_log;
+use function wp_create_nonce;
+
 /**
  * Admin Controller class - Pierre's admin interface! 🪨
  * 

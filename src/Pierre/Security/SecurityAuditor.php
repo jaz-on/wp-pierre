@@ -617,7 +617,8 @@ class SecurityAuditor {
         
         $found_headers = 0;
         foreach ($headers as $header) {
-            if (isset(wp_unslash($_SERVER['HTTP_' . str_replace('-', '_', strtoupper($header))]))) {
+            $header_key = 'HTTP_' . str_replace('-', '_', strtoupper($header));
+            if (isset($_SERVER[$header_key])) {
                 $found_headers++;
             }
         }

@@ -799,7 +799,7 @@ class AdminController {
      */
     public function ajax_get_admin_stats(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_admin_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -820,7 +820,7 @@ class AdminController {
      */
     public function ajax_assign_user(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_admin_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -830,10 +830,10 @@ class AdminController {
         }
         
         $user_id = absint(wp_unslash($_POST['user_id']) ?? 0);
-        $project_type = sanitize_key(wp_unslash($_POST['project_type']) ?? '');
-        $project_slug = sanitize_key(wp_unslash($_POST['project_slug']) ?? '');
-        $locale_code = sanitize_key(wp_unslash($_POST['locale_code']) ?? '');
-        $role = sanitize_key(wp_unslash($_POST['role']) ?? '');
+        $project_type = sanitize_key(wp_unslash($_POST['project_type'] ?? ''));
+        $project_slug = sanitize_key(wp_unslash($_POST['project_slug'] ?? ''));
+        $locale_code = sanitize_key(wp_unslash($_POST['locale_code'] ?? ''));
+        $role = sanitize_key(wp_unslash($_POST['role'] ?? ''));
         $assigned_by = get_current_user_id();
         
         $result = $this->user_project_link->assign_user_to_project(
@@ -856,7 +856,7 @@ class AdminController {
      */
     public function ajax_remove_user(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_admin_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -866,8 +866,8 @@ class AdminController {
         }
         
         $user_id = absint(wp_unslash($_POST['user_id']) ?? 0);
-        $project_slug = sanitize_key(wp_unslash($_POST['project_slug']) ?? '');
-        $locale_code = sanitize_key(wp_unslash($_POST['locale_code']) ?? '');
+        $project_slug = sanitize_key(wp_unslash($_POST['project_slug'] ?? ''));
+        $locale_code = sanitize_key(wp_unslash($_POST['locale_code'] ?? ''));
         $removed_by = get_current_user_id();
         
         $result = $this->user_project_link->remove_user_from_project(
@@ -888,7 +888,7 @@ class AdminController {
      */
     public function ajax_test_notification(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_admin_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -909,7 +909,7 @@ class AdminController {
      */
     public function ajax_save_settings(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_admin_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -919,7 +919,7 @@ class AdminController {
         }
         
         $settings = [
-            'slack_webhook_url' => sanitize_url(wp_unslash($_POST['slack_webhook_url']) ?? ''),
+            'slack_webhook_url' => sanitize_url(wp_unslash($_POST['slack_webhook_url'] ?? '')),
             'surveillance_interval' => absint(wp_unslash($_POST['surveillance_interval']) ?? 15),
             'notifications_enabled' => !empty(wp_unslash($_POST['notifications_enabled']))
         ];
@@ -942,7 +942,7 @@ class AdminController {
      */
     public function ajax_start_surveillance(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -963,7 +963,7 @@ class AdminController {
      */
     public function ajax_stop_surveillance(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -984,7 +984,7 @@ class AdminController {
      */
     public function ajax_test_surveillance(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1005,7 +1005,7 @@ class AdminController {
      */
     public function ajax_add_project(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1014,8 +1014,8 @@ class AdminController {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
-        $project_slug = sanitize_key(wp_unslash($_POST['project_slug']) ?? '');
-        $locale_code = sanitize_key(wp_unslash($_POST['locale_code']) ?? '');
+        $project_slug = sanitize_key(wp_unslash($_POST['project_slug'] ?? ''));
+        $locale_code = sanitize_key(wp_unslash($_POST['locale_code'] ?? ''));
         
         if (empty($project_slug) || empty($locale_code)) {
             wp_send_json_error(['message' => __('Pierre says: Project slug and locale code are required!', 'wp-pierre') . ' 😢']);
@@ -1039,7 +1039,7 @@ class AdminController {
      */
     public function ajax_remove_project(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1048,8 +1048,8 @@ class AdminController {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
-        $project_slug = sanitize_key(wp_unslash($_POST['project_slug']) ?? '');
-        $locale_code = sanitize_key(wp_unslash($_POST['locale_code']) ?? '');
+        $project_slug = sanitize_key(wp_unslash($_POST['project_slug'] ?? ''));
+        $locale_code = sanitize_key(wp_unslash($_POST['locale_code'] ?? ''));
         
         if (empty($project_slug) || empty($locale_code)) {
             wp_send_json_error(['message' => __('Pierre says: Project slug and locale code are required!', 'wp-pierre') . ' 😢']);
@@ -1073,7 +1073,7 @@ class AdminController {
      */
     public function ajax_flush_cache(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1096,7 +1096,7 @@ class AdminController {
      */
     public function ajax_reset_settings(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1119,7 +1119,7 @@ class AdminController {
      */
     public function ajax_clear_data(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1143,7 +1143,7 @@ class AdminController {
      */
     public function ajax_export_report(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1152,7 +1152,7 @@ class AdminController {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
-        $report_type = sanitize_key(wp_unslash($_POST['report_type']) ?? '');
+        $report_type = sanitize_key(wp_unslash($_POST['report_type'] ?? ''));
         
         if (empty($report_type)) {
             wp_send_json_error(['message' => __('Pierre says: Report type is required!', 'wp-pierre') . ' 😢']);
@@ -1181,7 +1181,7 @@ class AdminController {
      */
     public function ajax_export_all_reports(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1219,7 +1219,7 @@ class AdminController {
      */
     public function ajax_schedule_reports(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1424,7 +1424,7 @@ class AdminController {
     public function ajax_security_audit(): void {
         try {
             // Pierre validates nonce! 🪨
-            if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+            if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
                 wp_send_json_error(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
                 return;
             }
@@ -1458,7 +1458,7 @@ class AdminController {
     public function ajax_security_logs(): void {
         try {
             // Pierre validates nonce! 🪨
-            if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+            if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
                 wp_send_json_error(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
                 return;
             }
@@ -1471,7 +1471,7 @@ class AdminController {
             
             // Pierre gets security logs! 🪨
             $limit = absint(wp_unslash($_POST['limit']) ?? 100);
-            $event_type = sanitize_key(wp_unslash($_POST['event_type']) ?? '');
+            $event_type = sanitize_key(wp_unslash($_POST['event_type'] ?? ''));
             
             $security_logs = $this->csrf_protection->get_security_logs($limit, $event_type);
             
@@ -1495,7 +1495,7 @@ class AdminController {
     public function ajax_clear_security_logs(): void {
         try {
             // Pierre validates nonce! 🪨
-            if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+            if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
                 wp_send_json_error(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
                 return;
             }
@@ -1507,7 +1507,7 @@ class AdminController {
             }
             
             // Pierre clears security logs! 🪨
-            $event_type = sanitize_key(wp_unslash($_POST['event_type']) ?? '');
+            $event_type = sanitize_key(wp_unslash($_POST['event_type'] ?? ''));
             $success = $this->csrf_protection->clear_security_logs($event_type);
             
             if ($success) {

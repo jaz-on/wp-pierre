@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<!-- Pierre's PHPCS configuration - he follows WordPress standards! 🪨 -->
+<ruleset name="Pierre WordPress Coding Standards">
+    <description>WordPress Coding Standards for Pierre Plugin</description>
+    
+    <!-- Pierre includes WordPress standards! 🪨 -->
+    <rule ref="WordPress"/>
+    <rule ref="WordPress-Extra"/>
+    <rule ref="WordPress-Docs"/>
+    
+    <!-- Pierre's file paths! 🪨 -->
+    <file>wp-pierre.php</file>
+    <file>src/</file>
+    <file>tests/</file>
+    
+    <!-- Pierre excludes these paths! 🪨 -->
+    <exclude-pattern>vendor/</exclude-pattern>
+    <exclude-pattern>assets/</exclude-pattern>
+    <exclude-pattern>templates/</exclude-pattern>
+    
+    <!-- Pierre's specific rules! 🪨 -->
+    <rule ref="WordPress.WhiteSpace.ControlStructureSpacing">
+        <properties>
+            <property name="blank_line_check" value="true"/>
+        </properties>
+    </rule>
+    
+    <rule ref="WordPress.Files.FileName">
+        <properties>
+            <property name="strict_class_file_names" value="false"/>
+        </properties>
+    </rule>
+    
+    <!-- Pierre allows short array syntax! 🪨 -->
+    <rule ref="Generic.Arrays.DisallowShortArraySyntax"/>
+    
+    <!-- Pierre's error reporting! 🪨 -->
+    <rule ref="Generic.PHP.DisallowShortOpenTag"/>
+    <rule ref="Generic.PHP.DisallowAlternativePHPTags"/>
+    
+    <!-- Pierre's documentation rules! 🪨 -->
+    <rule ref="WordPress-Docs.RequireFileHeader"/>
+    <rule ref="WordPress-Docs.RequirePackageTag"/>
+    <rule ref="WordPress-Docs.RequireSinceTag"/>
+    
+    <!-- Pierre's security rules! 🪨 -->
+    <rule ref="WordPress.Security.EscapeOutput"/>
+    <rule ref="WordPress.Security.NonceVerification"/>
+    <rule ref="WordPress.Security.ValidatedSanitizedInput"/>
+    
+    <!-- Pierre's performance rules! 🪨 -->
+    <rule ref="WordPress.Performance.SlowDBQuery"/>
+    <rule ref="WordPress.Performance.SlowQuery"/>
+    
+    <!-- Pierre's naming conventions! 🪨 -->
+    <rule ref="WordPress.NamingConventions.ValidFunctionName"/>
+    <rule ref="WordPress.NamingConventions.ValidVariableName"/>
+    <rule ref="WordPress.NamingConventions.ValidHookName"/>
+    
+    <!-- Pierre's PHP version! 🪨 -->
+    <config name="minimum_supported_wp_version" value="6.0"/>
+    <config name="testVersion" value="8.3"/>
+</ruleset>

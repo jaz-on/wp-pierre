@@ -1,0 +1,37 @@
+{
+    "name": "wp-pierre/pierre",
+    "description": "Pierre monitors WordPress Polyglots translations and notifies teams via Slack 🪨",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Jason Rouet",
+            "email": "bonjour@jasonrouet.com",
+            "website": "https://jasonrouet.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Pierre\\": "src/Pierre/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Pierre\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-html coverage"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

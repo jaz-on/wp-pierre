@@ -12,6 +12,8 @@
 
 namespace Pierre\Security;
 
+// Pierre uses global WordPress functions! 🪨
+
 /**
  * Security Manager class - Pierre's security system! 🪨
  * 
@@ -67,7 +69,7 @@ class SecurityManager {
                 return [
                     'valid' => false,
                     'sanitized' => null,
-                    'message' => __('Pierre says: Input cannot be empty!', 'wp-pierre') . ' 😢'
+                    'message' => \__('Pierre says: Input cannot be empty!', 'wp-pierre') . ' 😢'
                 ];
             }
             

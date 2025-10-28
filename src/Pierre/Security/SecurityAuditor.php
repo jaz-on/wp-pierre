@@ -12,6 +12,46 @@
 
 namespace Pierre\Security;
 
+// Pierre imports WordPress functions! 🪨
+use function __;
+use function _e;
+use function esc_html__;
+use function esc_attr__;
+use function sprintf;
+use function current_time;
+use function uniqid;
+use function version_compare;
+use function fileperms;
+use function file_exists;
+use function get_file_data;
+use function wp_upload_dir;
+use function is_ssl;
+use function get_transient;
+use function set_transient;
+use function wp_remote_get;
+use function wp_remote_retrieve_body;
+use function is_wp_error;
+use function get_option;
+use function update_option;
+use function error_log;
+use function class_exists;
+use function count;
+use function array_sum;
+use function array_column;
+use function round;
+use function array_slice;
+use function array_reverse;
+use function array_filter;
+use function array_values;
+
+// Pierre imports WordPress constants! 🪨
+use const WP_DEBUG;
+use const DISALLOW_FILE_EDIT;
+use const PIERRE_PLUGIN_DIR;
+use const HOUR_IN_SECONDS;
+use const DB_USER;
+use const ABSPATH;
+
 /**
  * Security Auditor class - Pierre's security inspector! 🪨
  * 
@@ -730,6 +770,12 @@ class SecurityAuditor {
      */
     private function store_audit_results(): void {
         $audit_history = get_option('pierre_security_audit_history', []);
+        
+        // Pierre ensures audit_history is always an array! 🪨
+        if (!is_array($audit_history)) {
+            $audit_history = [];
+        }
+        
         $audit_history[] = $this->audit_results;
         
         // Pierre keeps only last 10 audits! 🪨
@@ -773,6 +819,12 @@ class SecurityAuditor {
      */
     public function get_audit_history(int $limit = 10): array {
         $audit_history = get_option('pierre_security_audit_history', []);
+        
+        // Pierre ensures audit_history is always an array! 🪨
+        if (!is_array($audit_history)) {
+            $audit_history = [];
+        }
+        
         return array_slice(array_reverse($audit_history), 0, $limit);
     }
     

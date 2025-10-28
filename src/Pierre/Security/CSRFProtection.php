@@ -12,6 +12,32 @@
 
 namespace Pierre\Security;
 
+// Pierre imports WordPress functions! 🪨
+use function __;
+use function _e;
+use function esc_html__;
+use function esc_attr__;
+use function sprintf;
+use function wp_verify_nonce;
+use function wp_create_nonce;
+use function current_user_can;
+use function get_current_user_id;
+use function get_site_url;
+use function admin_url;
+use function current_time;
+use function wp_generate_password;
+use function get_transient;
+use function set_transient;
+use function delete_transient;
+use function get_option;
+use function update_option;
+use function delete_option;
+use function error_log;
+
+// Pierre imports WordPress constants! 🪨
+use const HOUR_IN_SECONDS;
+use const MINUTE_IN_SECONDS;
+
 /**
  * CSRF Protection class - Pierre's attack prevention! 🪨
  * 
@@ -341,6 +367,11 @@ class CSRFProtection {
     public function get_security_logs(int $limit = 100, string $event_type = ''): array {
         $security_logs = get_option('pierre_security_logs', []);
         
+        // Pierre ensures security_logs is always an array! 🪨
+        if (!is_array($security_logs)) {
+            $security_logs = [];
+        }
+        
         if (!empty($event_type)) {
             $security_logs = array_filter($security_logs, function($log) use ($event_type) {
                 return $log['event_type'] === $event_type;
@@ -363,6 +394,12 @@ class CSRFProtection {
         }
         
         $security_logs = get_option('pierre_security_logs', []);
+        
+        // Pierre ensures security_logs is always an array! 🪨
+        if (!is_array($security_logs)) {
+            $security_logs = [];
+        }
+        
         $filtered_logs = array_filter($security_logs, function($log) use ($event_type) {
             return $log['event_type'] !== $event_type;
         });

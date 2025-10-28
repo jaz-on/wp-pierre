@@ -432,20 +432,73 @@ jQuery(document).ready(function($) {
     // Pierre handles reports! 🪨
     $('.pierre-export-item button').on('click', function() {
         var reportType = $(this).data('report');
-        alert('Pierre says: Exporting ' + reportType + ' report! 🪨');
-        // TODO: Implement actual report export
+        var button = $(this);
+        button.prop('disabled', true).text('Exporting...');
+        
+        $.post(ajaxurl, {
+            action: 'pierre_export_report',
+            report_type: reportType,
+            nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
+        }, function(response) {
+            if (response.success) {
+                alert(response.data.message);
+                // Pierre could download the report data here! 🪨
+                console.log('Report data:', response.data.data);
+            } else {
+                alert('Pierre says: ' + (response.data.message || 'Failed to export report!') + ' 😢');
+            }
+        }).always(function() {
+            button.prop('disabled', false).text('Export');
+        });
     });
     
     $('#pierre-export-all').on('click', function() {
         if (confirm('Pierre asks: Export all reports? This may take a moment! 🪨')) {
-            alert('Pierre says: Exporting all reports! 🪨');
-            // TODO: Implement actual bulk export
+            var button = $(this);
+            button.prop('disabled', true).text('Exporting All...');
+            
+            $.post(ajaxurl, {
+                action: 'pierre_export_all_reports',
+                nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
+            }, function(response) {
+                if (response.success) {
+                    alert(response.data.message);
+                    // Pierre could download all reports here! 🪨
+                    console.log('All reports data:', response.data.data);
+                } else {
+                    alert('Pierre says: ' + (response.data.message || 'Failed to export reports!') + ' 😢');
+                }
+            }).always(function() {
+                button.prop('disabled', false).text('Export All Reports');
+            });
         }
     });
     
     $('#pierre-schedule-reports').on('click', function() {
-        alert('Pierre says: Report scheduling feature coming soon! 🪨');
-        // TODO: Implement report scheduling
+        var frequency = prompt('Pierre asks: How often should reports be generated?\n\nEnter: daily, weekly, or monthly', 'weekly');
+        
+        if (frequency && ['daily', 'weekly', 'monthly'].includes(frequency)) {
+            var button = $(this);
+            button.prop('disabled', true).text('Scheduling...');
+            
+            $.post(ajaxurl, {
+                action: 'pierre_schedule_reports',
+                schedule_frequency: frequency,
+                report_types: ['projects', 'teams', 'surveillance', 'notifications'],
+                nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
+            }, function(response) {
+                if (response.success) {
+                    alert(response.data.message);
+                    console.log('Schedule data:', response.data.data);
+                } else {
+                    alert('Pierre says: ' + (response.data.message || 'Failed to schedule reports!') + ' 😢');
+                }
+            }).always(function() {
+                button.prop('disabled', false).text('Schedule Reports');
+            });
+        } else if (frequency) {
+            alert('Pierre says: Please enter a valid frequency (daily, weekly, or monthly)! 😢');
+        }
     });
     
     // Pierre animates progress bars! 🪨

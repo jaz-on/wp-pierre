@@ -72,6 +72,8 @@ class CronManagerTest extends TestCase {
         // Pierre checks if status has required keys! 🪨
         $this->assertArrayHasKey('active', $status);
         $this->assertArrayHasKey('next_run', $status);
+        $this->assertArrayHasKey('surveillance_scheduled', $status);
+        $this->assertArrayHasKey('cleanup_scheduled', $status);
         $this->assertArrayHasKey('message', $status);
         
         error_log('Pierre tested surveillance status! 🪨');
@@ -114,6 +116,8 @@ class CronManagerTest extends TestCase {
         // Pierre checks if status has required keys! 🪨
         $this->assertArrayHasKey('surveillance_scheduled', $status);
         $this->assertArrayHasKey('cleanup_scheduled', $status);
+        $this->assertArrayHasKey('next_surveillance', $status);
+        $this->assertArrayHasKey('next_cleanup', $status);
         $this->assertArrayHasKey('message', $status);
         
         error_log('Pierre tested cron manager status! 🪨');

@@ -12,6 +12,8 @@
 namespace Pierre\Surveillance;
 
 use Pierre\Notifications\SlackNotifier;
+use Pierre\Performance\CacheManager;
+use Pierre\Performance\PerformanceOptimizer;
 
 /**
  * Project Watcher class - Pierre's surveillance system! 🪨
@@ -35,6 +37,20 @@ class ProjectWatcher implements WatcherInterface {
     private SlackNotifier $notifier;
     
     /**
+     * Pierre's cache manager - he caches everything! 🪨
+     * 
+     * @var CacheManager
+     */
+    private CacheManager $cache_manager;
+    
+    /**
+     * Pierre's performance optimizer - he makes everything faster! 🪨
+     * 
+     * @var PerformanceOptimizer
+     */
+    private PerformanceOptimizer $performance_optimizer;
+    
+    /**
      * Pierre's surveillance status - he tracks his state! 🪨
      * 
      * @var bool
@@ -56,6 +72,8 @@ class ProjectWatcher implements WatcherInterface {
     public function __construct() {
         $this->scraper = new TranslationScraper();
         $this->notifier = pierre()->get_slack_notifier();
+        $this->cache_manager = new CacheManager();
+        $this->performance_optimizer = new PerformanceOptimizer();
         $this->load_watched_projects();
     }
     
@@ -195,6 +213,9 @@ class ProjectWatcher implements WatcherInterface {
             // Pierre saves his watch list! 🪨
             $this->save_watched_projects();
             
+            // Pierre invalidates his cache! 🪨
+            $this->cache_manager->delete('watched_projects', 'surveillance');
+            
             error_log("Pierre is now watching {$project_slug} ({$locale_code})! 🪨");
             return true;
             
@@ -248,7 +269,14 @@ class ProjectWatcher implements WatcherInterface {
      * @return array Array of projects being watched
      */
     public function get_watched_projects(): array {
-        return array_values($this->watched_projects);
+        return $this->cache_manager->remember(
+            'watched_projects',
+            function() {
+                return array_values($this->watched_projects);
+            },
+            5 * MINUTE_IN_SECONDS, // Cache for 5 minutes
+            'surveillance'
+        );
     }
     
     /**

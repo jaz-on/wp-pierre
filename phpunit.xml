@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Pierre's PHPUnit configuration - he tests everything! 🪨 -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         stopOnFailure="false"
+         cacheDirectory=".phpunit.cache"
+         executionOrder="depends,defects"
+         requireCoverageMetadata="true"
+         beStrictAboutCoverageMetadata="true"
+         beStrictAboutOutputDuringTests="true"
+         failOnRisky="true"
+         failOnWarning="true">
+    
+    <!-- Pierre's test suite! 🪨 -->
+    <testsuites>
+        <testsuite name="Pierre Test Suite 🪨">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    
+    <!-- Pierre's source directories! 🪨 -->
+    <source>
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+        <exclude>
+            <directory>tests</directory>
+            <directory>vendor</directory>
+            <directory>assets</directory>
+        </exclude>
+    </source>
+    
+    <!-- Pierre's coverage settings! 🪨 -->
+    <coverage>
+        <report>
+            <html outputDirectory="coverage"/>
+            <text outputFile="coverage.txt"/>
+            <clover outputFile="coverage.xml"/>
+        </report>
+    </coverage>
+    
+    <!-- Pierre's logging! 🪨 -->
+    <logging>
+        <junit outputFile="junit.xml"/>
+    </logging>
+    
+    <!-- Pierre's PHP settings! 🪨 -->
+    <php>
+        <ini name="error_reporting" value="-1"/>
+        <ini name="memory_limit" value="-1"/>
+        <ini name="max_execution_time" value="300"/>
+    </php>
+</phpunit>

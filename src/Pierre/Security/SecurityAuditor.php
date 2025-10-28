@@ -132,8 +132,10 @@ class SecurityAuditor {
         $checks['wp_version'] = [
             'passed' => $is_latest,
             'message' => $is_latest ? 
+                // translators: %s is the WordPress version
                 sprintf(__('WordPress %s is up to date!', 'wp-pierre'), $wp_version) : 
-                sprintf(__('WordPress update available! Current: %s, Latest: %s', 'wp-pierre'), $wp_version, $latest_version),
+                // translators: %1$s is current version, %2$s is latest version
+                sprintf(__('WordPress update available! Current: %1$s, Latest: %2$s', 'wp-pierre'), $wp_version, $latest_version),
             'severity' => $is_latest ? 'info' : 'warning'
         ];
         $score += $is_latest ? 100 : 50;
@@ -615,7 +617,7 @@ class SecurityAuditor {
         
         $found_headers = 0;
         foreach ($headers as $header) {
-            if (isset($_SERVER['HTTP_' . str_replace('-', '_', strtoupper($header))])) {
+            if (isset(wp_unslash($_SERVER['HTTP_' . str_replace('-', '_', strtoupper($header))]))) {
                 $found_headers++;
             }
         }
@@ -624,7 +626,8 @@ class SecurityAuditor {
         
         return [
             'passed' => $score >= 75,
-            'message' => sprintf(__('%d/%d security headers found!', 'wp-pierre'), $found_headers, count($headers)),
+            // translators: %1$d is found headers count, %2$d is total headers count
+            'message' => sprintf(__('%1$d/%2$d security headers found!', 'wp-pierre'), $found_headers, count($headers)),
             'severity' => $score >= 75 ? 'info' : 'warning',
             'score' => $score
         ];
@@ -663,7 +666,8 @@ class SecurityAuditor {
                 $recommendations[] = [
                     'category' => $category,
                     'priority' => $check['score'] < 50 ? 'high' : 'medium',
-                    'message' => sprintf(__('Improve %s security (Score: %d%%)', 'wp-pierre'), $category, $check['score']),
+                    // translators: %1$s is category name, %2$d is score percentage
+                    'message' => sprintf(__('Improve %1$s security (Score: %2$d%%)', 'wp-pierre'), $category, $check['score']),
                     'actions' => $this->get_recommendation_actions($category)
                 ];
             }

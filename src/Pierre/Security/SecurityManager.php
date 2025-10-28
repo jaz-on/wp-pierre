@@ -160,7 +160,7 @@ class SecurityManager {
         
         // Pierre checks for allowed protocols! 🪨
         $allowed_protocols = ['http', 'https'];
-        $parsed_url = parse_url($url);
+        $parsed_url = wp_parse_url($url);
         
         if (!in_array($parsed_url['scheme'] ?? '', $allowed_protocols, true)) {
             return [
@@ -201,6 +201,7 @@ class SecurityManager {
             return [
                 'valid' => false,
                 'sanitized' => null,
+                // translators: %d is the minimum value required
                 'message' => sprintf(__('Pierre says: Value must be at least %d!', 'wp-pierre'), $options['min']) . ' 😢'
             ];
         }
@@ -209,6 +210,7 @@ class SecurityManager {
             return [
                 'valid' => false,
                 'sanitized' => null,
+                // translators: %d is the maximum value allowed
                 'message' => sprintf(__('Pierre says: Value must be at most %d!', 'wp-pierre'), $options['max']) . ' 😢'
             ];
         }
@@ -237,6 +239,7 @@ class SecurityManager {
             return [
                 'valid' => false,
                 'sanitized' => null,
+                // translators: %d is the maximum character length allowed
                 'message' => sprintf(__('Pierre says: String too long! Maximum %d characters.', 'wp-pierre'), $max_length) . ' 😢'
             ];
         }
@@ -348,6 +351,7 @@ class SecurityManager {
             return [
                 'valid' => false,
                 'sanitized' => null,
+                // translators: %s is the list of allowed roles
                 'message' => sprintf(__('Pierre says: Invalid role! Allowed roles: %s', 'wp-pierre'), implode(', ', $valid_roles)) . ' 😢'
             ];
         }
@@ -374,6 +378,7 @@ class SecurityManager {
             return [
                 'valid' => false,
                 'sanitized' => null,
+                // translators: %s is the list of allowed project types
                 'message' => sprintf(__('Pierre says: Invalid project type! Allowed types: %s', 'wp-pierre'), implode(', ', $valid_types)) . ' 😢'
             ];
         }
@@ -545,7 +550,8 @@ class SecurityManager {
             'passed' => $is_latest,
             'message' => $is_latest ? 
                 __('WordPress is up to date!', 'wp-pierre') : 
-                sprintf(__('WordPress update available! Current: %s, Latest: %s', 'wp-pierre'), $wp_version, $latest_version),
+                // translators: %1$s is current version, %2$s is latest version
+                sprintf(__('WordPress update available! Current: %1$s, Latest: %2$s', 'wp-pierre'), $wp_version, $latest_version),
             'score' => $is_latest ? 100 : 50
         ];
     }

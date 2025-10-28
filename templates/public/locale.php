@@ -20,8 +20,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo esc_html(sprintf(__('Pierre Dashboard - %s', 'wp-pierre'), $data['locale'] ?? 'Unknown')); ?> 🪨</title>
-    <link rel="stylesheet" href="<?php echo esc_url(PIERRE_PLUGIN_URL . 'assets/css/public.css'); ?>">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <?php wp_head(); ?>
 </head>
 <body class="pierre-public-dashboard">
     <div class="pierre-container">
@@ -129,6 +128,6 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
         nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
     };
     </script>
-    <script src="<?php echo esc_url(PIERRE_PLUGIN_URL . 'assets/js/public.js'); ?>"></script>
+    <?php wp_footer(); ?>
 </body>
 </html>

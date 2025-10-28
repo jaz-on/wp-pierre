@@ -182,7 +182,7 @@ function pierre_sanitize_file_content(string $content, string $file_extension): 
             
         default:
             // Pierre removes HTML tags for text files! 🪨
-            $content = strip_tags($content);
+            $content = wp_strip_all_tags($content);
             break;
     }
     

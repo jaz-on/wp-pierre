@@ -128,7 +128,7 @@ class CSRFProtection {
                 'action' => $action,
                 'user_id' => get_current_user_id(),
                 'ip_address' => $this->get_client_ip(),
-                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
+                'user_agent' => wp_unslash($_SERVER['HTTP_USER_AGENT']) ?? 'Unknown'
             ]);
             
             return [
@@ -154,7 +154,7 @@ class CSRFProtection {
      * @return bool True if referrer is valid
      */
     private function check_referrer(): bool {
-        $referrer = $_SERVER['HTTP_REFERER'] ?? '';
+        $referrer = wp_unslash($_SERVER['HTTP_REFERER']) ?? '';
         
         if (empty($referrer)) {
             return false;
@@ -217,7 +217,7 @@ class CSRFProtection {
         
         foreach ($ip_keys as $key) {
             if (array_key_exists($key, $_SERVER) === true) {
-                foreach (explode(',', $_SERVER[$key]) as $ip) {
+                foreach (explode(',', wp_unslash($_SERVER[$key])) as $ip) {
                     $ip = trim($ip);
                     
                     if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
@@ -227,7 +227,7 @@ class CSRFProtection {
             }
         }
         
-        return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        return wp_unslash($_SERVER['REMOTE_ADDR']) ?? '0.0.0.0';
     }
     
     /**

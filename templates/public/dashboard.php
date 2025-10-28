@@ -19,15 +19,15 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pierre Dashboard - WordPress Translation Monitor 🪨</title>
+    <title><?php echo esc_html__('Pierre Dashboard - WordPress Translation Monitor', 'wp-pierre'); ?> 🪨</title>
     <link rel="stylesheet" href="<?php echo esc_url(PIERRE_PLUGIN_URL . 'assets/css/public.css'); ?>">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body class="pierre-public-dashboard">
     <div class="pierre-container">
         <div class="pierre-header">
-            <h1>Pierre Dashboard 🪨</h1>
-            <p>WordPress Translation Monitor - Public Interface</p>
+            <h1><?php echo esc_html__('Pierre Dashboard', 'wp-pierre'); ?> 🪨</h1>
+            <p><?php echo esc_html__('WordPress Translation Monitor - Public Interface', 'wp-pierre'); ?></p>
         </div>
 
         <?php if (isset($data['stats']) && !empty($data['stats'])): ?>
@@ -48,7 +48,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
 
         <?php if (isset($data['user_assignments']) && !empty($data['user_assignments'])): ?>
         <div class="pierre-projects">
-            <h2>Your Translation Projects 🪨</h2>
+            <h2><?php echo esc_html__('Your Translation Projects', 'wp-pierre'); ?> 🪨</h2>
             <?php foreach ($data['user_assignments'] as $assignment): ?>
             <div class="pierre-project-card" 
                  data-project="<?php echo esc_attr($assignment['project_slug'] ?? ''); ?>"
@@ -86,7 +86,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
 
         <?php if (isset($data['watched_projects']) && !empty($data['watched_projects'])): ?>
         <div class="pierre-projects">
-            <h2>All Monitored Projects 🪨</h2>
+            <h2><?php echo esc_html__('All Monitored Projects', 'wp-pierre'); ?> 🪨</h2>
             <?php foreach ($data['watched_projects'] as $project): ?>
             <div class="pierre-project-card" 
                  data-project="<?php echo esc_attr($project['project_slug'] ?? ''); ?>"
@@ -125,7 +125,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
             </button>
             <?php if (current_user_can('wpupdates_view_dashboard')): ?>
             <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-dashboard')); ?>" class="pierre-button">
-                Admin Dashboard 🪨
+                <?php echo esc_html__('Admin Dashboard', 'wp-pierre'); ?> 🪨
             </a>
             <?php endif; ?>
         </div>
@@ -133,7 +133,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
         <div class="pierre-footer">
             <p>
                 <strong>Pierre</strong> - WordPress Translation Monitor 🪨 | 
-                <a href="<?php echo esc_url(home_url()); ?>">Back to Site</a>
+                <a href="<?php echo esc_url(home_url()); ?>"><?php echo esc_html__('Back to Site', 'wp-pierre'); ?></a>
             </p>
         </div>
     </div>

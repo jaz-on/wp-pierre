@@ -469,7 +469,7 @@ class DashboardController {
      */
     public function ajax_get_stats(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die('Pierre says: Invalid nonce! 😢');
         }
         
@@ -490,7 +490,7 @@ class DashboardController {
      */
     public function ajax_get_projects(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die('Pierre says: Invalid nonce! 😢');
         }
         
@@ -511,7 +511,7 @@ class DashboardController {
      */
     public function ajax_test_notification(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce']) ?? '', 'pierre_ajax')) {
+        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
             wp_die('Pierre says: Invalid nonce! 😢');
         }
         

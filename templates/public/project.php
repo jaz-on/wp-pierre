@@ -19,14 +19,20 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php echo esc_html(sprintf(__('Pierre Dashboard - %s (%s)', 'wp-pierre'), $data['project_name'] ?? $data['project'] ?? 'Unknown', $data['locale'] ?? 'Unknown')); ?> 🪨</title>
+    <title><?php 
+    // translators: %1$s is project name, %2$s is locale
+    echo esc_html(sprintf(__('Pierre Dashboard - %1$s (%2$s)', 'wp-pierre'), $data['project_name'] ?? $data['project'] ?? 'Unknown', $data['locale'] ?? 'Unknown')); 
+    ?> 🪨</title>
     <?php wp_head(); ?>
 </head>
 <body class="pierre-public-dashboard">
     <div class="pierre-container">
         <div class="pierre-header">
             <h1><?php echo esc_html($data['project_name'] ?? $data['project'] ?? 'Unknown'); ?> 🪨</h1>
-            <p><?php echo esc_html(sprintf(__('%s Translation Project', 'wp-pierre'), $data['locale_name'] ?? $data['locale'] ?? 'Unknown')); ?></p>
+            <p><?php 
+            // translators: %s is the locale name
+            echo esc_html(sprintf(__('%s Translation Project', 'wp-pierre'), $data['locale_name'] ?? $data['locale'] ?? 'Unknown')); 
+            ?></p>
         </div>
 
         <div class="pierre-breadcrumb">
@@ -152,7 +158,10 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
 
         <div class="pierre-actions">
             <a href="<?php echo esc_url(home_url('/pierre/' . $data['locale'] . '/')); ?>" class="pierre-button">
-                <?php echo esc_html(sprintf(__('Back to %s', 'wp-pierre'), $data['locale_name'] ?? $data['locale'] ?? 'Locale')); ?> 🪨
+                <?php 
+                // translators: %s is the locale name
+                echo esc_html(sprintf(__('Back to %s', 'wp-pierre'), $data['locale_name'] ?? $data['locale'] ?? 'Locale')); 
+                ?> 🪨
             </a>
             <a href="<?php echo esc_url(home_url('/pierre/')); ?>" class="pierre-button">
                 <?php echo esc_html__('Back to Dashboard', 'wp-pierre'); ?> 🪨

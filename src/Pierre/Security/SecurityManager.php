@@ -571,8 +571,10 @@ class SecurityManager {
         return [
             'passed' => $is_supported,
             'message' => $is_supported ? 
+                // translators: %s is the PHP version
                 sprintf(__('PHP version %s is supported!', 'wp-pierre'), $php_version) : 
-                sprintf(__('PHP version %s is not supported! Required: %s', 'wp-pierre'), $php_version, $required_version),
+                // translators: %1$s is current PHP version, %2$s is required PHP version
+                sprintf(__('PHP version %1$s is not supported! Required: %2$s', 'wp-pierre'), $php_version, $required_version),
             'score' => $is_supported ? 100 : 0
         ];
     }

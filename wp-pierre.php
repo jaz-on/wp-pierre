@@ -3,7 +3,7 @@
  * Plugin Name: Pierre - Translation Monitor
  * Plugin URI: https://github.com/jaz-on/wp-pierre
  * Description: Pierre monitors WordPress Polyglots translations and notifies teams via Slack 🪨
- * Version: 1.0.0
+ * Version: 1.0.6
  * Author: Jason Rouet
  * Author URI: https://profiles.wordpress.org/jaz_on/
  * Author Email: bonjour@jasonrouet.com

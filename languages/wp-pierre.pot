@@ -1,0 +1,555 @@
+# Copyright (C) 2024 Jason Rouet
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Pierre WordPress Translation Monitor 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/jaz-on/wp-pierre/issues\n"
+"POT-Creation-Date: 2024-10-28 22:30+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: src/Pierre/Surveillance/CronManager.php:125
+msgid "Pierre's Surveillance Check"
+msgstr ""
+
+#: src/Pierre/Surveillance/CronManager.php:131
+msgid "Pierre's Daily Cleanup"
+msgstr ""
+
+#: templates/admin/dashboard.php:19
+msgid "Pierre Dashboard"
+msgstr ""
+
+#: templates/admin/dashboard.php:20
+msgid "Translation Monitoring Dashboard"
+msgstr ""
+
+#: templates/admin/dashboard.php:25
+msgid "Overview Statistics"
+msgstr ""
+
+#: templates/admin/dashboard.php:39
+msgid "Recent Activity"
+msgstr ""
+
+#: templates/admin/dashboard.php:42
+msgid "Pierre says: Activity chart coming soon!"
+msgstr ""
+
+#: templates/admin/dashboard.php:72
+msgid "Translation Progress"
+msgstr ""
+
+#: templates/admin/dashboard.php:119
+msgid "Recent Notifications"
+msgstr ""
+
+#: templates/admin/projects.php:19
+msgid "Pierre Projects"
+msgstr ""
+
+#: templates/admin/projects.php:20
+msgid "Translation Project Management"
+msgstr ""
+
+#: templates/admin/projects.php:25
+msgid "Project Statistics"
+msgstr ""
+
+#: templates/admin/projects.php:39
+msgid "Add New Project"
+msgstr ""
+
+#: templates/admin/projects.php:40
+msgid "Monitor a new translation project"
+msgstr ""
+
+#: templates/admin/projects.php:44
+msgid "Project Slug"
+msgstr ""
+
+#: templates/admin/projects.php:45
+msgid "e.g., wp, woocommerce"
+msgstr ""
+
+#: templates/admin/projects.php:48
+msgid "Locale Code"
+msgstr ""
+
+#: templates/admin/projects.php:49
+msgid "e.g., fr, es, de"
+msgstr ""
+
+#: templates/admin/projects.php:52
+msgid "Add Project"
+msgstr ""
+
+#: templates/admin/projects.php:57
+msgid "Monitored Projects"
+msgstr ""
+
+#: templates/admin/projects.php:58
+msgid "Projects currently under surveillance"
+msgstr ""
+
+#: templates/admin/projects.php:72
+msgid "Project"
+msgstr ""
+
+#: templates/admin/projects.php:73
+msgid "Locale"
+msgstr ""
+
+#: templates/admin/projects.php:74
+msgid "Completion"
+msgstr ""
+
+#: templates/admin/projects.php:75
+msgid "Status"
+msgstr ""
+
+#: templates/admin/projects.php:76
+msgid "Actions"
+msgstr ""
+
+#: templates/admin/projects.php:80
+msgid "Active"
+msgstr ""
+
+#: templates/admin/projects.php:81
+msgid "Paused"
+msgstr ""
+
+#: templates/admin/projects.php:85
+msgid "Start Surveillance"
+msgstr ""
+
+#: templates/admin/projects.php:86
+msgid "Stop Surveillance"
+msgstr ""
+
+#: templates/admin/projects.php:87
+msgid "Test Surveillance"
+msgstr ""
+
+#: templates/admin/projects.php:88
+msgid "Remove Project"
+msgstr ""
+
+#: templates/admin/reports.php:19
+msgid "Pierre Reports"
+msgstr ""
+
+#: templates/admin/reports.php:20
+msgid "Translation Monitoring Reports & Analytics"
+msgstr ""
+
+#: templates/admin/reports.php:25
+msgid "Report Statistics"
+msgstr ""
+
+#: templates/admin/reports.php:39
+msgid "Surveillance Activity"
+msgstr ""
+
+#: templates/admin/reports.php:42
+msgid "Pierre says: Activity chart coming soon!"
+msgstr ""
+
+#: templates/admin/reports.php:72
+msgid "Translation Progress"
+msgstr ""
+
+#: templates/admin/reports.php:119
+msgid "Recent Notifications"
+msgstr ""
+
+#: templates/admin/settings.php:19
+msgid "Pierre Settings"
+msgstr ""
+
+#: templates/admin/settings.php:20
+msgid "Configure Pierre's surveillance and notification settings"
+msgstr ""
+
+#: templates/admin/settings.php:25
+msgid "Slack Configuration"
+msgstr ""
+
+#: templates/admin/settings.php:26
+msgid "Configure Slack webhook for notifications"
+msgstr ""
+
+#: templates/admin/settings.php:30
+msgid "Webhook URL"
+msgstr ""
+
+#: templates/admin/settings.php:31
+msgid "https://hooks.slack.com/services/..."
+msgstr ""
+
+#: templates/admin/settings.php:35
+msgid "Test Webhook"
+msgstr ""
+
+#: templates/admin/settings.php:40
+msgid "Surveillance Settings"
+msgstr ""
+
+#: templates/admin/settings.php:41
+msgid "Configure surveillance intervals and limits"
+msgstr ""
+
+#: templates/admin/settings.php:45
+msgid "Check Interval"
+msgstr ""
+
+#: templates/admin/settings.php:46
+msgid "How often Pierre checks for changes"
+msgstr ""
+
+#: templates/admin/settings.php:50
+msgid "5 minutes"
+msgstr ""
+
+#: templates/admin/settings.php:51
+msgid "15 minutes"
+msgstr ""
+
+#: templates/admin/settings.php:52
+msgid "30 minutes"
+msgstr ""
+
+#: templates/admin/settings.php:53
+msgid "1 hour"
+msgstr ""
+
+#: templates/admin/settings.php:54
+msgid "2 hours"
+msgstr ""
+
+#: templates/admin/settings.php:58
+msgid "Max Projects Per Check"
+msgstr ""
+
+#: templates/admin/settings.php:59
+msgid "Maximum number of projects to check in one batch"
+msgstr ""
+
+#: templates/admin/settings.php:63
+msgid "Notification Settings"
+msgstr ""
+
+#: templates/admin/settings.php:64
+msgid "Configure notification types and thresholds"
+msgstr ""
+
+#: templates/admin/settings.php:68
+msgid "Notification Types"
+msgstr ""
+
+#: templates/admin/settings.php:72
+msgid "New Strings"
+msgstr ""
+
+#: templates/admin/settings.php:73
+msgid "Notify when new strings are detected"
+msgstr ""
+
+#: templates/admin/settings.php:77
+msgid "Completion Updates"
+msgstr ""
+
+#: templates/admin/settings.php:78
+msgid "Notify when completion percentage changes"
+msgstr ""
+
+#: templates/admin/settings.php:82
+msgid "Needs Attention"
+msgstr ""
+
+#: templates/admin/settings.php:83
+msgid "Notify when strings need review"
+msgstr ""
+
+#: templates/admin/settings.php:87
+msgid "Errors"
+msgstr ""
+
+#: templates/admin/settings.php:88
+msgid "Notify when errors occur"
+msgstr ""
+
+#: templates/admin/settings.php:92
+msgid "Completion Threshold"
+msgstr ""
+
+#: templates/admin/settings.php:93
+msgid "Minimum completion percentage to trigger notifications"
+msgstr ""
+
+#: templates/admin/settings.php:97
+msgid "Save Settings"
+msgstr ""
+
+#: templates/admin/settings.php:98
+msgid "Flush Cache"
+msgstr ""
+
+#: templates/admin/settings.php:99
+msgid "Reset to Defaults"
+msgstr ""
+
+#: templates/admin/settings.php:100
+msgid "Clear All Data"
+msgstr ""
+
+#: templates/admin/teams.php:19
+msgid "Pierre Teams"
+msgstr ""
+
+#: templates/admin/teams.php:20
+msgid "Manage translation team assignments"
+msgstr ""
+
+#: templates/admin/teams.php:25
+msgid "Team Statistics"
+msgstr ""
+
+#: templates/admin/teams.php:39
+msgid "Assign User to Project"
+msgstr ""
+
+#: templates/admin/teams.php:40
+msgid "Add a user to a translation project"
+msgstr ""
+
+#: templates/admin/teams.php:44
+msgid "Select User"
+msgstr ""
+
+#: templates/admin/teams.php:45
+msgid "Choose a user to assign"
+msgstr ""
+
+#: templates/admin/teams.php:48
+msgid "Select Project"
+msgstr ""
+
+#: templates/admin/teams.php:49
+msgid "Choose a project to assign"
+msgstr ""
+
+#: templates/admin/teams.php:52
+msgid "Select Role"
+msgstr ""
+
+#: templates/admin/teams.php:53
+msgid "Choose a role for the user"
+msgstr ""
+
+#: templates/admin/teams.php:56
+msgid "Assign User"
+msgstr ""
+
+#: templates/admin/teams.php:61
+msgid "Current Assignments"
+msgstr ""
+
+#: templates/admin/teams.php:62
+msgid "Users assigned to translation projects"
+msgstr ""
+
+#: templates/admin/teams.php:76
+msgid "User"
+msgstr ""
+
+#: templates/admin/teams.php:77
+msgid "Project"
+msgstr ""
+
+#: templates/admin/teams.php:78
+msgid "Role"
+msgstr ""
+
+#: templates/admin/teams.php:79
+msgid "Assigned"
+msgstr ""
+
+#: templates/admin/teams.php:80
+msgid "Actions"
+msgstr ""
+
+#: templates/admin/teams.php:84
+msgid "Remove Assignment"
+msgstr ""
+
+#: templates/public/dashboard.php:22
+msgid "Pierre Dashboard - WordPress Translation Monitor"
+msgstr ""
+
+#: templates/public/dashboard.php:29
+msgid "Pierre Dashboard"
+msgstr ""
+
+#: templates/public/dashboard.php:30
+msgid "WordPress Translation Monitor - Public Interface"
+msgstr ""
+
+#: templates/public/dashboard.php:51
+msgid "Your Translation Projects"
+msgstr ""
+
+#: templates/public/dashboard.php:89
+msgid "All Monitored Projects"
+msgstr ""
+
+#: templates/public/dashboard.php:127
+msgid "Admin Dashboard"
+msgstr ""
+
+#: templates/public/dashboard.php:136
+msgid "Back to Site"
+msgstr ""
+
+#: templates/public/locale.php:22
+msgid "Pierre Dashboard - %s"
+msgstr ""
+
+#: templates/public/locale.php:29
+msgid "Pierre Dashboard - %s"
+msgstr ""
+
+#: templates/public/locale.php:30
+msgid "Translation Projects for %s"
+msgstr ""
+
+#: templates/public/locale.php:34
+msgid "Pierre Dashboard"
+msgstr ""
+
+#: templates/public/locale.php:52
+msgid "Welcome to Pierre's translation monitoring for %s!"
+msgstr ""
+
+#: templates/public/locale.php:57
+msgid "Projects for %s"
+msgstr ""
+
+#: templates/public/locale.php:99
+msgid "No projects found for %s!"
+msgstr ""
+
+#: templates/public/locale.php:104
+msgid "Back to Dashboard"
+msgstr ""
+
+#: templates/public/locale.php:111
+msgid "Admin Dashboard"
+msgstr ""
+
+#: templates/public/locale.php:120
+msgid "Back to Site"
+msgstr ""
+
+#: templates/public/project.php:22
+msgid "Pierre Dashboard - %s (%s)"
+msgstr ""
+
+#: templates/public/project.php:29
+msgid "%s"
+msgstr ""
+
+#: templates/public/project.php:30
+msgid "%s Translation Project"
+msgstr ""
+
+#: templates/public/project.php:34
+msgid "Pierre Dashboard"
+msgstr ""
+
+#: templates/public/project.php:54
+msgid "Welcome to Pierre's monitoring for %s in %s!"
+msgstr ""
+
+#: templates/public/project.php:60
+msgid "Team Members"
+msgstr ""
+
+#: templates/public/project.php:69
+msgid "Assigned: %s"
+msgstr ""
+
+#: templates/public/project.php:71
+msgid "by %s"
+msgstr ""
+
+#: templates/public/project.php:85
+msgid "Project Information"
+msgstr ""
+
+#: templates/public/project.php:88
+msgid "Project: %s"
+msgstr ""
+
+#: templates/public/project.php:91
+msgid "Locale: %s"
+msgstr ""
+
+#: templates/public/project.php:94
+msgid "Project Name: %s"
+msgstr ""
+
+#: templates/public/project.php:97
+msgid "Locale Name: %s"
+msgstr ""
+
+#: templates/public/project.php:103
+msgid "Quick Actions"
+msgstr ""
+
+#: templates/public/project.php:123
+msgid "Recent Activity"
+msgstr ""
+
+#: templates/public/project.php:129
+msgid "Project completion increased to %s%%"
+msgstr ""
+
+#: templates/public/project.php:130
+msgid "Last updated: %s"
+msgstr ""
+
+#: templates/public/project.php:138
+msgid "%d team members assigned to this project"
+msgstr ""
+
+#: templates/public/project.php:147
+msgid "Pierre is monitoring this project for changes"
+msgstr ""
+
+#: templates/public/project.php:155
+msgid "Back to %s"
+msgstr ""
+
+#: templates/public/project.php:158
+msgid "Back to Dashboard"
+msgstr ""
+
+#: templates/public/project.php:162
+msgid "Admin Dashboard"
+msgstr ""
+
+#: templates/public/project.php:171
+msgid "Back to Site"
+msgstr ""
+
+#: templates/public/project.php:179
+msgid "Pierre - WordPress Translation Monitor"
+msgstr ""

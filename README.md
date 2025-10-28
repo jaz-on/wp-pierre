@@ -1,56 +1,70 @@
 # Pierre - WordPress Translation Monitor 🪨
 
 [![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)](https://wordpress.org/)
-[![PHP](https://img.shields.io/badge/PHP-8.3%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPL%20v2%2B-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 
-Pierre is a modern WordPress plugin that monitors WordPress Polyglots translations and notifies teams via Slack. Built with PHP 8.3+, WordPress 6.0+, and following WordPress Coding Standards.
+## The Story Behind Pierre 🪨
 
-## 🚀 Features
+Pierre loves WordPress, Pierre loves WordPress when it displays **IN HIS PREFERRED LANGUAGE**, Pierre also loves translating some strings on translate.wordpress.org casually.
 
-### 📊 **Translation Monitoring**
+But Pierre really struggles to be consistent and keep up with the release pace of the plugins and themes he helps translate.
+
+So he talks to his Jason, a frenchmen who doesn't translate much like Pierre, but often discusses with locale managers, GTE, PTE and remembers an old project initiated by a friend of his: a Belgian named Pascal Casier. The thing is, Pascal is a nerd who loves tinkering with APIs and render datas in a nice way, especially those from wordpress.org. In 2016, he built small tools to crawl, then display data from translate.wordpress.org and thus help translators get notified on their Slack about strings waiting for translation.
+
+So Jason basically decided to rewrite the whole thing from scratch to offer a better experience for the community. As the project wasn't really fun to use, he decided to make it more user-friendly by giving it a personality and a rock emoji.
+
+**INTRODUCING to you: WP-Pierre.** The evolution of this old idea, a WordPress plugin coupled with a website https://pierre.jasonrouet.com/ (temporary URL) to simplify access to this tool for any local WordPress community and manage: adding translation teams + connecting your local community Slack.
+
+*Fun fact: The name Pierre is a nod to the [Pierre de Rosette (French)](https://fr.wikipedia.org/wiki/Pierre_de_Rosette), or Rosetta Stone in English. Pierre's also a surname which translates easily across languages: Peter (DE/EN), Peio (EU), Pedro (ES), Πέτρος (GR), Pier/Pietro (IT), Piotr (PL), etc.
+
+Just like Pierre helps bridge the gap between different languages in WordPress! 🪨
+
+(What a great story, don't you think? It took me 2 hours to write it, but it's worth it. IT'S WORTH IT, RIGHT? RIGHT!?! To be fair, I had a lot of fun writing it. And I'm sure you're happy that I didn't stick with my first idea of naming it after [Pierre-François-Xavier Bouchard](https://fr.wikipedia.org/wiki/Pierre-Fran%C3%A7ois-Xavier_Bouchard)! 🤡)*
+
+---
+
+Pierre is a WordPress plugin that monitors WordPress Polyglots translations and notifies teams via Slack. Built with PHP 8.3+, WordPress 6.0+, and following WordPress Coding Standards.
+
+## Features
+
+### **Translation Monitoring**
 - **Real-time Surveillance**: Automated monitoring of WordPress Polyglots translations
 - **Change Detection**: Instant notifications when translations are updated
 - **Progress Tracking**: Monitor completion percentages and translation status
 - **Multi-project Support**: Watch multiple translation projects simultaneously
 
-### 🔔 **Slack Integration**
+### **Slack Integration**
 - **Instant Notifications**: Get notified immediately when translations change
 - **Rich Messages**: Beautiful Slack messages with project details and progress
 - **Customizable Alerts**: Configure notification types and thresholds
 - **Test Notifications**: Verify your Slack integration before going live
 
-### 👥 **Team Management**
+### **Team Management**
 - **User Assignments**: Assign team members to specific translation projects
 - **Role-based Access**: Granular permissions for different user roles
 - **Project Ownership**: Track who's responsible for each translation project
 - **Assignment History**: Keep track of team changes and assignments
 
-### 🎛️ **Admin Interface**
+### **Admin Interface**
 - **Dashboard**: Overview of all monitored projects and team assignments
 - **Project Management**: Add, remove, and configure translation projects
 - **Settings Panel**: Configure surveillance intervals and notification preferences
 - **Reports**: Detailed analytics and translation progress reports
 
-### 🌍 **Public Dashboard**
+### **Public Dashboard**
 - **Public Interface**: Share translation progress with stakeholders
 - **Responsive Design**: Works perfectly on desktop and mobile devices
 - **Custom Routing**: Clean URLs for different locales and projects
 - **Real-time Updates**: Live data without page refreshes
 
-## 📋 Requirements
+## Requirements
 
 - **WordPress**: 6.0 or higher
 - **PHP**: 8.3 or higher
 - **MySQL**: 5.7+ or MariaDB 10.3+
 - **Slack**: Webhook URL for notifications (optional)
 
-## 🛠️ Installation
-
-### From WordPress Admin
-1. Go to **Plugins** → **Add New**
-2. Search for "Pierre Translation Monitor"
-3. Click **Install Now** and then **Activate**
+## Installation
 
 ### Manual Installation
 1. Download the plugin files
@@ -62,7 +76,7 @@ Pierre is a modern WordPress plugin that monitors WordPress Polyglots translatio
 composer require wp-pierre/pierre
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### 1. **Initial Setup**
 After activation, Pierre will automatically:
@@ -89,7 +103,7 @@ After activation, Pierre will automatically:
 3. Choose the appropriate role
 4. Click **Assign User**
 
-## 🎯 Usage
+## Usage
 
 ### **For Administrators**
 - Monitor all translation projects from the admin dashboard
@@ -108,7 +122,7 @@ After activation, Pierre will automatically:
 - Monitor translation progress without admin access
 - Stay informed about project status and deadlines
 
-## 🔧 API Reference
+## API Reference
 
 ### **AJAX Endpoints**
 - `pierre_start_surveillance` - Start surveillance monitoring
@@ -130,102 +144,11 @@ add_filter('pierre_surveillance_interval', function($interval) {
 });
 ```
 
-## 🧪 Testing
+## Contributing
 
-Pierre includes a comprehensive test suite built with PHPUnit:
+This is a community & opensource project, feel free to open issues, PRs or contact me directly!
 
-```bash
-# Run all tests
-composer test
-
-# Run tests with coverage
-composer test-coverage
-
-# Run specific test suite
-./vendor/bin/phpunit tests/Surveillance/
-```
-
-## 🌐 Internationalization
-
-Pierre is fully internationalized and ready for translation:
-
-- **Text Domain**: `wp-pierre`
-- **Language Files**: Located in `/languages/`
-- **Translation Template**: `wp-pierre.pot`
-- **Supported Languages**: All languages supported by WordPress
-
-### Contributing Translations
-1. Download the `wp-pierre.pot` file
-2. Translate the strings using Poedit or similar tool
-3. Save as `wp-pierre-{locale}.po` (e.g., `wp-pierre-fr_FR.po`)
-4. Submit your translation via GitHub or WordPress.org
-
-## 🔒 Security
-
-Pierre follows WordPress security best practices:
-
-- **Input Sanitization**: All user inputs are properly sanitized
-- **Output Escaping**: All outputs are escaped to prevent XSS
-- **Nonce Verification**: All AJAX requests include nonce verification
-- **Capability Checks**: Proper permission checks for all admin actions
-- **Prepared Statements**: All database queries use prepared statements
-
-## 📊 Performance
-
-Pierre is optimized for performance:
-
-- **Efficient Caching**: Uses WordPress transients for API responses
-- **Minimal Database Queries**: Optimized queries with proper indexing
-- **Background Processing**: Surveillance runs in the background
-- **Memory Management**: Proper cleanup and memory optimization
-
-## 🐛 Troubleshooting
-
-### **Common Issues**
-
-**Slack notifications not working:**
-- Verify your webhook URL is correct
-- Check that the webhook is active in Slack
-- Test the connection in Pierre settings
-
-**Surveillance not starting:**
-- Ensure WordPress cron is working
-- Check that you have proper permissions
-- Verify the project slug and locale are valid
-
-**Public dashboard not loading:**
-- Check that permalinks are enabled
-- Verify the routing is working correctly
-- Ensure the template files are present
-
-### **Debug Mode**
-Enable WordPress debug mode to see detailed error messages:
-
-```php
-define('WP_DEBUG', true);
-define('WP_DEBUG_LOG', true);
-```
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### **Development Setup**
-```bash
-# Clone the repository
-git clone https://github.com/jaz-on/wp-pierre.git
-
-# Install dependencies
-composer install
-
-# Run tests
-composer test
-
-# Check code standards
-composer run-script phpcs
-```
-
-## 📄 License
+## License
 
 This plugin is licensed under the GPL v2 or later.
 
@@ -236,20 +159,22 @@ the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
 ```
 
-## 👨‍💻 Author
+## Author & Sponsorship
 
 **Jason Rouet**
 - Website: [https://jasonrouet.com](https://jasonrouet.com)
 - Email: [bonjour@jasonrouet.com](mailto:bonjour@jasonrouet.com)
 - WordPress.org: [https://profiles.wordpress.org/jaz_on/](https://profiles.wordpress.org/jaz_on/)
 
-## 🙏 Acknowledgments
+You can sponsor me on [Ko-fi](https://ko-fi.com/jasonrouet) or [Github](https://github.com/sponsors/jaz-on).
+Any help is welcome, sharing the project, giving feedback, reporting issues, etc.
+
+## Acknowledgments
 
 - WordPress Polyglots team for the translation platform
-- Slack for the notification webhook API
-- WordPress community for coding standards and best practices
+- Pascal Casier for the initial idea called wpupdates that was live on his site that got hacked (https://wp-info.org/wpupdates-to-slack/). WP-Pierre is essentially a rewrite of this idea.
 
-## 📈 Changelog
+## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for a complete list of changes.
 
@@ -257,4 +182,4 @@ See [CHANGELOG.md](CHANGELOG.md) for a complete list of changes.
 
 **Pierre says: Thank you for using WordPress Translation Monitor! 🪨**
 
-*Made with ❤️ for the WordPress translation community*
+*Made with ❤️ for the WordPress translation community, hope it helps!*

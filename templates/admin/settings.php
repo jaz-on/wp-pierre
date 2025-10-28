@@ -335,46 +335,152 @@ jQuery(document).ready(function($) {
     // Pierre handles settings management! 🪨
     $('#pierre-slack-settings').on('submit', function(e) {
         e.preventDefault();
-        alert('Pierre says: Slack settings saved! 🪨');
-        // TODO: Implement actual settings save
+        var form = $(this);
+        var button = form.find('button[type="submit"]');
+        button.prop('disabled', true).text('Saving...');
+        
+        $.post(ajaxurl, {
+            action: 'pierre_admin_save_settings',
+            slack_webhook_url: $('#slack_webhook_url').val(),
+            nonce: '<?php echo wp_create_nonce('pierre_admin_ajax'); ?>'
+        }, function(response) {
+            if (response.success) {
+                alert(response.data.message);
+            } else {
+                alert('Pierre says: ' + (response.data.message || 'Failed to save settings!') + ' 😢');
+            }
+        }).always(function() {
+            button.prop('disabled', false).text('Save Settings');
+        });
     });
     
     $('#pierre-surveillance-settings').on('submit', function(e) {
         e.preventDefault();
-        alert('Pierre says: Surveillance settings saved! 🪨');
-        // TODO: Implement actual settings save
+        var form = $(this);
+        var button = form.find('button[type="submit"]');
+        button.prop('disabled', true).text('Saving...');
+        
+        $.post(ajaxurl, {
+            action: 'pierre_admin_save_settings',
+            surveillance_interval: $('#surveillance_interval').val(),
+            max_projects_per_check: $('#max_projects_per_check').val(),
+            nonce: '<?php echo wp_create_nonce('pierre_admin_ajax'); ?>'
+        }, function(response) {
+            if (response.success) {
+                alert(response.data.message);
+            } else {
+                alert('Pierre says: ' + (response.data.message || 'Failed to save settings!') + ' 😢');
+            }
+        }).always(function() {
+            button.prop('disabled', false).text('Save Settings');
+        });
     });
     
     $('#pierre-notification-settings').on('submit', function(e) {
         e.preventDefault();
-        alert('Pierre says: Notification settings saved! 🪨');
-        // TODO: Implement actual settings save
+        var form = $(this);
+        var button = form.find('button[type="submit"]');
+        button.prop('disabled', true).text('Saving...');
+        
+        var notificationTypes = [];
+        $('input[name="notification_types[]"]:checked').each(function() {
+            notificationTypes.push($(this).val());
+        });
+        
+        $.post(ajaxurl, {
+            action: 'pierre_admin_save_settings',
+            notification_types: notificationTypes,
+            notification_threshold: $('#notification_threshold').val(),
+            nonce: '<?php echo wp_create_nonce('pierre_admin_ajax'); ?>'
+        }, function(response) {
+            if (response.success) {
+                alert(response.data.message);
+            } else {
+                alert('Pierre says: ' + (response.data.message || 'Failed to save settings!') + ' 😢');
+            }
+        }).always(function() {
+            button.prop('disabled', false).text('Save Settings');
+        });
     });
     
     $('#pierre-test-slack').on('click', function() {
-        alert('Pierre says: Testing Slack connection! 🪨');
-        // TODO: Implement actual Slack test
+        var button = $(this);
+        button.prop('disabled', true).text('Testing...');
+        
+        $.post(ajaxurl, {
+            action: 'pierre_admin_test_notification',
+            nonce: '<?php echo wp_create_nonce('pierre_admin_ajax'); ?>'
+        }, function(response) {
+            if (response.success) {
+                alert('Pierre says: Slack test successful! 🪨');
+            } else {
+                alert('Pierre says: ' + (response.data.message || 'Slack test failed!') + ' 😢');
+            }
+        }).always(function() {
+            button.prop('disabled', false).text('Test Webhook');
+        });
     });
     
     $('#pierre-flush-cache').on('click', function() {
         if (confirm('Pierre asks: Flush all cached data? 🪨')) {
-            alert('Pierre says: Cache flushed! 🪨');
-            // TODO: Implement actual cache flush
+            var button = $(this);
+            button.prop('disabled', true).text('Flushing...');
+            
+            $.post(ajaxurl, {
+                action: 'pierre_flush_cache',
+                nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
+            }, function(response) {
+                if (response.success) {
+                    alert(response.data.message);
+                } else {
+                    alert('Pierre says: ' + (response.data.message || 'Failed to flush cache!') + ' 😢');
+                }
+            }).always(function() {
+                button.prop('disabled', false).text('Flush Cache');
+            });
         }
     });
     
     $('#pierre-reset-settings').on('click', function() {
         if (confirm('Pierre asks: Reset all settings to defaults? This cannot be undone! 😢')) {
-            alert('Pierre says: Settings reset to defaults! 🪨');
-            // TODO: Implement actual settings reset
+            var button = $(this);
+            button.prop('disabled', true).text('Resetting...');
+            
+            $.post(ajaxurl, {
+                action: 'pierre_reset_settings',
+                nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
+            }, function(response) {
+                if (response.success) {
+                    alert(response.data.message);
+                    location.reload();
+                } else {
+                    alert('Pierre says: ' + (response.data.message || 'Failed to reset settings!') + ' 😢');
+                }
+            }).always(function() {
+                button.prop('disabled', false).text('Reset to Defaults');
+            });
         }
     });
     
     $('#pierre-clear-all-data').on('click', function() {
         if (confirm('Pierre asks: Clear ALL data? This will remove all projects, assignments, and settings! This cannot be undone! 😢')) {
             if (confirm('Pierre asks: Are you REALLY sure? This is your last chance! 😢')) {
-                alert('Pierre says: All data cleared! 🪨');
-                // TODO: Implement actual data clearing
+                var button = $(this);
+                button.prop('disabled', true).text('Clearing...');
+                
+                $.post(ajaxurl, {
+                    action: 'pierre_clear_data',
+                    nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
+                }, function(response) {
+                    if (response.success) {
+                        alert(response.data.message);
+                        location.reload();
+                    } else {
+                        alert('Pierre says: ' + (response.data.message || 'Failed to clear data!') + ' 😢');
+                    }
+                }).always(function() {
+                    button.prop('disabled', false).text('Clear All Data');
+                });
             }
         }
     });

@@ -260,20 +260,61 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
 jQuery(document).ready(function($) {
     // Pierre handles project management! 🪨
     $('#pierre-start-surveillance').on('click', function() {
-        alert('Pierre says: Starting surveillance! 🪨');
-        // TODO: Implement actual surveillance start
+        var button = $(this);
+        button.prop('disabled', true).text('Starting...');
+        
+        $.post(ajaxurl, {
+            action: 'pierre_start_surveillance',
+            nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
+        }, function(response) {
+            if (response.success) {
+                alert(response.data.message);
+                location.reload();
+            } else {
+                alert('Pierre says: ' + (response.data.message || 'Failed to start surveillance!') + ' 😢');
+            }
+        }).always(function() {
+            button.prop('disabled', false).text('Start Surveillance 🪨');
+        });
     });
     
     $('#pierre-stop-surveillance').on('click', function() {
         if (confirm('Pierre asks: Are you sure you want to stop surveillance? 😢')) {
-            alert('Pierre says: Surveillance stopped! 🪨');
-            // TODO: Implement actual surveillance stop
+            var button = $(this);
+            button.prop('disabled', true).text('Stopping...');
+            
+            $.post(ajaxurl, {
+                action: 'pierre_stop_surveillance',
+                nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
+            }, function(response) {
+                if (response.success) {
+                    alert(response.data.message);
+                    location.reload();
+                } else {
+                    alert('Pierre says: ' + (response.data.message || 'Failed to stop surveillance!') + ' 😢');
+                }
+            }).always(function() {
+                button.prop('disabled', false).text('Stop Surveillance 🪨');
+            });
         }
     });
     
     $('#pierre-test-surveillance').on('click', function() {
-        alert('Pierre says: Testing surveillance system! 🪨');
-        // TODO: Implement actual surveillance test
+        var button = $(this);
+        button.prop('disabled', true).text('Testing...');
+        
+        $.post(ajaxurl, {
+            action: 'pierre_test_surveillance',
+            nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
+        }, function(response) {
+            if (response.success) {
+                alert(response.data.message);
+            } else {
+                alert('Pierre says: ' + (response.data.message || 'Test failed!') + ' 😢');
+            }
+        }).always(function() {
+            button.prop('disabled', false).text('Test Surveillance 🪨');
+        });
     });
     
     $('#pierre-add-project-form').on('submit', function(e) {
@@ -282,8 +323,25 @@ jQuery(document).ready(function($) {
         var localeCode = $('#locale_code').val();
         
         if (projectSlug && localeCode) {
-            alert('Pierre says: Adding project ' + projectSlug + ' (' + localeCode + ') to watch list! 🪨');
-            // TODO: Implement actual project addition
+            var button = $(this).find('button[type="submit"]');
+            button.prop('disabled', true).text('Adding...');
+            
+            $.post(ajaxurl, {
+                action: 'pierre_add_project',
+                project_slug: projectSlug,
+                locale_code: localeCode,
+                nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
+            }, function(response) {
+                if (response.success) {
+                    alert(response.data.message);
+                    $('#project_slug, #locale_code').val('');
+                    location.reload();
+                } else {
+                    alert('Pierre says: ' + (response.data.message || 'Failed to add project!') + ' 😢');
+                }
+            }).always(function() {
+                button.prop('disabled', false).text('Add Project');
+            });
         }
     });
     
@@ -292,8 +350,24 @@ jQuery(document).ready(function($) {
         var locale = $(this).data('locale');
         
         if (confirm('Pierre asks: Remove ' + project + ' (' + locale + ') from watch list? 😢')) {
-            alert('Pierre says: Project removed from watch list! 🪨');
-            // TODO: Implement actual project removal
+            var button = $(this);
+            button.prop('disabled', true).text('Removing...');
+            
+            $.post(ajaxurl, {
+                action: 'pierre_remove_project',
+                project_slug: project,
+                locale_code: locale,
+                nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
+            }, function(response) {
+                if (response.success) {
+                    alert(response.data.message);
+                    location.reload();
+                } else {
+                    alert('Pierre says: ' + (response.data.message || 'Failed to remove project!') + ' 😢');
+                }
+            }).always(function() {
+                button.prop('disabled', false).text('Unwatch 🪨');
+            });
         }
     });
     

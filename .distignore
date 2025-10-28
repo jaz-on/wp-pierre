@@ -1,0 +1,44 @@
+# Pierre's distribution ignore file - he excludes dev files! 🪨
+# This file defines what to exclude when creating distribution packages
+
+# Development files
+.git/
+.gitignore
+.gitattributes
+composer.json
+composer.lock
+phpunit.xml
+phpunit.xml.dist
+.phpunit.cache/
+coverage/
+tests/
+.github/
+docs/
+*.md
+!README.md
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+error_log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Keep vendor/ for distribution (autoload.php is required)
+# Keep all PHP files
+# Keep templates/
+# Keep languages/
+# Keep assets/
+# Keep wp-pierre.php

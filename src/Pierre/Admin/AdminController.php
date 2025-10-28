@@ -246,6 +246,18 @@ class AdminController {
         add_action('wp_ajax_pierre_admin_remove_user', [$this, 'ajax_remove_user']);
         add_action('wp_ajax_pierre_admin_test_notification', [$this, 'ajax_test_notification']);
         add_action('wp_ajax_pierre_admin_save_settings', [$this, 'ajax_save_settings']);
+        
+        // Pierre handles project management AJAX! 🪨
+        add_action('wp_ajax_pierre_start_surveillance', [$this, 'ajax_start_surveillance']);
+        add_action('wp_ajax_pierre_stop_surveillance', [$this, 'ajax_stop_surveillance']);
+        add_action('wp_ajax_pierre_test_surveillance', [$this, 'ajax_test_surveillance']);
+        add_action('wp_ajax_pierre_add_project', [$this, 'ajax_add_project']);
+        add_action('wp_ajax_pierre_remove_project', [$this, 'ajax_remove_project']);
+        
+        // Pierre handles settings AJAX! 🪨
+        add_action('wp_ajax_pierre_flush_cache', [$this, 'ajax_flush_cache']);
+        add_action('wp_ajax_pierre_reset_settings', [$this, 'ajax_reset_settings']);
+        add_action('wp_ajax_pierre_clear_data', [$this, 'ajax_clear_data']);
     }
     
     /**
@@ -832,6 +844,207 @@ class AdminController {
         }
         
         wp_send_json_success(['message' => 'Pierre saved his settings! 🪨']);
+    }
+    
+    /**
+     * Pierre handles AJAX start surveillance! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_start_surveillance(): void {
+        // Pierre checks nonce! 🪨
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+            wp_die('Pierre says: Invalid nonce! 😢');
+        }
+        
+        // Pierre checks permissions! 🪨
+        if (!current_user_can('wpupdates_manage_projects')) {
+            wp_die('Pierre says: You don\'t have permission! 😢');
+        }
+        
+        $result = $this->project_watcher->start_surveillance();
+        wp_send_json_success(['message' => 'Pierre started surveillance! 🪨', 'result' => $result]);
+    }
+    
+    /**
+     * Pierre handles AJAX stop surveillance! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_stop_surveillance(): void {
+        // Pierre checks nonce! 🪨
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+            wp_die('Pierre says: Invalid nonce! 😢');
+        }
+        
+        // Pierre checks permissions! 🪨
+        if (!current_user_can('wpupdates_manage_projects')) {
+            wp_die('Pierre says: You don\'t have permission! 😢');
+        }
+        
+        $result = $this->project_watcher->stop_surveillance();
+        wp_send_json_success(['message' => 'Pierre stopped surveillance! 🪨', 'result' => $result]);
+    }
+    
+    /**
+     * Pierre handles AJAX test surveillance! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_test_surveillance(): void {
+        // Pierre checks nonce! 🪨
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+            wp_die('Pierre says: Invalid nonce! 😢');
+        }
+        
+        // Pierre checks permissions! 🪨
+        if (!current_user_can('wpupdates_manage_projects')) {
+            wp_die('Pierre says: You don\'t have permission! 😢');
+        }
+        
+        $result = $this->project_watcher->test_surveillance();
+        wp_send_json_success(['message' => 'Pierre tested surveillance! 🪨', 'result' => $result]);
+    }
+    
+    /**
+     * Pierre handles AJAX add project! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_add_project(): void {
+        // Pierre checks nonce! 🪨
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+            wp_die('Pierre says: Invalid nonce! 😢');
+        }
+        
+        // Pierre checks permissions! 🪨
+        if (!current_user_can('wpupdates_manage_projects')) {
+            wp_die('Pierre says: You don\'t have permission! 😢');
+        }
+        
+        $project_slug = sanitize_key($_POST['project_slug'] ?? '');
+        $locale_code = sanitize_key($_POST['locale_code'] ?? '');
+        
+        if (empty($project_slug) || empty($locale_code)) {
+            wp_send_json_error(['message' => 'Pierre says: Project slug and locale code are required! 😢']);
+            return;
+        }
+        
+        $result = $this->project_watcher->add_project_to_watch($project_slug, $locale_code);
+        
+        if ($result) {
+            wp_send_json_success(['message' => 'Pierre added project to watch list! 🪨', 'result' => $result]);
+        } else {
+            wp_send_json_error(['message' => 'Pierre says: Failed to add project! 😢']);
+        }
+    }
+    
+    /**
+     * Pierre handles AJAX remove project! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_remove_project(): void {
+        // Pierre checks nonce! 🪨
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+            wp_die('Pierre says: Invalid nonce! 😢');
+        }
+        
+        // Pierre checks permissions! 🪨
+        if (!current_user_can('wpupdates_manage_projects')) {
+            wp_die('Pierre says: You don\'t have permission! 😢');
+        }
+        
+        $project_slug = sanitize_key($_POST['project_slug'] ?? '');
+        $locale_code = sanitize_key($_POST['locale_code'] ?? '');
+        
+        if (empty($project_slug) || empty($locale_code)) {
+            wp_send_json_error(['message' => 'Pierre says: Project slug and locale code are required! 😢']);
+            return;
+        }
+        
+        $result = $this->project_watcher->remove_project_from_watch($project_slug, $locale_code);
+        
+        if ($result) {
+            wp_send_json_success(['message' => 'Pierre removed project from watch list! 🪨', 'result' => $result]);
+        } else {
+            wp_send_json_error(['message' => 'Pierre says: Failed to remove project! 😢']);
+        }
+    }
+    
+    /**
+     * Pierre handles AJAX flush cache! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_flush_cache(): void {
+        // Pierre checks nonce! 🪨
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+            wp_die('Pierre says: Invalid nonce! 😢');
+        }
+        
+        // Pierre checks permissions! 🪨
+        if (!current_user_can('wpupdates_manage_settings')) {
+            wp_die('Pierre says: You don\'t have permission! 😢');
+        }
+        
+        // Pierre flushes his cache! 🪨
+        $this->project_watcher->flush_cache();
+        
+        wp_send_json_success(['message' => 'Pierre flushed his cache! 🪨']);
+    }
+    
+    /**
+     * Pierre handles AJAX reset settings! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_reset_settings(): void {
+        // Pierre checks nonce! 🪨
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+            wp_die('Pierre says: Invalid nonce! 😢');
+        }
+        
+        // Pierre checks permissions! 🪨
+        if (!current_user_can('wpupdates_manage_settings')) {
+            wp_die('Pierre says: You don\'t have permission! 😢');
+        }
+        
+        // Pierre resets his settings! 🪨
+        delete_option('pierre_settings');
+        
+        wp_send_json_success(['message' => 'Pierre reset his settings! 🪨']);
+    }
+    
+    /**
+     * Pierre handles AJAX clear data! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_clear_data(): void {
+        // Pierre checks nonce! 🪨
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+            wp_die('Pierre says: Invalid nonce! 😢');
+        }
+        
+        // Pierre checks permissions! 🪨
+        if (!current_user_can('wpupdates_manage_settings')) {
+            wp_die('Pierre says: You don\'t have permission! 😢');
+        }
+        
+        // Pierre clears his data! 🪨
+        $this->project_watcher->clear_all_data();
+        $this->user_project_link->clear_all_data();
+        
+        wp_send_json_success(['message' => 'Pierre cleared all his data! 🪨']);
     }
     
     /**

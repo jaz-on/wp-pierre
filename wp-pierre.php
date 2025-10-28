@@ -68,6 +68,16 @@ register_deactivation_hook(__FILE__, function() {
 });
 
 // Pierre's uninstall hook - he removes everything when asked! 🪨
-register_uninstall_hook(__FILE__, function() {
-    pierre()->uninstall();
-});
+register_uninstall_hook(__FILE__, 'pierre_uninstall_hook');
+
+/**
+ * Pierre's uninstall hook function - he removes everything! 🪨
+ * 
+ * @since 1.0.0
+ * @return void
+ */
+function pierre_uninstall_hook(): void {
+    if (function_exists('pierre')) {
+        pierre()->uninstall();
+    }
+}

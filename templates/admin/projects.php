@@ -16,13 +16,13 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
 
 <div class="wrap">
     <div class="pierre-admin-header">
-        <h1>Pierre Projects 🪨</h1>
-        <p>Manage Translation Projects & Surveillance</p>
+        <h1><?php echo esc_html__('Pierre Projects', 'wp-pierre'); ?> 🪨</h1>
+        <p><?php echo esc_html__('Manage Translation Projects & Surveillance', 'wp-pierre'); ?></p>
     </div>
 
     <?php if (isset($data['stats']) && !empty($data['stats'])): ?>
     <div class="pierre-admin-stats">
-        <h2>Project Statistics</h2>
+        <h2><?php echo esc_html__('Project Statistics', 'wp-pierre'); ?></h2>
         <div class="pierre-stats-grid">
             <?php foreach ($data['stats'] as $stat): ?>
             <div class="pierre-stat-box">
@@ -36,15 +36,15 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
 
     <div class="pierre-admin-cards">
         <div class="pierre-admin-card">
-            <h2>Surveillance Status 🪨</h2>
+            <h2><?php echo esc_html__('Surveillance Status', 'wp-pierre'); ?> 🪨</h2>
             <?php if (isset($data['surveillance_status'])): ?>
             <div class="pierre-surveillance-status">
                 <div class="pierre-status-indicator <?php echo $data['surveillance_status']['active'] ? 'active' : 'inactive'; ?>">
-                    <?php echo $data['surveillance_status']['active'] ? '🟢 Active' : '🔴 Inactive'; ?>
+                    <?php echo $data['surveillance_status']['active'] ? esc_html__('🟢 Active', 'wp-pierre') : esc_html__('🔴 Inactive', 'wp-pierre'); ?>
                 </div>
-                <p><strong>Message:</strong> <?php echo esc_html($data['surveillance_status']['message'] ?? 'No status message'); ?></p>
+                <p><strong><?php echo esc_html__('Message:', 'wp-pierre'); ?></strong> <?php echo esc_html($data['surveillance_status']['message'] ?? esc_html__('No status message', 'wp-pierre')); ?></p>
                 <?php if (isset($data['surveillance_status']['next_run'])): ?>
-                <p><strong>Next Run:</strong> <?php echo esc_html($data['surveillance_status']['next_run']); ?></p>
+                <p><strong><?php echo esc_html__('Next Run:', 'wp-pierre'); ?></strong> <?php echo esc_html($data['surveillance_status']['next_run']); ?></p>
                 <?php endif; ?>
             </div>
             <?php endif; ?>
@@ -63,15 +63,15 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
         </div>
 
         <div class="pierre-admin-card">
-            <h2>Watched Projects 🪨</h2>
+            <h2><?php echo esc_html__('Watched Projects', 'wp-pierre'); ?> 🪨</h2>
             <?php if (isset($data['watched_projects']) && !empty($data['watched_projects'])): ?>
             <div class="pierre-projects-list">
                 <?php foreach ($data['watched_projects'] as $project): ?>
                 <div class="pierre-project-item">
                     <div class="pierre-project-info">
-                        <strong><?php echo esc_html($project['project_slug'] ?? 'Unknown Project'); ?></strong>
+                        <strong><?php echo esc_html($project['project_slug'] ?? esc_html__('Unknown Project', 'wp-pierre')); ?></strong>
                         <span class="pierre-project-meta">
-                            (<?php echo esc_html($project['locale_code'] ?? 'Unknown Locale'); ?>)
+                            (<?php echo esc_html($project['locale_code'] ?? esc_html__('Unknown Locale', 'wp-pierre')); ?>)
                         </span>
                     </div>
                     <div class="pierre-project-actions">

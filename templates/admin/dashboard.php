@@ -16,13 +16,13 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
 
 <div class="wrap">
     <div class="pierre-admin-header">
-        <h1>Pierre Dashboard 🪨</h1>
-        <p>WordPress Translation Monitor - Surveillance & Team Management</p>
+        <h1><?php echo esc_html__('Pierre Dashboard', 'wp-pierre'); ?> 🪨</h1>
+        <p><?php echo esc_html__('WordPress Translation Monitor - Surveillance & Team Management', 'wp-pierre'); ?></p>
     </div>
 
     <?php if (isset($data['stats']) && !empty($data['stats'])): ?>
     <div class="pierre-admin-stats">
-        <h2>Pierre's Statistics</h2>
+        <h2><?php echo esc_html__('Pierre\'s Statistics', 'wp-pierre'); ?></h2>
         <div class="pierre-stats-grid">
             <?php foreach ($data['stats'] as $stat): ?>
             <div class="pierre-stat-box">
@@ -36,62 +36,62 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
 
     <div class="pierre-admin-cards">
         <div class="pierre-admin-card">
-            <h2>Surveillance Status 🪨</h2>
+            <h2><?php echo esc_html__('Surveillance Status', 'wp-pierre'); ?> 🪨</h2>
             <?php if (isset($data['surveillance_status'])): ?>
             <div class="pierre-status-info">
-                <p><strong>Status:</strong> <?php echo esc_html($data['surveillance_status']['active'] ? 'Active' : 'Inactive'); ?></p>
-                <p><strong>Message:</strong> <?php echo esc_html($data['surveillance_status']['message'] ?? 'No status message'); ?></p>
+                <p><strong><?php echo esc_html__('Status:', 'wp-pierre'); ?></strong> <?php echo esc_html($data['surveillance_status']['active'] ? esc_html__('Active', 'wp-pierre') : esc_html__('Inactive', 'wp-pierre')); ?></p>
+                <p><strong><?php echo esc_html__('Message:', 'wp-pierre'); ?></strong> <?php echo esc_html($data['surveillance_status']['message'] ?? esc_html__('No status message', 'wp-pierre')); ?></p>
                 <?php if (isset($data['surveillance_status']['next_run'])): ?>
-                <p><strong>Next Run:</strong> <?php echo esc_html($data['surveillance_status']['next_run']); ?></p>
+                <p><strong><?php echo esc_html__('Next Run:', 'wp-pierre'); ?></strong> <?php echo esc_html($data['surveillance_status']['next_run']); ?></p>
                 <?php endif; ?>
             </div>
             <?php endif; ?>
         </div>
 
         <div class="pierre-admin-card">
-            <h2>Notification System 🪨</h2>
+            <h2><?php echo esc_html__('Notification System', 'wp-pierre'); ?> 🪨</h2>
             <?php if (isset($data['notifier_status'])): ?>
             <div class="pierre-status-info">
-                <p><strong>Ready:</strong> <?php echo esc_html($data['notifier_status']['ready'] ? 'Yes' : 'No'); ?></p>
-                <p><strong>Status:</strong> <?php echo esc_html($data['notifier_status']['message'] ?? 'No status message'); ?></p>
+                <p><strong><?php echo esc_html__('Ready:', 'wp-pierre'); ?></strong> <?php echo esc_html($data['notifier_status']['ready'] ? esc_html__('Yes', 'wp-pierre') : esc_html__('No', 'wp-pierre')); ?></p>
+                <p><strong><?php echo esc_html__('Status:', 'wp-pierre'); ?></strong> <?php echo esc_html($data['notifier_status']['message'] ?? esc_html__('No status message', 'wp-pierre')); ?></p>
             </div>
             <?php endif; ?>
         </div>
 
         <div class="pierre-admin-card">
-            <h2>Your Assignments 🪨</h2>
+            <h2><?php echo esc_html__('Your Assignments', 'wp-pierre'); ?> 🪨</h2>
             <?php if (isset($data['user_assignments']) && !empty($data['user_assignments'])): ?>
             <div class="pierre-assignments-list">
                 <?php foreach ($data['user_assignments'] as $assignment): ?>
                 <div class="pierre-assignment-item">
-                    <strong><?php echo esc_html($assignment['project_name'] ?? 'Unknown Project'); ?></strong>
+                    <strong><?php echo esc_html($assignment['project_name'] ?? esc_html__('Unknown Project', 'wp-pierre')); ?></strong>
                     <span class="pierre-assignment-meta">
-                        (<?php echo esc_html($assignment['locale_code'] ?? 'Unknown Locale'); ?> - 
-                        <?php echo esc_html($assignment['role'] ?? 'Unknown Role'); ?>)
+                        (<?php echo esc_html($assignment['locale_code'] ?? esc_html__('Unknown Locale', 'wp-pierre')); ?> - 
+                        <?php echo esc_html($assignment['role'] ?? esc_html__('Unknown Role', 'wp-pierre')); ?>)
                     </span>
                 </div>
                 <?php endforeach; ?>
             </div>
             <?php else: ?>
-            <p>Pierre says: You don't have any project assignments yet! 😢</p>
+            <p><?php echo esc_html__('Pierre says: You don\'t have any project assignments yet!', 'wp-pierre'); ?> 😢</p>
             <?php endif; ?>
         </div>
 
         <div class="pierre-admin-card">
-            <h2>Watched Projects 🪨</h2>
+            <h2><?php echo esc_html__('Watched Projects', 'wp-pierre'); ?> 🪨</h2>
             <?php if (isset($data['watched_projects']) && !empty($data['watched_projects'])): ?>
             <div class="pierre-projects-list">
                 <?php foreach ($data['watched_projects'] as $project): ?>
                 <div class="pierre-project-item">
-                    <strong><?php echo esc_html($project['project_slug'] ?? 'Unknown Project'); ?></strong>
+                    <strong><?php echo esc_html($project['project_slug'] ?? esc_html__('Unknown Project', 'wp-pierre')); ?></strong>
                     <span class="pierre-project-meta">
-                        (<?php echo esc_html($project['locale_code'] ?? 'Unknown Locale'); ?>)
+                        (<?php echo esc_html($project['locale_code'] ?? esc_html__('Unknown Locale', 'wp-pierre')); ?>)
                     </span>
                 </div>
                 <?php endforeach; ?>
             </div>
             <?php else: ?>
-            <p>Pierre says: No projects are being watched yet! 😢</p>
+            <p><?php echo esc_html__('Pierre says: No projects are being watched yet!', 'wp-pierre'); ?> 😢</p>
             <?php endif; ?>
         </div>
     </div>

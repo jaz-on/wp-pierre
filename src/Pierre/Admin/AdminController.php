@@ -269,7 +269,7 @@ class AdminController {
     public function render_dashboard_page(): void {
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_view_dashboard')) {
-            wp_die('Pierre says: You don\'t have permission to view this page! 😢');
+            wp_die(__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre gets his dashboard data! 🪨
@@ -288,7 +288,7 @@ class AdminController {
     public function render_teams_page(): void {
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_manage_teams')) {
-            wp_die('Pierre says: You don\'t have permission to view this page! 😢');
+            wp_die(__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre gets his teams data! 🪨
@@ -307,7 +307,7 @@ class AdminController {
     public function render_projects_page(): void {
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_manage_projects')) {
-            wp_die('Pierre says: You don\'t have permission to view this page! 😢');
+            wp_die(__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre gets his projects data! 🪨
@@ -326,7 +326,7 @@ class AdminController {
     public function render_settings_page(): void {
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_manage_settings')) {
-            wp_die('Pierre says: You don\'t have permission to view this page! 😢');
+            wp_die(__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre gets his settings data! 🪨
@@ -345,7 +345,7 @@ class AdminController {
     public function render_reports_page(): void {
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_view_reports')) {
-            wp_die('Pierre says: You don\'t have permission to view this page! 😢');
+            wp_die(__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre gets his reports data! 🪨
@@ -712,12 +712,12 @@ class AdminController {
     public function ajax_get_admin_stats(): void {
         // Pierre checks nonce! 🪨
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_admin_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_view_dashboard')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
         $stats = $this->get_admin_stats();
@@ -733,12 +733,12 @@ class AdminController {
     public function ajax_assign_user(): void {
         // Pierre checks nonce! 🪨
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_admin_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_assign_projects')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
         $user_id = absint($_POST['user_id'] ?? 0);
@@ -769,12 +769,12 @@ class AdminController {
     public function ajax_remove_user(): void {
         // Pierre checks nonce! 🪨
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_admin_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_assign_projects')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
         $user_id = absint($_POST['user_id'] ?? 0);
@@ -801,12 +801,12 @@ class AdminController {
     public function ajax_test_notification(): void {
         // Pierre checks nonce! 🪨
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_admin_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_manage_notifications')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
         $result = $this->slack_notifier->test_notification();
@@ -822,12 +822,12 @@ class AdminController {
     public function ajax_save_settings(): void {
         // Pierre checks nonce! 🪨
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_admin_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_manage_settings')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
         $settings = [
@@ -855,12 +855,12 @@ class AdminController {
     public function ajax_start_surveillance(): void {
         // Pierre checks nonce! 🪨
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_manage_projects')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
         $result = $this->project_watcher->start_surveillance();
@@ -876,12 +876,12 @@ class AdminController {
     public function ajax_stop_surveillance(): void {
         // Pierre checks nonce! 🪨
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_manage_projects')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
         $result = $this->project_watcher->stop_surveillance();
@@ -897,12 +897,12 @@ class AdminController {
     public function ajax_test_surveillance(): void {
         // Pierre checks nonce! 🪨
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_manage_projects')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
         $result = $this->project_watcher->test_surveillance();
@@ -918,19 +918,19 @@ class AdminController {
     public function ajax_add_project(): void {
         // Pierre checks nonce! 🪨
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_manage_projects')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
         $project_slug = sanitize_key($_POST['project_slug'] ?? '');
         $locale_code = sanitize_key($_POST['locale_code'] ?? '');
         
         if (empty($project_slug) || empty($locale_code)) {
-            wp_send_json_error(['message' => 'Pierre says: Project slug and locale code are required! 😢']);
+            wp_send_json_error(['message' => __('Pierre says: Project slug and locale code are required!', 'wp-pierre') . ' 😢']);
             return;
         }
         
@@ -939,7 +939,7 @@ class AdminController {
         if ($result) {
             wp_send_json_success(['message' => 'Pierre added project to watch list! 🪨', 'result' => $result]);
         } else {
-            wp_send_json_error(['message' => 'Pierre says: Failed to add project! 😢']);
+            wp_send_json_error(['message' => __('Pierre says: Failed to add project!', 'wp-pierre') . ' 😢']);
         }
     }
     
@@ -952,19 +952,19 @@ class AdminController {
     public function ajax_remove_project(): void {
         // Pierre checks nonce! 🪨
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_manage_projects')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
         $project_slug = sanitize_key($_POST['project_slug'] ?? '');
         $locale_code = sanitize_key($_POST['locale_code'] ?? '');
         
         if (empty($project_slug) || empty($locale_code)) {
-            wp_send_json_error(['message' => 'Pierre says: Project slug and locale code are required! 😢']);
+            wp_send_json_error(['message' => __('Pierre says: Project slug and locale code are required!', 'wp-pierre') . ' 😢']);
             return;
         }
         
@@ -973,7 +973,7 @@ class AdminController {
         if ($result) {
             wp_send_json_success(['message' => 'Pierre removed project from watch list! 🪨', 'result' => $result]);
         } else {
-            wp_send_json_error(['message' => 'Pierre says: Failed to remove project! 😢']);
+            wp_send_json_error(['message' => __('Pierre says: Failed to remove project!', 'wp-pierre') . ' 😢']);
         }
     }
     
@@ -986,12 +986,12 @@ class AdminController {
     public function ajax_flush_cache(): void {
         // Pierre checks nonce! 🪨
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_manage_settings')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre flushes his cache! 🪨
@@ -1009,12 +1009,12 @@ class AdminController {
     public function ajax_reset_settings(): void {
         // Pierre checks nonce! 🪨
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_manage_settings')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre resets his settings! 🪨
@@ -1032,12 +1032,12 @@ class AdminController {
     public function ajax_clear_data(): void {
         // Pierre checks nonce! 🪨
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('wpupdates_manage_settings')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
         // Pierre clears his data! 🪨

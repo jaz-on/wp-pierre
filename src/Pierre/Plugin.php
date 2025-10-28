@@ -322,7 +322,7 @@ class Plugin {
     private function create_database_tables(): void {
         global $wpdb;
         
-        $table_name = $wpdb->prefix . 'wpupdates_user_projects';
+        $table_name = $wpdb->prefix . 'pierre_user_projects';
         
         $charset_collate = $wpdb->get_charset_collate();
         
@@ -389,7 +389,7 @@ class Plugin {
     private function remove_database_tables(): void {
         global $wpdb;
         
-        $table_name = $wpdb->prefix . 'wpupdates_user_projects';
+        $table_name = $wpdb->prefix . 'pierre_user_projects';
         $wpdb->query("DROP TABLE IF EXISTS {$table_name}");
         
         error_log('Pierre removed his database tables! 🪨');

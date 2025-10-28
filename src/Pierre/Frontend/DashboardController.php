@@ -432,7 +432,7 @@ class DashboardController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_view_dashboard')) {
+        if (!current_user_can('pierre_view_dashboard')) {
             wp_die('Pierre says: You don\'t have permission! 😢');
         }
         
@@ -453,7 +453,7 @@ class DashboardController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_view_dashboard')) {
+        if (!current_user_can('pierre_view_dashboard')) {
             wp_die('Pierre says: You don\'t have permission! 😢');
         }
         
@@ -474,7 +474,7 @@ class DashboardController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_notifications')) {
+        if (!current_user_can('pierre_manage_notifications')) {
             wp_die('Pierre says: You don\'t have permission! 😢');
         }
         
@@ -489,7 +489,7 @@ class DashboardController {
      * @return bool True if user can view, false otherwise
      */
     private function check_view_permissions(): bool {
-        return current_user_can('wpupdates_view_dashboard');
+        return current_user_can('pierre_view_dashboard');
     }
     
     /**

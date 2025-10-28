@@ -164,7 +164,7 @@ class AdminController {
         add_menu_page(
             'Pierre Dashboard 🪨',
             'Pierre 🪨',
-            'wpupdates_view_dashboard',
+            'pierre_view_dashboard',
             'pierre-dashboard',
             [$this, 'render_dashboard_page'],
             'dashicons-translation',
@@ -176,7 +176,7 @@ class AdminController {
             'pierre-dashboard',
             'Pierre Dashboard',
             'Dashboard',
-            'wpupdates_view_dashboard',
+            'pierre_view_dashboard',
             'pierre-dashboard',
             [$this, 'render_dashboard_page']
         );
@@ -186,7 +186,7 @@ class AdminController {
             'pierre-dashboard',
             'Pierre Teams',
             'Teams',
-            'wpupdates_manage_teams',
+            'pierre_manage_teams',
             'pierre-teams',
             [$this, 'render_teams_page']
         );
@@ -196,7 +196,7 @@ class AdminController {
             'pierre-dashboard',
             'Pierre Projects',
             'Projects',
-            'wpupdates_manage_projects',
+            'pierre_manage_projects',
             'pierre-projects',
             [$this, 'render_projects_page']
         );
@@ -206,7 +206,7 @@ class AdminController {
             'pierre-dashboard',
             'Pierre Settings',
             'Settings',
-            'wpupdates_manage_settings',
+            'pierre_manage_settings',
             'pierre-settings',
             [$this, 'render_settings_page']
         );
@@ -216,7 +216,7 @@ class AdminController {
             'pierre-dashboard',
             'Pierre Reports',
             'Reports',
-            'wpupdates_view_reports',
+            'pierre_view_reports',
             'pierre-reports',
             [$this, 'render_reports_page']
         );
@@ -240,7 +240,7 @@ class AdminController {
      * @return void
      */
     public function add_admin_bar_menu(\WP_Admin_Bar $wp_admin_bar): void {
-        if (!current_user_can('wpupdates_view_dashboard')) {
+        if (!current_user_can('pierre_view_dashboard')) {
             return;
         }
         
@@ -340,7 +340,7 @@ class AdminController {
      */
     public function render_dashboard_page(): void {
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_view_dashboard')) {
+        if (!current_user_can('pierre_view_dashboard')) {
             wp_die(__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
@@ -359,7 +359,7 @@ class AdminController {
      */
     public function render_teams_page(): void {
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_teams')) {
+        if (!current_user_can('pierre_manage_teams')) {
             wp_die(__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
@@ -378,7 +378,7 @@ class AdminController {
      */
     public function render_projects_page(): void {
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_projects')) {
+        if (!current_user_can('pierre_manage_projects')) {
             wp_die(__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
@@ -397,7 +397,7 @@ class AdminController {
      */
     public function render_settings_page(): void {
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_settings')) {
+        if (!current_user_can('pierre_manage_settings')) {
             wp_die(__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
@@ -416,7 +416,7 @@ class AdminController {
      */
     public function render_reports_page(): void {
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_view_reports')) {
+        if (!current_user_can('pierre_view_reports')) {
             wp_die(__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
@@ -804,7 +804,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_view_dashboard')) {
+        if (!current_user_can('pierre_view_dashboard')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -825,7 +825,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_assign_projects')) {
+        if (!current_user_can('pierre_assign_projects')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -861,7 +861,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_assign_projects')) {
+        if (!current_user_can('pierre_assign_projects')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -893,7 +893,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_notifications')) {
+        if (!current_user_can('pierre_manage_notifications')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -914,7 +914,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_settings')) {
+        if (!current_user_can('pierre_manage_settings')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -947,7 +947,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_projects')) {
+        if (!current_user_can('pierre_manage_projects')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -968,7 +968,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_projects')) {
+        if (!current_user_can('pierre_manage_projects')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -989,7 +989,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_projects')) {
+        if (!current_user_can('pierre_manage_projects')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -1010,7 +1010,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_projects')) {
+        if (!current_user_can('pierre_manage_projects')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -1044,7 +1044,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_projects')) {
+        if (!current_user_can('pierre_manage_projects')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -1078,7 +1078,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_settings')) {
+        if (!current_user_can('pierre_manage_settings')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -1101,7 +1101,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_settings')) {
+        if (!current_user_can('pierre_manage_settings')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -1124,7 +1124,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_settings')) {
+        if (!current_user_can('pierre_manage_settings')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -1148,7 +1148,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_reports')) {
+        if (!current_user_can('pierre_manage_reports')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -1185,7 +1185,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_reports')) {
+        if (!current_user_can('pierre_manage_reports')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
@@ -1223,7 +1223,7 @@ class AdminController {
         }
         
         // Pierre checks permissions! 🪨
-        if (!current_user_can('wpupdates_manage_reports')) {
+        if (!current_user_can('pierre_manage_reports')) {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         

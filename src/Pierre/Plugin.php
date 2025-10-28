@@ -218,9 +218,9 @@ class Plugin {
      */
     private function init_components(): void {
         // Pierre creates his surveillance components! 🪨
+        $this->slack_notifier = new SlackNotifier();
         $this->cron_manager = new CronManager();
         $this->project_watcher = new ProjectWatcher();
-        $this->slack_notifier = new SlackNotifier();
         
         // Pierre creates his team management components! 🪨
         $this->role_manager = new RoleManager();

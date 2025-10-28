@@ -15,6 +15,9 @@ use Pierre\Teams\UserProjectLink;
 use Pierre\Surveillance\ProjectWatcher;
 use Pierre\Notifications\SlackNotifier;
 use Pierre\Teams\RoleManager;
+use Pierre\Security\SecurityManager;
+use Pierre\Security\CSRFProtection;
+use Pierre\Security\SecurityAuditor;
 
 /**
  * Admin Controller class - Pierre's admin interface! 🪨
@@ -52,6 +55,27 @@ class AdminController {
     private RoleManager $role_manager;
     
     /**
+     * Pierre's security manager - he protects everything! 🪨
+     * 
+     * @var SecurityManager
+     */
+    private SecurityManager $security_manager;
+    
+    /**
+     * Pierre's CSRF protection - he prevents attacks! 🪨
+     * 
+     * @var CSRFProtection
+     */
+    private CSRFProtection $csrf_protection;
+    
+    /**
+     * Pierre's security auditor - he checks security! 🪨
+     * 
+     * @var SecurityAuditor
+     */
+    private SecurityAuditor $security_auditor;
+    
+    /**
      * Pierre's constructor - he prepares his admin interface! 🪨
      * 
      * @since 1.0.0
@@ -61,6 +85,9 @@ class AdminController {
         $this->project_watcher = pierre()->get_project_watcher();
         $this->slack_notifier = pierre()->get_slack_notifier();
         $this->role_manager = new RoleManager();
+        $this->security_manager = new SecurityManager();
+        $this->csrf_protection = new CSRFProtection();
+        $this->security_auditor = new SecurityAuditor();
     }
     
     /**
@@ -168,6 +195,16 @@ class AdminController {
             'pierre-reports',
             [$this, 'render_reports_page']
         );
+        
+        // Pierre's security submenu! 🪨
+        add_submenu_page(
+            'pierre-dashboard',
+            'Pierre Security',
+            'Security',
+            'manage_options',
+            'pierre-security',
+            [$this, 'render_security_page']
+        );
     }
     
     /**
@@ -263,6 +300,11 @@ class AdminController {
         add_action('wp_ajax_pierre_export_report', [$this, 'ajax_export_report']);
         add_action('wp_ajax_pierre_export_all_reports', [$this, 'ajax_export_all_reports']);
         add_action('wp_ajax_pierre_schedule_reports', [$this, 'ajax_schedule_reports']);
+        
+        // Pierre handles security AJAX! 🪨
+        add_action('wp_ajax_pierre_security_audit', [$this, 'ajax_security_audit']);
+        add_action('wp_ajax_pierre_security_logs', [$this, 'ajax_security_logs']);
+        add_action('wp_ajax_pierre_clear_security_logs', [$this, 'ajax_clear_security_logs']);
     }
     
     /**
@@ -358,6 +400,22 @@ class AdminController {
         
         // Pierre renders his template! 🪨
         $this->render_admin_template('reports', $reports_data);
+    }
+    
+    /**
+     * Pierre renders his security page! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function render_security_page(): void {
+        // Pierre checks permissions! 🪨
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
+        }
+        
+        // Pierre renders his security template! 🪨
+        $this->render_admin_template('security');
     }
     
     /**
@@ -1328,6 +1386,115 @@ class AdminController {
         $next_run = time() + $interval;
         
         return date('Y-m-d H:i:s', $next_run);
+    }
+    
+    /**
+     * Pierre performs security audit via AJAX! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_security_audit(): void {
+        try {
+            // Pierre validates nonce! 🪨
+            if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+                wp_send_json_error(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
+                return;
+            }
+            
+            // Pierre checks permissions! 🪨
+            if (!current_user_can('manage_options')) {
+                wp_send_json_error(__('Pierre says: Insufficient permissions!', 'wp-pierre') . ' 😢');
+                return;
+            }
+            
+            // Pierre performs comprehensive security audit! 🪨
+            $audit_results = $this->security_auditor->perform_comprehensive_audit();
+            
+            wp_send_json_success([
+                'message' => __('Pierre completed security audit!', 'wp-pierre') . ' 🪨',
+                'audit_results' => $audit_results
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log('Pierre encountered an error during security audit: ' . $e->getMessage() . ' 😢');
+            wp_send_json_error(__('Pierre says: Security audit failed!', 'wp-pierre') . ' 😢');
+        }
+    }
+    
+    /**
+     * Pierre gets security logs via AJAX! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_security_logs(): void {
+        try {
+            // Pierre validates nonce! 🪨
+            if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+                wp_send_json_error(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
+                return;
+            }
+            
+            // Pierre checks permissions! 🪨
+            if (!current_user_can('manage_options')) {
+                wp_send_json_error(__('Pierre says: Insufficient permissions!', 'wp-pierre') . ' 😢');
+                return;
+            }
+            
+            // Pierre gets security logs! 🪨
+            $limit = absint($_POST['limit'] ?? 100);
+            $event_type = sanitize_key($_POST['event_type'] ?? '');
+            
+            $security_logs = $this->csrf_protection->get_security_logs($limit, $event_type);
+            
+            wp_send_json_success([
+                'message' => __('Pierre retrieved security logs!', 'wp-pierre') . ' 🪨',
+                'security_logs' => $security_logs
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log('Pierre encountered an error retrieving security logs: ' . $e->getMessage() . ' 😢');
+            wp_send_json_error(__('Pierre says: Failed to retrieve security logs!', 'wp-pierre') . ' 😢');
+        }
+    }
+    
+    /**
+     * Pierre clears security logs via AJAX! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_clear_security_logs(): void {
+        try {
+            // Pierre validates nonce! 🪨
+            if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+                wp_send_json_error(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
+                return;
+            }
+            
+            // Pierre checks permissions! 🪨
+            if (!current_user_can('manage_options')) {
+                wp_send_json_error(__('Pierre says: Insufficient permissions!', 'wp-pierre') . ' 😢');
+                return;
+            }
+            
+            // Pierre clears security logs! 🪨
+            $event_type = sanitize_key($_POST['event_type'] ?? '');
+            $success = $this->csrf_protection->clear_security_logs($event_type);
+            
+            if ($success) {
+                wp_send_json_success([
+                    'message' => __('Pierre cleared security logs!', 'wp-pierre') . ' 🪨'
+                ]);
+            } else {
+                wp_send_json_error(__('Pierre says: Failed to clear security logs!', 'wp-pierre') . ' 😢');
+            }
+            
+        } catch (\Exception $e) {
+            error_log('Pierre encountered an error clearing security logs: ' . $e->getMessage() . ' 😢');
+            wp_send_json_error(__('Pierre says: Failed to clear security logs!', 'wp-pierre') . ' 😢');
+        }
     }
     
     /**

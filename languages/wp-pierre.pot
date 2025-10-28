@@ -1,555 +1,588 @@
-# Copyright (C) 2024 Jason Rouet
-# This file is distributed under the GPL v2 or later.
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Pierre WordPress Translation Monitor 1.0.0\n"
-"Report-Msgid-Bugs-To: https://github.com/jaz-on/wp-pierre/issues\n"
-"POT-Creation-Date: 2024-10-28 22:30+0000\n"
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-28 23:39+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: src/Pierre/Surveillance/CronManager.php:125
-msgid "Pierre's Surveillance Check"
+#: src/Pierre/Security/CSRFProtection.php:59
+msgid "Pierre says: Invalid nonce! CSRF attack detected!"
 msgstr ""
 
-#: src/Pierre/Surveillance/CronManager.php:131
-msgid "Pierre's Daily Cleanup"
+#: src/Pierre/Security/CSRFProtection.php:70
+msgid "Pierre says: Invalid referrer! CSRF attack detected!"
 msgstr ""
 
-#: templates/admin/dashboard.php:19
-msgid "Pierre Dashboard"
+#: src/Pierre/Security/CSRFProtection.php:82
+msgid "Pierre says: Rate limit exceeded! Too many requests!"
 msgstr ""
 
-#: templates/admin/dashboard.php:20
-msgid "Translation Monitoring Dashboard"
+#: src/Pierre/Security/CSRFProtection.php:94
+msgid "Pierre says: Insufficient permissions!"
 msgstr ""
 
-#: templates/admin/dashboard.php:25
-msgid "Overview Statistics"
+#: src/Pierre/Security/CSRFProtection.php:110
+msgid "Pierre says: CSRF protection passed!"
 msgstr ""
 
-#: templates/admin/dashboard.php:39
-msgid "Recent Activity"
+#: src/Pierre/Security/CSRFProtection.php:118
+msgid "Pierre says: CSRF validation error!"
 msgstr ""
 
-#: templates/admin/dashboard.php:42
-msgid "Pierre says: Activity chart coming soon!"
+#: src/Pierre/Security/CSRFProtection.php:284
+msgid "Pierre says: Invalid token format!"
 msgstr ""
 
-#: templates/admin/dashboard.php:72
-msgid "Translation Progress"
+#: src/Pierre/Security/CSRFProtection.php:292
+msgid "Pierre says: Token action mismatch!"
 msgstr ""
 
-#: templates/admin/dashboard.php:119
-msgid "Recent Notifications"
+#: src/Pierre/Security/CSRFProtection.php:300
+msgid "Pierre says: Token expired!"
 msgstr ""
 
-#: templates/admin/projects.php:19
-msgid "Pierre Projects"
+#: src/Pierre/Security/CSRFProtection.php:311
+msgid "Pierre says: Token not found or expired!"
 msgstr ""
 
-#: templates/admin/projects.php:20
-msgid "Translation Project Management"
+#: src/Pierre/Security/CSRFProtection.php:320
+msgid "Pierre says: Token is valid!"
 msgstr ""
 
-#: templates/admin/projects.php:25
-msgid "Project Statistics"
+#: src/Pierre/Security/CSRFProtection.php:328
+msgid "Pierre says: Token validation error!"
 msgstr ""
 
-#: templates/admin/projects.php:39
-msgid "Add New Project"
+#: src/Pierre/Security/SecurityAuditor.php:95
+#, php-format
+msgid "WordPress %s is up to date!"
 msgstr ""
 
-#: templates/admin/projects.php:40
-msgid "Monitor a new translation project"
+#: src/Pierre/Security/SecurityAuditor.php:96
+#: src/Pierre/Security/SecurityManager.php:546
+#, php-format
+msgid "WordPress update available! Current: %s, Latest: %s"
 msgstr ""
 
-#: templates/admin/projects.php:44
-msgid "Project Slug"
+#: src/Pierre/Security/SecurityAuditor.php:107
+msgid "Debug mode is enabled! Disable in production."
 msgstr ""
 
-#: templates/admin/projects.php:45
-msgid "e.g., wp, woocommerce"
+#: src/Pierre/Security/SecurityAuditor.php:108
+msgid "Debug mode is disabled!"
 msgstr ""
 
-#: templates/admin/projects.php:48
-msgid "Locale Code"
+#: src/Pierre/Security/SecurityAuditor.php:119
+msgid "File editing is disabled!"
 msgstr ""
 
-#: templates/admin/projects.php:49
-msgid "e.g., fr, es, de"
+#: src/Pierre/Security/SecurityAuditor.php:120
+msgid "File editing is enabled! Consider disabling."
 msgstr ""
 
-#: templates/admin/projects.php:52
-msgid "Add Project"
+#: src/Pierre/Security/SecurityAuditor.php:152
+msgid "Plugin file permissions are secure!"
 msgstr ""
 
-#: templates/admin/projects.php:57
-msgid "Monitored Projects"
+#: src/Pierre/Security/SecurityAuditor.php:153
+msgid "Plugin file permissions are too permissive!"
 msgstr ""
 
-#: templates/admin/projects.php:58
-msgid "Projects currently under surveillance"
+#: src/Pierre/Security/SecurityAuditor.php:171
+msgid "Sensitive files found in plugin directory!"
 msgstr ""
 
-#: templates/admin/projects.php:72
-msgid "Project"
+#: src/Pierre/Security/SecurityAuditor.php:172
+msgid "No sensitive files found!"
 msgstr ""
 
-#: templates/admin/projects.php:73
-msgid "Locale"
+#: src/Pierre/Security/SecurityAuditor.php:193
+msgid "Plugin headers are complete!"
 msgstr ""
 
-#: templates/admin/projects.php:74
-msgid "Completion"
+#: src/Pierre/Security/SecurityAuditor.php:194
+msgid "Plugin headers are incomplete!"
 msgstr ""
 
-#: templates/admin/projects.php:75
-msgid "Status"
+#: src/Pierre/Security/SecurityAuditor.php:226
+msgid "Using default table prefix! Consider changing."
 msgstr ""
 
-#: templates/admin/projects.php:76
-msgid "Actions"
+#: src/Pierre/Security/SecurityAuditor.php:227
+msgid "Using custom table prefix!"
 msgstr ""
 
-#: templates/admin/projects.php:80
+#: src/Pierre/Security/SecurityAuditor.php:239
+msgid "Using root database user! Create dedicated user."
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:240
+msgid "Using dedicated database user!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:273
+msgid "Uploads directory is protected!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:274
+msgid "Uploads directory needs protection!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:288
+msgid "wp-config.php permissions are secure!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:289
+msgid "wp-config.php permissions are too permissive!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:319
+msgid "HTTPS is enabled!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:320
+msgid "HTTPS is not enabled! Enable SSL."
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:360
+msgid "Input validation class exists!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:361
+msgid "Input validation class missing!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:391
+msgid "Output sanitization class exists!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:392
+msgid "Output sanitization class missing!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:422
+msgid "Two-factor authentication is available!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:423
+msgid "Two-factor authentication not enabled!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:453
+msgid "Capability checks are implemented!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:454
+msgid "Capability checks need implementation!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:484
+msgid "Session cookies are secure!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:485
+msgid "Session cookies are not secure!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:515
+msgid "SSL/TLS is enabled!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:516
+msgid "SSL/TLS is not enabled!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:546
+msgid "Security logging is implemented!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:547
+msgid "Security logging needs implementation!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:587
+#, php-format
+msgid "%d/%d security headers found!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:626
+#, php-format
+msgid "Improve %s security (Score: %d%%)"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:645
+msgid "Update WordPress to latest version"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:646
+msgid "Disable debug mode in production"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:647
+msgid "Disable file editing"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:650
+msgid "Review plugin file permissions"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:651
+msgid "Remove sensitive files from plugin directory"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:652
+msgid "Complete plugin headers"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:655
+msgid "Change default table prefix"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:656
+msgid "Create dedicated database user"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:657
+msgid "Use prepared statements"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:660
+msgid "Enable HTTPS/SSL"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:661
+msgid "Configure security headers"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:662
+msgid "Use secure cookies"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:666
+msgid "Review security configuration"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:693
+msgid "GDPR compliance check passed!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:707
+msgid "OWASP Top 10 compliance check passed!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityAuditor.php:721
+msgid "WordPress coding standards compliance passed!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:70
+msgid "Pierre says: Input cannot be empty!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:102
+msgid "Pierre says: Unknown validation type!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:111
+msgid "Pierre says: Validation error occurred!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:130
+msgid "Pierre says: Invalid email address!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:137
+msgid "Pierre says: Email is valid!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:155
+msgid "Pierre says: Invalid URL!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:167
+msgid "Pierre says: URL protocol not allowed!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:174
+msgid "Pierre says: URL is valid!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:193
+msgid "Pierre says: Invalid integer!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:202
+#, php-format
+msgid "Pierre says: Value must be at least %d!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:210
+#, php-format
+msgid "Pierre says: Value must be at most %d!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:217
+msgid "Pierre says: Integer is valid!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:238
+#, php-format
+msgid "Pierre says: String too long! Maximum %d characters."
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:247
+msgid "Pierre says: String contains invalid characters!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:254
+msgid "Pierre says: String is valid!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:272
+msgid "Pierre says: Invalid key!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:279
+msgid "Pierre says: Key is valid!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:297
+msgid ""
+"Pierre says: Invalid slug! Only lowercase letters, numbers, hyphens, and "
+"underscores allowed."
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:304
+msgid "Pierre says: Slug is valid!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:323
+msgid "Pierre says: Invalid locale code! Use format like \"fr\" or \"fr_FR\"."
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:330
+msgid "Pierre says: Locale is valid!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:349
+#, php-format
+msgid "Pierre says: Invalid role! Allowed roles: %s"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:356
+msgid "Pierre says: Role is valid!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:375
+#, php-format
+msgid "Pierre says: Invalid project type! Allowed types: %s"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:382
+msgid "Pierre says: Project type is valid!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:403
+msgid "Pierre says: Script tags not allowed!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:410
+msgid "Pierre says: HTML is valid!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:428
+msgid "Pierre says: Invalid JSON format!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:437
+msgid "Pierre says: JSON is valid!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:545
+msgid "WordPress is up to date!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:566
+#, php-format
+msgid "PHP version %s is supported!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:567
+#, php-format
+msgid "PHP version %s is not supported! Required: %s"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:588
+msgid "File permissions are secure!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:589
+msgid "File permissions are too permissive!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:609
+msgid "Database queries use prepared statements!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:610
+msgid "Database queries may not be secure!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:628
+msgid "Input validation is implemented!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:629
+msgid "Input validation needs improvement!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:647
+msgid "Output sanitization is implemented!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:648
+msgid "Output sanitization needs improvement!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:666
+msgid "CSRF protection is implemented!"
+msgstr ""
+
+#: src/Pierre/Security/SecurityManager.php:667
+msgid "CSRF protection needs improvement!"
+msgstr ""
+
+#: templates/admin/security.php:32
+msgid "Pierre Security Center"
+msgstr ""
+
+#: templates/admin/security.php:38
+msgid "Security Manager"
+msgstr ""
+
+#: templates/admin/security.php:43 templates/admin/security.php:56
+#: templates/admin/security.php:69
 msgid "Active"
 msgstr ""
 
-#: templates/admin/projects.php:81
-msgid "Paused"
+#: templates/admin/security.php:44 templates/admin/security.php:57
+#: templates/admin/security.php:70
+msgid "Inactive"
 msgstr ""
 
-#: templates/admin/projects.php:85
-msgid "Start Surveillance"
+#: templates/admin/security.php:51
+msgid "CSRF Protection"
 msgstr ""
 
-#: templates/admin/projects.php:86
-msgid "Stop Surveillance"
+#: templates/admin/security.php:64
+msgid "Security Auditor"
 msgstr ""
 
-#: templates/admin/projects.php:87
-msgid "Test Surveillance"
+#: templates/admin/security.php:79
+msgid "Security Actions"
 msgstr ""
 
-#: templates/admin/projects.php:88
-msgid "Remove Project"
+#: templates/admin/security.php:83
+msgid "Run Security Audit"
 msgstr ""
 
-#: templates/admin/reports.php:19
-msgid "Pierre Reports"
+#: templates/admin/security.php:87
+msgid "View Security Logs"
 msgstr ""
 
-#: templates/admin/reports.php:20
-msgid "Translation Monitoring Reports & Analytics"
+#: templates/admin/security.php:91
+msgid "Clear Security Logs"
 msgstr ""
 
-#: templates/admin/reports.php:25
-msgid "Report Statistics"
+#: templates/admin/security.php:98
+msgid "Security Audit Results"
 msgstr ""
 
-#: templates/admin/reports.php:39
-msgid "Surveillance Activity"
+#: templates/admin/security.php:104
+msgid "Security Logs"
 msgstr ""
 
-#: templates/admin/reports.php:42
-msgid "Pierre says: Activity chart coming soon!"
+#: templates/admin/security.php:110
+msgid "Recent Security Events"
 msgstr ""
 
-#: templates/admin/reports.php:72
-msgid "Translation Progress"
+#: templates/admin/security.php:113
+msgid "No recent security events."
 msgstr ""
 
-#: templates/admin/reports.php:119
-msgid "Recent Notifications"
+#: templates/admin/security.php:118 templates/admin/security.php:362
+msgid "Timestamp"
 msgstr ""
 
-#: templates/admin/settings.php:19
-msgid "Pierre Settings"
+#: templates/admin/security.php:119 templates/admin/security.php:362
+msgid "Event Type"
 msgstr ""
 
-#: templates/admin/settings.php:20
-msgid "Configure Pierre's surveillance and notification settings"
+#: templates/admin/security.php:120 templates/admin/security.php:362
+msgid "User ID"
 msgstr ""
 
-#: templates/admin/settings.php:25
-msgid "Slack Configuration"
+#: templates/admin/security.php:121 templates/admin/security.php:362
+msgid "IP Address"
 msgstr ""
 
-#: templates/admin/settings.php:26
-msgid "Configure Slack webhook for notifications"
+#: templates/admin/security.php:122 templates/admin/security.php:362
+msgid "Details"
 msgstr ""
 
-#: templates/admin/settings.php:30
-msgid "Webhook URL"
+#: templates/admin/security.php:138 templates/admin/security.php:179
+#: templates/admin/security.php:370
+msgid "View Details"
 msgstr ""
 
-#: templates/admin/settings.php:31
-msgid "https://hooks.slack.com/services/..."
+#: templates/admin/security.php:151
+msgid "Audit History"
 msgstr ""
 
-#: templates/admin/settings.php:35
-msgid "Test Webhook"
+#: templates/admin/security.php:154
+msgid "No audit history available."
 msgstr ""
 
-#: templates/admin/settings.php:40
-msgid "Surveillance Settings"
+#: templates/admin/security.php:159
+msgid "Date"
 msgstr ""
 
-#: templates/admin/settings.php:41
-msgid "Configure surveillance intervals and limits"
+#: templates/admin/security.php:160
+msgid "Overall Score"
 msgstr ""
 
-#: templates/admin/settings.php:45
-msgid "Check Interval"
+#: templates/admin/security.php:161
+msgid "Critical Issues"
 msgstr ""
 
-#: templates/admin/settings.php:46
-msgid "How often Pierre checks for changes"
+#: templates/admin/security.php:162
+msgid "Warnings"
 msgstr ""
 
-#: templates/admin/settings.php:50
-msgid "5 minutes"
-msgstr ""
-
-#: templates/admin/settings.php:51
-msgid "15 minutes"
-msgstr ""
-
-#: templates/admin/settings.php:52
-msgid "30 minutes"
-msgstr ""
-
-#: templates/admin/settings.php:53
-msgid "1 hour"
-msgstr ""
-
-#: templates/admin/settings.php:54
-msgid "2 hours"
-msgstr ""
-
-#: templates/admin/settings.php:58
-msgid "Max Projects Per Check"
-msgstr ""
-
-#: templates/admin/settings.php:59
-msgid "Maximum number of projects to check in one batch"
-msgstr ""
-
-#: templates/admin/settings.php:63
-msgid "Notification Settings"
-msgstr ""
-
-#: templates/admin/settings.php:64
-msgid "Configure notification types and thresholds"
-msgstr ""
-
-#: templates/admin/settings.php:68
-msgid "Notification Types"
-msgstr ""
-
-#: templates/admin/settings.php:72
-msgid "New Strings"
-msgstr ""
-
-#: templates/admin/settings.php:73
-msgid "Notify when new strings are detected"
-msgstr ""
-
-#: templates/admin/settings.php:77
-msgid "Completion Updates"
-msgstr ""
-
-#: templates/admin/settings.php:78
-msgid "Notify when completion percentage changes"
-msgstr ""
-
-#: templates/admin/settings.php:82
-msgid "Needs Attention"
-msgstr ""
-
-#: templates/admin/settings.php:83
-msgid "Notify when strings need review"
-msgstr ""
-
-#: templates/admin/settings.php:87
-msgid "Errors"
-msgstr ""
-
-#: templates/admin/settings.php:88
-msgid "Notify when errors occur"
-msgstr ""
-
-#: templates/admin/settings.php:92
-msgid "Completion Threshold"
-msgstr ""
-
-#: templates/admin/settings.php:93
-msgid "Minimum completion percentage to trigger notifications"
-msgstr ""
-
-#: templates/admin/settings.php:97
-msgid "Save Settings"
-msgstr ""
-
-#: templates/admin/settings.php:98
-msgid "Flush Cache"
-msgstr ""
-
-#: templates/admin/settings.php:99
-msgid "Reset to Defaults"
-msgstr ""
-
-#: templates/admin/settings.php:100
-msgid "Clear All Data"
-msgstr ""
-
-#: templates/admin/teams.php:19
-msgid "Pierre Teams"
-msgstr ""
-
-#: templates/admin/teams.php:20
-msgid "Manage translation team assignments"
-msgstr ""
-
-#: templates/admin/teams.php:25
-msgid "Team Statistics"
-msgstr ""
-
-#: templates/admin/teams.php:39
-msgid "Assign User to Project"
-msgstr ""
-
-#: templates/admin/teams.php:40
-msgid "Add a user to a translation project"
-msgstr ""
-
-#: templates/admin/teams.php:44
-msgid "Select User"
-msgstr ""
-
-#: templates/admin/teams.php:45
-msgid "Choose a user to assign"
-msgstr ""
-
-#: templates/admin/teams.php:48
-msgid "Select Project"
-msgstr ""
-
-#: templates/admin/teams.php:49
-msgid "Choose a project to assign"
-msgstr ""
-
-#: templates/admin/teams.php:52
-msgid "Select Role"
-msgstr ""
-
-#: templates/admin/teams.php:53
-msgid "Choose a role for the user"
-msgstr ""
-
-#: templates/admin/teams.php:56
-msgid "Assign User"
-msgstr ""
-
-#: templates/admin/teams.php:61
-msgid "Current Assignments"
-msgstr ""
-
-#: templates/admin/teams.php:62
-msgid "Users assigned to translation projects"
-msgstr ""
-
-#: templates/admin/teams.php:76
-msgid "User"
-msgstr ""
-
-#: templates/admin/teams.php:77
-msgid "Project"
-msgstr ""
-
-#: templates/admin/teams.php:78
-msgid "Role"
-msgstr ""
-
-#: templates/admin/teams.php:79
-msgid "Assigned"
-msgstr ""
-
-#: templates/admin/teams.php:80
+#: templates/admin/security.php:163
 msgid "Actions"
 msgstr ""
 
-#: templates/admin/teams.php:84
-msgid "Remove Assignment"
+#: templates/admin/security.php:329
+msgid "Running Audit..."
 msgstr ""
 
-#: templates/public/dashboard.php:22
-msgid "Pierre Dashboard - WordPress Translation Monitor"
+#: templates/admin/security.php:333 templates/admin/security.php:358
+#: templates/admin/security.php:391
+msgid "pierre_ajax"
 msgstr ""
 
-#: templates/public/dashboard.php:29
-msgid "Pierre Dashboard"
-msgstr ""
-
-#: templates/public/dashboard.php:30
-msgid "WordPress Translation Monitor - Public Interface"
-msgstr ""
-
-#: templates/public/dashboard.php:51
-msgid "Your Translation Projects"
-msgstr ""
-
-#: templates/public/dashboard.php:89
-msgid "All Monitored Projects"
-msgstr ""
-
-#: templates/public/dashboard.php:127
-msgid "Admin Dashboard"
-msgstr ""
-
-#: templates/public/dashboard.php:136
-msgid "Back to Site"
-msgstr ""
-
-#: templates/public/locale.php:22
-msgid "Pierre Dashboard - %s"
-msgstr ""
-
-#: templates/public/locale.php:29
-msgid "Pierre Dashboard - %s"
-msgstr ""
-
-#: templates/public/locale.php:30
-msgid "Translation Projects for %s"
-msgstr ""
-
-#: templates/public/locale.php:34
-msgid "Pierre Dashboard"
-msgstr ""
-
-#: templates/public/locale.php:52
-msgid "Welcome to Pierre's translation monitoring for %s!"
-msgstr ""
-
-#: templates/public/locale.php:57
-msgid "Projects for %s"
-msgstr ""
-
-#: templates/public/locale.php:99
-msgid "No projects found for %s!"
-msgstr ""
-
-#: templates/public/locale.php:104
-msgid "Back to Dashboard"
-msgstr ""
-
-#: templates/public/locale.php:111
-msgid "Admin Dashboard"
-msgstr ""
-
-#: templates/public/locale.php:120
-msgid "Back to Site"
-msgstr ""
-
-#: templates/public/project.php:22
-msgid "Pierre Dashboard - %s (%s)"
-msgstr ""
-
-#: templates/public/project.php:29
-msgid "%s"
-msgstr ""
-
-#: templates/public/project.php:30
-msgid "%s Translation Project"
-msgstr ""
-
-#: templates/public/project.php:34
-msgid "Pierre Dashboard"
-msgstr ""
-
-#: templates/public/project.php:54
-msgid "Welcome to Pierre's monitoring for %s in %s!"
-msgstr ""
-
-#: templates/public/project.php:60
-msgid "Team Members"
-msgstr ""
-
-#: templates/public/project.php:69
-msgid "Assigned: %s"
-msgstr ""
-
-#: templates/public/project.php:71
-msgid "by %s"
-msgstr ""
-
-#: templates/public/project.php:85
-msgid "Project Information"
-msgstr ""
-
-#: templates/public/project.php:88
-msgid "Project: %s"
-msgstr ""
-
-#: templates/public/project.php:91
-msgid "Locale: %s"
-msgstr ""
-
-#: templates/public/project.php:94
-msgid "Project Name: %s"
-msgstr ""
-
-#: templates/public/project.php:97
-msgid "Locale Name: %s"
-msgstr ""
-
-#: templates/public/project.php:103
-msgid "Quick Actions"
-msgstr ""
-
-#: templates/public/project.php:123
-msgid "Recent Activity"
-msgstr ""
-
-#: templates/public/project.php:129
-msgid "Project completion increased to %s%%"
-msgstr ""
-
-#: templates/public/project.php:130
-msgid "Last updated: %s"
-msgstr ""
-
-#: templates/public/project.php:138
-msgid "%d team members assigned to this project"
-msgstr ""
-
-#: templates/public/project.php:147
-msgid "Pierre is monitoring this project for changes"
-msgstr ""
-
-#: templates/public/project.php:155
-msgid "Back to %s"
-msgstr ""
-
-#: templates/public/project.php:158
-msgid "Back to Dashboard"
-msgstr ""
-
-#: templates/public/project.php:162
-msgid "Admin Dashboard"
-msgstr ""
-
-#: templates/public/project.php:171
-msgid "Back to Site"
-msgstr ""
-
-#: templates/public/project.php:179
-msgid "Pierre - WordPress Translation Monitor"
+#: templates/admin/security.php:388
+msgid "Pierre says: Are you sure you want to clear all security logs?"
 msgstr ""

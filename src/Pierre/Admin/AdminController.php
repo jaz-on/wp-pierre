@@ -258,6 +258,11 @@ class AdminController {
         add_action('wp_ajax_pierre_flush_cache', [$this, 'ajax_flush_cache']);
         add_action('wp_ajax_pierre_reset_settings', [$this, 'ajax_reset_settings']);
         add_action('wp_ajax_pierre_clear_data', [$this, 'ajax_clear_data']);
+        
+        // Pierre handles reports AJAX! 🪨
+        add_action('wp_ajax_pierre_export_report', [$this, 'ajax_export_report']);
+        add_action('wp_ajax_pierre_export_all_reports', [$this, 'ajax_export_all_reports']);
+        add_action('wp_ajax_pierre_schedule_reports', [$this, 'ajax_schedule_reports']);
     }
     
     /**
@@ -1045,6 +1050,284 @@ class AdminController {
         $this->user_project_link->clear_all_data();
         
         wp_send_json_success(['message' => 'Pierre cleared all his data! 🪨']);
+    }
+    
+    /**
+     * Pierre handles AJAX export report! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_export_report(): void {
+        // Pierre checks nonce! 🪨
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
+        }
+        
+        // Pierre checks permissions! 🪨
+        if (!current_user_can('wpupdates_manage_reports')) {
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
+        }
+        
+        $report_type = sanitize_key($_POST['report_type'] ?? '');
+        
+        if (empty($report_type)) {
+            wp_send_json_error(['message' => __('Pierre says: Report type is required!', 'wp-pierre') . ' 😢']);
+            return;
+        }
+        
+        // Pierre generates his report! 🪨
+        $report_data = $this->generate_report($report_type);
+        
+        if ($report_data) {
+            wp_send_json_success([
+                'message' => sprintf(__('Pierre exported %s report successfully!', 'wp-pierre'), $report_type) . ' 🪨',
+                'data' => $report_data
+            ]);
+        } else {
+            wp_send_json_error(['message' => __('Pierre says: Failed to generate report!', 'wp-pierre') . ' 😢']);
+        }
+    }
+    
+    /**
+     * Pierre handles AJAX export all reports! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_export_all_reports(): void {
+        // Pierre checks nonce! 🪨
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
+        }
+        
+        // Pierre checks permissions! 🪨
+        if (!current_user_can('wpupdates_manage_reports')) {
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
+        }
+        
+        // Pierre generates all his reports! 🪨
+        $report_types = ['projects', 'teams', 'surveillance', 'notifications'];
+        $all_reports = [];
+        
+        foreach ($report_types as $type) {
+            $report_data = $this->generate_report($type);
+            if ($report_data) {
+                $all_reports[$type] = $report_data;
+            }
+        }
+        
+        if (!empty($all_reports)) {
+            wp_send_json_success([
+                'message' => __('Pierre exported all reports successfully!', 'wp-pierre') . ' 🪨',
+                'data' => $all_reports
+            ]);
+        } else {
+            wp_send_json_error(['message' => __('Pierre says: Failed to generate reports!', 'wp-pierre') . ' 😢']);
+        }
+    }
+    
+    /**
+     * Pierre handles AJAX schedule reports! 🪨
+     * 
+     * @since 1.0.0
+     * @return void
+     */
+    public function ajax_schedule_reports(): void {
+        // Pierre checks nonce! 🪨
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'pierre_ajax')) {
+            wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
+        }
+        
+        // Pierre checks permissions! 🪨
+        if (!current_user_can('wpupdates_manage_reports')) {
+            wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
+        }
+        
+        $schedule_frequency = sanitize_key($_POST['schedule_frequency'] ?? 'weekly');
+        $report_types = $_POST['report_types'] ?? [];
+        
+        // Pierre schedules his reports! 🪨
+        $result = $this->schedule_reports($schedule_frequency, $report_types);
+        
+        if ($result) {
+            wp_send_json_success([
+                'message' => sprintf(__('Pierre scheduled reports for %s!', 'wp-pierre'), $schedule_frequency) . ' 🪨',
+                'data' => $result
+            ]);
+        } else {
+            wp_send_json_error(['message' => __('Pierre says: Failed to schedule reports!', 'wp-pierre') . ' 😢']);
+        }
+    }
+    
+    /**
+     * Pierre generates a report! 🪨
+     * 
+     * @since 1.0.0
+     * @param string $report_type Type of report to generate
+     * @return array|false Report data or false on failure
+     */
+    private function generate_report(string $report_type): array|false {
+        try {
+            switch ($report_type) {
+                case 'projects':
+                    return $this->generate_projects_report();
+                case 'teams':
+                    return $this->generate_teams_report();
+                case 'surveillance':
+                    return $this->generate_surveillance_report();
+                case 'notifications':
+                    return $this->generate_notifications_report();
+                default:
+                    return false;
+            }
+        } catch (\Exception $e) {
+            error_log('Pierre encountered an error generating report: ' . $e->getMessage() . ' 😢');
+            return false;
+        }
+    }
+    
+    /**
+     * Pierre generates projects report! 🪨
+     * 
+     * @since 1.0.0
+     * @return array Projects report data
+     */
+    private function generate_projects_report(): array {
+        $projects = $this->project_watcher->get_all_projects();
+        $report_data = [
+            'generated_at' => current_time('mysql'),
+            'total_projects' => count($projects),
+            'projects' => []
+        ];
+        
+        foreach ($projects as $project) {
+            $report_data['projects'][] = [
+                'project_slug' => $project['project_slug'],
+                'locale_code' => $project['locale_code'],
+                'completion_percentage' => $project['completion_percentage'] ?? 0,
+                'last_updated' => $project['last_updated'] ?? null,
+                'status' => $project['status'] ?? 'unknown'
+            ];
+        }
+        
+        return $report_data;
+    }
+    
+    /**
+     * Pierre generates teams report! 🪨
+     * 
+     * @since 1.0.0
+     * @return array Teams report data
+     */
+    private function generate_teams_report(): array {
+        $assignments = $this->user_project_link->get_all_assignments();
+        $report_data = [
+            'generated_at' => current_time('mysql'),
+            'total_assignments' => count($assignments),
+            'assignments' => []
+        ];
+        
+        foreach ($assignments as $assignment) {
+            $report_data['assignments'][] = [
+                'user_id' => $assignment['user_id'],
+                'project_slug' => $assignment['project_slug'],
+                'locale_code' => $assignment['locale_code'],
+                'role' => $assignment['role'],
+                'assigned_by' => $assignment['assigned_by'],
+                'assigned_at' => $assignment['assigned_at']
+            ];
+        }
+        
+        return $report_data;
+    }
+    
+    /**
+     * Pierre generates surveillance report! 🪨
+     * 
+     * @since 1.0.0
+     * @return array Surveillance report data
+     */
+    private function generate_surveillance_report(): array {
+        $surveillance_status = $this->project_watcher->get_surveillance_status();
+        $report_data = [
+            'generated_at' => current_time('mysql'),
+            'surveillance_active' => $surveillance_status['active'] ?? false,
+            'last_check' => $surveillance_status['last_check'] ?? null,
+            'next_check' => $surveillance_status['next_check'] ?? null,
+            'total_checks' => $surveillance_status['total_checks'] ?? 0,
+            'successful_checks' => $surveillance_status['successful_checks'] ?? 0,
+            'failed_checks' => $surveillance_status['failed_checks'] ?? 0
+        ];
+        
+        return $report_data;
+    }
+    
+    /**
+     * Pierre generates notifications report! 🪨
+     * 
+     * @since 1.0.0
+     * @return array Notifications report data
+     */
+    private function generate_notifications_report(): array {
+        $settings = get_option('pierre_settings', []);
+        $report_data = [
+            'generated_at' => current_time('mysql'),
+            'slack_configured' => !empty($settings['slack_webhook_url']),
+            'notification_types' => $settings['notification_types'] ?? [],
+            'notification_threshold' => $settings['notification_threshold'] ?? 5,
+            'last_notification' => $settings['last_notification'] ?? null,
+            'total_notifications_sent' => $settings['total_notifications_sent'] ?? 0
+        ];
+        
+        return $report_data;
+    }
+    
+    /**
+     * Pierre schedules reports! 🪨
+     * 
+     * @since 1.0.0
+     * @param string $frequency Schedule frequency
+     * @param array $report_types Types of reports to schedule
+     * @return array|false Schedule result or false on failure
+     */
+    private function schedule_reports(string $frequency, array $report_types): array|false {
+        try {
+            $schedule_data = [
+                'frequency' => $frequency,
+                'report_types' => $report_types,
+                'scheduled_at' => current_time('mysql'),
+                'next_run' => $this->calculate_next_run($frequency)
+            ];
+            
+            // Pierre saves his schedule! 🪨
+            update_option('pierre_report_schedule', $schedule_data);
+            
+            return $schedule_data;
+        } catch (\Exception $e) {
+            error_log('Pierre encountered an error scheduling reports: ' . $e->getMessage() . ' 😢');
+            return false;
+        }
+    }
+    
+    /**
+     * Pierre calculates next run time! 🪨
+     * 
+     * @since 1.0.0
+     * @param string $frequency Schedule frequency
+     * @return string Next run time
+     */
+    private function calculate_next_run(string $frequency): string {
+        $intervals = [
+            'daily' => DAY_IN_SECONDS,
+            'weekly' => WEEK_IN_SECONDS,
+            'monthly' => MONTH_IN_SECONDS
+        ];
+        
+        $interval = $intervals[$frequency] ?? WEEK_IN_SECONDS;
+        $next_run = time() + $interval;
+        
+        return date('Y-m-d H:i:s', $next_run);
     }
     
     /**

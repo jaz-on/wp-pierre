@@ -236,11 +236,50 @@ class CronManager {
         $next_cleanup = wp_next_scheduled(self::CLEANUP_HOOK);
         
         return [
+            'active' => $next_surveillance !== false,
+            'next_run' => $next_surveillance ? date('Y-m-d H:i:s', $next_surveillance) : null,
             'surveillance_scheduled' => $next_surveillance !== false,
             'next_surveillance' => $next_surveillance ? date('Y-m-d H:i:s', $next_surveillance) : null,
             'cleanup_scheduled' => $next_cleanup !== false,
             'next_cleanup' => $next_cleanup ? date('Y-m-d H:i:s', $next_cleanup) : null,
             'message' => 'Pierre\'s surveillance system is ' . ($next_surveillance ? 'active' : 'inactive') . '! 🪨'
+        ];
+    }
+    
+    /**
+     * Pierre gets his cleanup status! 🪨
+     * 
+     * @since 1.0.0
+     * @return array Array containing cleanup status information
+     */
+    public function get_cleanup_status(): array {
+        $next_cleanup = wp_next_scheduled(self::CLEANUP_HOOK);
+        
+        return [
+            'active' => $next_cleanup !== false,
+            'next_run' => $next_cleanup ? date('Y-m-d H:i:s', $next_cleanup) : null,
+            'cleanup_scheduled' => $next_cleanup !== false,
+            'next_cleanup' => $next_cleanup ? date('Y-m-d H:i:s', $next_cleanup) : null,
+            'message' => 'Pierre\'s cleanup system is ' . ($next_cleanup ? 'active' : 'inactive') . '! 🪨'
+        ];
+    }
+    
+    /**
+     * Pierre gets his cron manager status! 🪨
+     * 
+     * @since 1.0.0
+     * @return array Array containing cron manager status information
+     */
+    public function get_status(): array {
+        $next_surveillance = wp_next_scheduled(self::SURVEILLANCE_HOOK);
+        $next_cleanup = wp_next_scheduled(self::CLEANUP_HOOK);
+        
+        return [
+            'surveillance_scheduled' => $next_surveillance !== false,
+            'cleanup_scheduled' => $next_cleanup !== false,
+            'next_surveillance' => $next_surveillance ? date('Y-m-d H:i:s', $next_surveillance) : null,
+            'next_cleanup' => $next_cleanup ? date('Y-m-d H:i:s', $next_cleanup) : null,
+            'message' => 'Pierre\'s cron manager is ' . ($next_surveillance ? 'active' : 'inactive') . '! 🪨'
         ];
     }
 }

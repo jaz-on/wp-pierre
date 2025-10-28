@@ -131,6 +131,9 @@ class Plugin {
      */
     public function activate(): void {
         try {
+            // Pierre initializes his components first! 🪨
+            $this->init_components();
+            
             // Pierre creates his database tables! 🪨
             $this->create_database_tables();
             

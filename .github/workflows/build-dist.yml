@@ -1,0 +1,50 @@
+name: Build plugin ZIP (artifact)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-zip:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer
+
+      - name: Install Composer (no-dev)
+        run: |
+          composer install --no-dev --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare dist folder with .distignore
+        run: |
+          rm -rf dist && mkdir -p dist/wp-pierre
+          rsync -av --exclude-from=.distignore . dist/wp-pierre/
+
+      - name: Verify vendor is included
+        run: |
+          test -d dist/wp-pierre/vendor || { echo "vendor/ missing"; exit 1; }
+
+      - name: Build zip
+        run: |
+          cd dist
+          zip -r wp-pierre.zip wp-pierre/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wp-pierre-${{ github.ref_name }}.zip
+          path: dist/wp-pierre.zip
+          if-no-files-found: error
+

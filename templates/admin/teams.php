@@ -15,187 +15,279 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
 ?>
 
 <div class="wrap">
-    <div class="pierre-admin-header">
-        <h1>Pierre Teams 🪨</h1>
-        <p>Manage Translation Teams & User Assignments</p>
-    </div>
+    <h1><?php echo esc_html__('Pierre 🪨 Teams', 'wp-pierre'); ?></h1>
+    
+    <?php /* Filter by Locale card removed for now to simplify UI */ ?>
 
-    <?php if (isset($data['stats']) && !empty($data['stats'])): ?>
-    <div class="pierre-admin-stats">
-        <h2>Team Statistics</h2>
-        <div class="pierre-stats-grid">
-            <?php foreach ($data['stats'] as $stat): ?>
-            <div class="pierre-stat-box">
-                <div class="pierre-stat-number"><?php echo esc_html($stat['value']); ?></div>
-                <div class="pierre-stat-label"><?php echo esc_html($stat['label']); ?></div>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-    <?php endif; ?>
+    <?php /* Team Statistics card removed to avoid redundancy with lists below */ ?>
 
-    <div class="pierre-admin-cards">
-        <div class="pierre-admin-card">
-            <h2>Available Users 🪨</h2>
-            <?php if (isset($data['users']) && !empty($data['users'])): ?>
-            <div class="pierre-users-list">
-                <?php foreach ($data['users'] as $user): ?>
-                <div class="pierre-user-item">
-                    <div class="pierre-user-info">
-                        <strong><?php echo esc_html($user->display_name ?? 'Unknown User'); ?></strong>
-                        <span class="pierre-user-meta">(<?php echo esc_html($user->user_email ?? 'No email'); ?>)</span>
-                    </div>
-                    <div class="pierre-user-actions">
-                        <button class="pierre-admin-button small" data-user-id="<?php echo esc_attr($user->ID); ?>">
-                            Assign to Project 🪨
-                        </button>
-                    </div>
+    <div class="pierre-card">
+            <h2><?php echo esc_html__('Available Users', 'wp-pierre'); ?></h2>
+            <div class="tablenav top">
+                <div class="alignleft actions">
+                    <span class="displaying-num"><?php echo esc_html(count($data['users'] ?? [])); ?> <?php echo esc_html__('items', 'wp-pierre'); ?></span>
                 </div>
-                <?php endforeach; ?>
             </div>
-            <?php else: ?>
-            <p>Pierre says: No users found! 😢</p>
-            <?php endif; ?>
-        </div>
-
-        <div class="pierre-admin-card">
-            <h2>Pierre Roles 🪨</h2>
-            <?php if (isset($data['roles']) && !empty($data['roles'])): ?>
-            <div class="pierre-roles-list">
-                <?php foreach ($data['roles'] as $role): ?>
-                <div class="pierre-role-item">
-                    <strong><?php echo esc_html($role['name'] ?? 'Unknown Role'); ?></strong>
-                    <p><?php echo esc_html($role['description'] ?? 'No description'); ?></p>
-                    <div class="pierre-role-capabilities">
-                        <strong>Capabilities:</strong>
-                        <?php if (isset($role['capabilities']) && is_array($role['capabilities'])): ?>
-                            <?php echo esc_html(implode(', ', array_keys($role['capabilities']))); ?>
-                        <?php else: ?>
-                            No capabilities
-                        <?php endif; ?>
-                    </div>
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th scope="col" class="manage-column"><?php echo esc_html__('Name', 'wp-pierre'); ?></th>
+                        <th scope="col" class="manage-column"><?php echo esc_html__('Email', 'wp-pierre'); ?></th>
+                        <th scope="col" class="manage-column"><?php echo esc_html__('WP Role', 'wp-pierre'); ?></th>
+                        <th scope="col" class="manage-column"><?php echo esc_html__('Locales', 'wp-pierre'); ?></th>
+                        <th scope="col" class="manage-column"><?php echo esc_html__('Projects', 'wp-pierre'); ?></th>
+                        <th scope="col" class="manage-column"><?php echo esc_html__('Actions', 'wp-pierre'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($data['users'])): ?>
+                        <?php foreach ($data['users'] as $item): 
+                            $user = $item['user'];
+                            $is_admin = !empty($item['is_admin']);
+                            $assignments = $item['assignments'] ?? [];
+                            // Build locales & projects summaries from assignments
+                            $locales_summary = [];
+                            $projects_summary = [];
+                            if (is_array($assignments)) {
+                                foreach ($assignments as $a) {
+                                    $loc = $a['locale_code'] ?? '';
+                                    $slug = $a['project_slug'] ?? '';
+                                    if ($loc && !in_array($loc, $locales_summary, true)) { $locales_summary[] = $loc; }
+                                    if ($slug) { $projects_summary[] = $slug; }
+                                }
+                            }
+                        ?>
+                        <tr>
+                            <td>
+                                <strong><?php echo esc_html($user->display_name ?? esc_html__('Unknown User', 'wp-pierre')); ?></strong>
+                                <br />
+                                <a href="<?php echo esc_url( admin_url('user-edit.php?user_id=' . absint($user->ID)) ); ?>" target="_blank" rel="noopener"><?php echo esc_html__('View WP User', 'wp-pierre'); ?></a>
+                            </td>
+                            <td><?php echo esc_html($user->user_email ?? ''); ?></td>
+                            <td><?php echo !empty($user->roles[0]) ? esc_html($user->roles[0]) : esc_html__('—','wp-pierre'); ?></td>
+                            <td><?php echo $is_admin ? esc_html__('All','wp-pierre') : (!empty($locales_summary) ? esc_html(implode(', ', $locales_summary)) : esc_html__('—','wp-pierre')); ?></td>
+                            <td><?php echo !empty($projects_summary) ? esc_html(implode(', ', array_unique($projects_summary))) : esc_html__('—','wp-pierre'); ?></td>
+                            <td>
+                                <?php if (!$is_admin): ?>
+                                    <button class="button button-small pierre-assign-user-btn" data-user-id="<?php echo esc_attr($user->ID); ?>" data-user-name="<?php echo esc_attr($user->display_name); ?>">
+                                        <?php echo esc_html__('Assign to Locale/Project', 'wp-pierre'); ?>
+                                    </button>
+                                <?php else: ?>
+                                    <span class="description"><?php echo esc_html__('No action needed', 'wp-pierre'); ?></span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr class="no-items">
+                            <td class="colspanchange" colspan="4"><?php echo esc_html__('No users found.', 'wp-pierre'); ?></td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+            <div class="tablenav bottom">
+                <div class="alignleft actions">
+                    <span class="displaying-num"><?php echo esc_html(count($data['users'] ?? [])); ?> <?php echo esc_html__('items', 'wp-pierre'); ?></span>
                 </div>
-                <?php endforeach; ?>
             </div>
-            <?php else: ?>
-            <p>Pierre says: No roles found! 😢</p>
-            <?php endif; ?>
-        </div>
-
-        <div class="pierre-admin-card">
-            <h2>Pierre Capabilities 🪨</h2>
-            <?php if (isset($data['capabilities']) && !empty($data['capabilities'])): ?>
-            <div class="pierre-capabilities-list">
-                <?php foreach ($data['capabilities'] as $capability): ?>
-                <div class="pierre-capability-item">
-                    <code><?php echo esc_html($capability); ?></code>
-                </div>
-                <?php endforeach; ?>
-            </div>
-            <?php else: ?>
-            <p>Pierre says: No capabilities found! 😢</p>
-            <?php endif; ?>
-        </div>
     </div>
 
-    <div class="pierre-admin-card">
-        <h2>Quick Actions 🪨</h2>
-        <div class="pierre-quick-actions">
-            <button class="pierre-admin-button" id="pierre-refresh-teams">
-                Refresh Teams Data 🪨
-            </button>
-            <button class="pierre-admin-button secondary" id="pierre-test-assignment">
-                Test Assignment 🪨
-            </button>
-            <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-dashboard')); ?>" class="pierre-admin-button">
-                Back to Dashboard 🪨
-            </a>
-        </div>
+    <!-- Modal/Inline form for user assignment -->
+    <div id="pierre-assign-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:20px;border:1px solid #ccc;box-shadow:0 2px 10px rgba(0,0,0,0.2);z-index:100000;max-width:600px;width:90%;">
+        <h2><?php echo esc_html__('Assign User to Locale/Project', 'wp-pierre'); ?></h2>
+        <p><strong><?php echo esc_html__('User:', 'wp-pierre'); ?></strong> <span id="pierre-assign-user-name"></span></p>
+        <form id="pierre-assign-form" class="pierre-form-compact">
+            <input type="hidden" id="pierre-assign-user-id" name="user_id" value="" />
+            <div class="pierre-form-group">
+                <label for="pierre-assign-locale"><?php echo esc_html__('Locale:', 'wp-pierre'); ?></label>
+                <select id="pierre-assign-locale" name="locale_code" class="wp-core-ui" required>
+                    <option value=""><?php echo esc_html__('— Select locale —', 'wp-pierre'); ?></option>
+                    <?php 
+                    $locales = $data['locales'] ?? [];
+                    $labels = $data['locales_labels'] ?? [];
+                    foreach ($locales as $loc): 
+                    ?>
+                        <option value="<?php echo esc_attr($loc); ?>"><?php echo esc_html($labels[$loc] ?? $loc); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="pierre-form-group">
+                <label for="pierre-assign-role"><?php echo esc_html__('Role:', 'wp-pierre'); ?></label>
+                <select id="pierre-assign-role" name="role" class="wp-core-ui" required>
+                    <option value=""><?php echo esc_html__('— Select role —', 'wp-pierre'); ?></option>
+                    <?php 
+                    $roles = $data['roles'] ?? [];
+                    foreach ($roles as $key => $label): 
+                    ?>
+                        <option value="<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="pierre-form-group">
+                <label for="pierre-assign-project-type"><?php echo esc_html__('Project Type:', 'wp-pierre'); ?></label>
+                <select id="pierre-assign-project-type" name="project_type" class="wp-core-ui" required>
+                    <option value="plugin"><?php echo esc_html__('Plugin', 'wp-pierre'); ?></option>
+                    <option value="theme"><?php echo esc_html__('Theme', 'wp-pierre'); ?></option>
+                    <option value="meta"><?php echo esc_html__('Meta', 'wp-pierre'); ?></option>
+                    <option value="app"><?php echo esc_html__('App', 'wp-pierre'); ?></option>
+                </select>
+            </div>
+            <div class="pierre-form-group">
+                <label for="pierre-assign-project-slug"><?php echo esc_html__('Project Slug:', 'wp-pierre'); ?></label>
+                <input type="text" id="pierre-assign-project-slug" name="project_slug" class="regular-text" placeholder="e.g., wp, woocommerce" required />
+                <div class="pierre-help" id="pierre-assign-projects-hint" style="display:none;">
+                    <?php echo esc_html__('Projects watched for selected locale:', 'wp-pierre'); ?>
+                    <ul id="pierre-assign-projects-list" style="margin-top:4px;margin-left:20px;"></ul>
+                </div>
+            </div>
+            <div class="pierre-form-actions">
+                <button type="submit" class="button button-primary"><?php echo esc_html__('Assign', 'wp-pierre'); ?></button>
+                <button type="button" class="button" id="pierre-assign-cancel"><?php echo esc_html__('Cancel', 'wp-pierre'); ?></button>
+            </div>
+        </form>
     </div>
+    <div id="pierre-assign-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:99999;"></div>
+
+    <script>
+    (function(){
+        const assignBtns = document.querySelectorAll('.pierre-assign-user-btn');
+        const modal = document.getElementById('pierre-assign-modal');
+        const overlay = document.getElementById('pierre-assign-overlay');
+        const form = document.getElementById('pierre-assign-form');
+        const cancelBtn = document.getElementById('pierre-assign-cancel');
+        const localeSelect = document.getElementById('pierre-assign-locale');
+        const projectsHint = document.getElementById('pierre-assign-projects-hint');
+        const projectsList = document.getElementById('pierre-assign-projects-list');
+        const userNameSpan = document.getElementById('pierre-assign-user-name');
+        const userIdInput = document.getElementById('pierre-assign-user-id');
+
+        const projectsByLocale = <?php echo wp_json_encode($data['projects_by_locale'] ?? []); ?>;
+
+        function showModal(userId, userName) {
+            userIdInput.value = userId;
+            userNameSpan.textContent = userName;
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        function hideModal() {
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+            form.reset();
+            projectsHint.style.display = 'none';
+        }
+
+        localeSelect.addEventListener('change', function() {
+            const locale = this.value;
+            projectsList.innerHTML = '';
+            if (projectsByLocale[locale] && projectsByLocale[locale].length > 0) {
+                projectsByLocale[locale].forEach(function(slug) {
+                    const li = document.createElement('li');
+                    li.textContent = slug;
+                    projectsList.appendChild(li);
+                });
+                projectsHint.style.display = 'block';
+            } else {
+                projectsHint.style.display = 'none';
+            }
+        });
+
+        assignBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                const userName = this.getAttribute('data-user-name');
+                showModal(userId, userName);
+            });
+        });
+
+        cancelBtn.addEventListener('click', hideModal);
+        overlay.addEventListener('click', hideModal);
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '<?php echo esc_js(__('Assigning...', 'wp-pierre')); ?>';
+
+            const formData = new FormData(form);
+            formData.append('action', 'pierre_admin_assign_user');
+            formData.append('nonce', window.pierreAdminL10n?.nonce || '');
+
+            fetch(window.pierreAdminL10n?.ajaxUrl || ajaxurl, { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(json => {
+                    const msg = (json && (json.data?.message || json.message)) || (json.success ? '<?php echo esc_js(__('Assignment successful!', 'wp-pierre')); ?>' : '<?php echo esc_js(__('Assignment failed.', 'wp-pierre')); ?>');
+                    if (json && json.success) {
+                        alert(msg);
+                        location.reload();
+                    } else {
+                        alert(msg);
+                    }
+                })
+                .catch(() => {
+                    alert('<?php echo esc_js(__('Network error.', 'wp-pierre')); ?>');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                });
+        });
+    })();
+    </script>
+
+    <div class="pierre-card">
+            <h2><?php echo esc_html__('Roles & Capabilities', 'wp-pierre'); ?></h2>
+            <div class="pierre-grid" style="grid-template-columns: 1fr 1fr; gap:16px;">
+                <div>
+                    <h3 style="margin-top:0;"><?php echo esc_html__('Pierre Roles', 'wp-pierre'); ?></h3>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="manage-column"><?php echo esc_html__('Role', 'wp-pierre'); ?></th>
+                                <th scope="col" class="manage-column"><?php echo esc_html__('Description', 'wp-pierre'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($data['roles'])): ?>
+                                <?php foreach ($data['roles'] as $key => $label): ?>
+                                <tr>
+                                    <td><?php echo esc_html($key); ?></td>
+                                    <td><?php echo esc_html($label); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr class="no-items">
+                                    <td class="colspanchange" colspan="2"><?php echo esc_html__('No roles found.', 'wp-pierre'); ?></td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <h3 style="margin-top:0;"><?php echo esc_html__('Pierre Capabilities', 'wp-pierre'); ?></h3>
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="manage-column"><?php echo esc_html__('Capability', 'wp-pierre'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($data['capabilities'])): ?>
+                                <?php foreach ($data['capabilities'] as $capability): ?>
+                                <tr>
+                                    <td><code><?php echo esc_html($capability); ?></code></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr class="no-items">
+                                    <td class="colspanchange" colspan="1"><?php echo esc_html__('No capabilities found.', 'wp-pierre'); ?></td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+    </div>
+
 </div>
-
-<style>
-.pierre-users-list,
-.pierre-roles-list,
-.pierre-capabilities-list {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.pierre-user-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    margin: 10px 0;
-    background: #f8f9fa;
-    border-radius: 6px;
-    border-left: 4px solid #2271b1;
-}
-
-.pierre-user-info strong {
-    display: block;
-    margin-bottom: 5px;
-}
-
-.pierre-user-meta {
-    color: #666;
-    font-size: 0.9em;
-}
-
-.pierre-role-item {
-    padding: 15px;
-    margin: 10px 0;
-    background: #f8f9fa;
-    border-radius: 6px;
-    border-left: 4px solid #46b450;
-}
-
-.pierre-role-capabilities {
-    margin-top: 10px;
-    font-size: 0.9em;
-    color: #666;
-}
-
-.pierre-capability-item {
-    display: inline-block;
-    padding: 5px 10px;
-    margin: 5px;
-    background: #e7f3ff;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9em;
-}
-
-.pierre-quick-actions {
-    text-align: center;
-    padding: 20px;
-}
-
-.pierre-quick-actions .pierre-admin-button {
-    margin: 0 10px 10px 0;
-}
-
-.pierre-admin-button.small {
-    padding: 8px 16px;
-    font-size: 0.9em;
-}
-</style>
-
-<script>
-jQuery(document).ready(function($) {
-    // Pierre handles team management! 🪨
-    $('#pierre-refresh-teams').on('click', function() {
-        location.reload();
-    });
-    
-    $('.pierre-user-item button').on('click', function() {
-        var userId = $(this).data('user-id');
-        alert('Pierre says: Assignment feature coming soon! User ID: ' + userId + ' 🪨');
-    });
-    
-    $('#pierre-test-assignment').on('click', function() {
-        alert('Pierre says: Test assignment feature coming soon! 🪨');
-    });
-});
-</script>

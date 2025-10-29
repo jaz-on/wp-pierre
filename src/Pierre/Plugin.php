@@ -241,6 +241,8 @@ class Plugin {
         // Pierre hooks into WordPress actions! 🪨
         add_action('init', [$this, 'init_public_hooks']);
         add_action('admin_init', [$this, 'init_admin_hooks']);
+        // Ensure admin menu is registered at the right timing
+        add_action('admin_menu', [$this->admin_controller, 'add_admin_menu']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_public_scripts']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
     }
@@ -280,14 +282,6 @@ class Plugin {
             [],
             PIERRE_VERSION
         );
-        
-        wp_enqueue_script(
-            'pierre-public',
-            PIERRE_PLUGIN_URL . 'assets/js/public.js',
-            ['jquery'],
-            PIERRE_VERSION,
-            true
-        );
     }
     
     /**
@@ -297,6 +291,10 @@ class Plugin {
      * @return void
      */
     public function enqueue_admin_scripts(): void {
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if (!$screen || strpos($screen->id, 'pierre') === false) {
+            return; // only enqueue on Pierre admin screens
+        }
         wp_enqueue_style(
             'pierre-admin',
             PIERRE_PLUGIN_URL . 'assets/css/admin.css',
@@ -304,13 +302,7 @@ class Plugin {
             PIERRE_VERSION
         );
         
-        wp_enqueue_script(
-            'pierre-admin',
-            PIERRE_PLUGIN_URL . 'assets/js/admin.js',
-            ['jquery', 'wp-util'],
-            PIERRE_VERSION,
-            true
-        );
+        // No admin JS interactivity: do not enqueue script or localize data
     }
     
     /**

@@ -71,7 +71,7 @@ interface NotifierInterface {
      * @since 1.0.0
      * @param string $message The raw message to format
      * @param array $context Additional context for formatting
-     * @return string The formatted message
+     * @return array The formatted message payload
      */
-    public function format_message(string $message, array $context = []): string;
+    public function format_message(string $message, array $context = []): array;
 }

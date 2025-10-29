@@ -45,6 +45,20 @@ class CronManager {
      * @var string
      */
     private const CLEANUP_INTERVAL = 'pierre_daily';
+
+    /**
+     * Pierre's locales refresh hook - he refreshes available locales cache! 🪨
+     *
+     * @var string
+     */
+    private const LOCALES_REFRESH_HOOK = 'pierre_refresh_locales_cache';
+
+    /**
+     * Pierre's weekly interval - for locales refresh! 🪨
+     *
+     * @var string
+     */
+    private const WEEKLY_INTERVAL = 'pierre_weekly';
     
     /**
      * Pierre schedules his surveillance events! 🪨
@@ -75,10 +89,21 @@ class CronManager {
             );
             error_log('Pierre scheduled his cleanup task! 🪨');
         }
+
+        // Pierre schedules his locales refresh! 🪨
+        if (!wp_next_scheduled(self::LOCALES_REFRESH_HOOK)) {
+            wp_schedule_event(
+                time(),
+                self::WEEKLY_INTERVAL,
+                self::LOCALES_REFRESH_HOOK
+            );
+            error_log('Pierre scheduled his locales refresh task! 🪨');
+        }
         
         // Pierre hooks into his scheduled events! 🪨
         add_action(self::SURVEILLANCE_HOOK, [$this, 'run_surveillance_check']);
         add_action(self::CLEANUP_HOOK, [$this, 'run_cleanup_task']);
+        add_action(self::LOCALES_REFRESH_HOOK, [$this, 'run_locales_refresh']);
         
         error_log('Pierre scheduled all his surveillance events! 🪨');
     }
@@ -130,9 +155,30 @@ class CronManager {
                 'interval' => DAY_IN_SECONDS,
                 'display' => __('Pierre\'s Daily Cleanup', 'wp-pierre')
             ];
+
+            // Pierre's weekly interval (for locales refresh)! 🪨
+            $schedules[self::WEEKLY_INTERVAL] = [
+                'interval' => WEEK_IN_SECONDS,
+                'display' => __('Pierre\'s Weekly Tasks', 'wp-pierre')
+            ];
             
             return $schedules;
         });
+    }
+
+    /**
+     * Pierre refreshes available locales cache (weekly)! 🪨
+     *
+     * @since 1.0.0
+     * @return void
+     */
+    public function run_locales_refresh(): void {
+        try {
+            delete_transient('pierre_available_locales');
+            error_log('Pierre refreshed locales cache (transient cleared)! 🪨');
+        } catch (\Exception $e) {
+            error_log('Pierre encountered an error refreshing locales cache: ' . $e->getMessage() . ' 😢');
+        }
     }
     
     /**

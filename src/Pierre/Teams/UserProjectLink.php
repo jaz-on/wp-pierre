@@ -74,10 +74,11 @@ class UserProjectLink {
     ): array {
         try {
             // Pierre validates permissions! 🪨
-            if (!$this->role_manager->user_has_capability($assigned_by, 'pierre_assign_projects')) {
+            // Locale Manager can assign, GTE cannot
+            if (!$this->role_manager->user_can_assign_projects($assigned_by, $locale_code)) {
                 return [
                     'success' => false,
-                    'message' => 'Pierre says: You don\'t have permission to assign projects! 😢'
+                    'message' => 'Pierre says: You don\'t have permission to assign projects! Only Locale Managers and site administrators can assign users. 😢'
                 ];
             }
             
@@ -292,5 +293,44 @@ class UserProjectLink {
         return [
             'message' => 'Pierre\'s assignment system is ready! 🪨'
         ];
+    }
+
+    /**
+     * Get all assignments for a user with details (stub)
+     *
+     * @param int $user_id
+     * @return array
+     */
+    public function get_user_assignments_with_details(int $user_id): array {
+        return [];
+    }
+
+    /**
+     * Get all assignments for a project/locale with details (stub)
+     *
+     * @param string $project_slug
+     * @param string $locale_code
+     * @return array
+     */
+    public function get_project_assignments_with_details(string $project_slug, string $locale_code): array {
+        return [];
+    }
+
+    /**
+     * Get all assignments (stub)
+     *
+     * @return array
+     */
+    public function get_all_assignments(): array {
+        return [];
+    }
+
+    /**
+     * Clear all assignments data (stub)
+     *
+     * @return void
+     */
+    public function clear_all_data(): void {
+        // no-op stub for now
     }
 }

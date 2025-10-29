@@ -7,424 +7,360 @@
 
 (function($) {
     'use strict';
-    
-    // Pierre's admin object! 🪨
-    window.PierreAdmin = {
-        
-        /**
-         * Pierre initializes his admin JavaScript! 🪨
-         */
-        init: function() {
-            this.bindEvents();
-            this.loadAdminStats();
-            this.setupTabs();
-            this.setupAutoRefresh();
-            console.log('Pierre initialized his admin JavaScript! 🪨');
-        },
-        
-        /**
-         * Pierre binds his admin events! 🪨
-         */
-        bindEvents: function() {
-            // Pierre handles admin button clicks! 🪨
-            $(document).on('click', '.pierre-admin-button', this.handleButtonClick);
-            
-            // Pierre handles form submissions! 🪨
-            $(document).on('submit', '.pierre-admin-form', this.handleFormSubmit);
-            
-            // Pierre handles user assignment! 🪨
-            $(document).on('click', '.pierre-assign-user', this.assignUser);
-            
-            // Pierre handles user removal! 🪨
-            $(document).on('click', '.pierre-remove-user', this.removeUser);
-            
-            // Pierre handles test notification! 🪨
-            $(document).on('click', '.pierre-test-notification', this.testNotification);
-            
-            // Pierre handles settings save! 🪨
-            $(document).on('click', '.pierre-save-settings', this.saveSettings);
-            
-            // Pierre handles refresh stats! 🪨
-            $(document).on('click', '.pierre-refresh-stats', this.loadAdminStats);
-        },
-        
-        /**
-         * Pierre handles button clicks! 🪨
-         */
-        handleButtonClick: function(e) {
-            e.preventDefault();
-            var $button = $(this);
-            var action = $button.data('action');
-            
-            // Pierre shows loading state! 🪨
-            PierreAdmin.showLoading($button);
-            
-            // Pierre handles different actions! 🪨
-            switch (action) {
-                case 'refresh':
-                    PierreAdmin.loadAdminStats();
-                    break;
-                case 'test-notification':
-                    PierreAdmin.testNotification();
-                    break;
-                case 'save-settings':
-                    PierreAdmin.saveSettings();
-                    break;
-                default:
-                    console.log('Pierre says: Unknown admin action! 😢');
-            }
-            
-            // Pierre hides loading state! 🪨
-            setTimeout(function() {
-                PierreAdmin.hideLoading($button);
-            }, 1000);
-        },
-        
-        /**
-         * Pierre handles form submissions! 🪨
-         */
-        handleFormSubmit: function(e) {
-            e.preventDefault();
-            var $form = $(this);
-            var formData = $form.serialize();
-            
-            // Pierre shows loading state! 🪨
-            PierreAdmin.showLoading($form.find('button[type="submit"]'));
-            
-            // Pierre submits form data! 🪨
-            $.ajax({
-                url: pierre_admin_ajax.ajax_url,
-                type: 'POST',
-                data: formData + '&action=pierre_admin_save_settings&nonce=' + pierre_admin_ajax.nonce,
-                success: function(response) {
-                    if (response.success) {
-                        PierreAdmin.showNotice('Pierre saved his settings! 🪨', 'success');
-                    } else {
-                        PierreAdmin.showNotice('Pierre failed to save settings! 😢', 'error');
-                    }
-                },
-                error: function() {
-                    PierreAdmin.showNotice('Pierre encountered an error saving settings! 😢', 'error');
-                },
-                complete: function() {
-                    PierreAdmin.hideLoading($form.find('button[type="submit"]'));
-                }
+    // Settings: Slack (global) save + test
+    (function(){
+        const slackForm = document.getElementById('pierre-slack-settings');
+        const testBtn = document.getElementById('pierre-test-slack');
+        if (slackForm) {
+            slackForm.addEventListener('submit', function(e){
+                e.preventDefault();
+                const fd = new FormData(slackForm);
+                fd.append('action', 'pierre_admin_save_settings');
+                fd.append('nonce', window.pierreAdminL10n?.nonce || '');
+                fetch(window.pierreAdminL10n?.ajaxUrl || ajaxurl, { method:'POST', body: fd })
+                    .then(r=>r.json())
+                    .then(json=>{
+                        const msg = (json && (json.data?.message || json.message)) || (json.success ? 'Saved.' : 'Failed.');
+                        alert(msg);
+                    })
+                    .catch(()=>alert('Network error.'));
             });
-        },
-        
-        /**
-         * Pierre loads his admin statistics! 🪨
-         */
-        loadAdminStats: function() {
-            $.ajax({
-                url: pierre_admin_ajax.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'pierre_admin_get_stats',
-                    nonce: pierre_admin_ajax.nonce
-                },
-                success: function(response) {
-                    if (response.success) {
-                        PierreAdmin.updateAdminStats(response.data);
-                        PierreAdmin.showNotice('Pierre updated his admin statistics! 🪨', 'success');
-                    } else {
-                        PierreAdmin.showNotice('Pierre failed to load admin statistics! 😢', 'error');
-                    }
-                },
-                error: function() {
-                    PierreAdmin.showNotice('Pierre encountered an error loading admin statistics! 😢', 'error');
-                }
-            });
-        },
-        
-        /**
-         * Pierre assigns a user! 🪨
-         */
-        assignUser: function(e) {
-            e.preventDefault();
-            var $button = $(this);
-            var userId = $button.data('user-id');
-            var projectType = $button.data('project-type');
-            var projectSlug = $button.data('project-slug');
-            var localeCode = $button.data('locale-code');
-            var role = $button.data('role');
-            
-            // Pierre shows loading state! 🪨
-            PierreAdmin.showLoading($button);
-            
-            $.ajax({
-                url: pierre_admin_ajax.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'pierre_admin_assign_user',
-                    nonce: pierre_admin_ajax.nonce,
-                    user_id: userId,
-                    project_type: projectType,
-                    project_slug: projectSlug,
-                    locale_code: localeCode,
-                    role: role
-                },
-                success: function(response) {
-                    if (response.success) {
-                        PierreAdmin.showNotice(response.data.message, 'success');
-                        PierreAdmin.loadAdminStats();
-                    } else {
-                        PierreAdmin.showNotice('Pierre failed to assign user! 😢', 'error');
-                    }
-                },
-                error: function() {
-                    PierreAdmin.showNotice('Pierre encountered an error assigning user! 😢', 'error');
-                },
-                complete: function() {
-                    PierreAdmin.hideLoading($button);
-                }
-            });
-        },
-        
-        /**
-         * Pierre removes a user! 🪨
-         */
-        removeUser: function(e) {
-            e.preventDefault();
-            var $button = $(this);
-            var userId = $button.data('user-id');
-            var projectSlug = $button.data('project-slug');
-            var localeCode = $button.data('locale-code');
-            
-            // Pierre confirms removal! 🪨
-            if (!confirm('Pierre asks: Are you sure you want to remove this user? 😢')) {
-                return;
-            }
-            
-            // Pierre shows loading state! 🪨
-            PierreAdmin.showLoading($button);
-            
-            $.ajax({
-                url: pierre_admin_ajax.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'pierre_admin_remove_user',
-                    nonce: pierre_admin_ajax.nonce,
-                    user_id: userId,
-                    project_slug: projectSlug,
-                    locale_code: localeCode
-                },
-                success: function(response) {
-                    if (response.success) {
-                        PierreAdmin.showNotice(response.data.message, 'success');
-                        PierreAdmin.loadAdminStats();
-                    } else {
-                        PierreAdmin.showNotice('Pierre failed to remove user! 😢', 'error');
-                    }
-                },
-                error: function() {
-                    PierreAdmin.showNotice('Pierre encountered an error removing user! 😢', 'error');
-                },
-                complete: function() {
-                    PierreAdmin.hideLoading($button);
-                }
-            });
-        },
-        
-        /**
-         * Pierre tests his notification system! 🪨
-         */
-        testNotification: function() {
-            $.ajax({
-                url: pierre_admin_ajax.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'pierre_admin_test_notification',
-                    nonce: pierre_admin_ajax.nonce
-                },
-                success: function(response) {
-                    if (response.success) {
-                        PierreAdmin.showNotice('Pierre sent a test notification! 🪨', 'success');
-                    } else {
-                        PierreAdmin.showNotice('Pierre failed to send test notification! 😢', 'error');
-                    }
-                },
-                error: function() {
-                    PierreAdmin.showNotice('Pierre encountered an error testing notifications! 😢', 'error');
-                }
-            });
-        },
-        
-        /**
-         * Pierre saves his settings! 🪨
-         */
-        saveSettings: function() {
-            var settings = {
-                slack_webhook_url: $('#slack_webhook_url').val(),
-                surveillance_interval: $('#surveillance_interval').val(),
-                notifications_enabled: $('#notifications_enabled').is(':checked')
-            };
-            
-            $.ajax({
-                url: pierre_admin_ajax.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'pierre_admin_save_settings',
-                    nonce: pierre_admin_ajax.nonce,
-                    slack_webhook_url: settings.slack_webhook_url,
-                    surveillance_interval: settings.surveillance_interval,
-                    notifications_enabled: settings.notifications_enabled
-                },
-                success: function(response) {
-                    if (response.success) {
-                        PierreAdmin.showNotice('Pierre saved his settings! 🪨', 'success');
-                    } else {
-                        PierreAdmin.showNotice('Pierre failed to save settings! 😢', 'error');
-                    }
-                },
-                error: function() {
-                    PierreAdmin.showNotice('Pierre encountered an error saving settings! 😢', 'error');
-                }
-            });
-        },
-        
-        /**
-         * Pierre sets up tabs! 🪨
-         */
-        setupTabs: function() {
-            $('.pierre-admin-tab').on('click', function() {
-                var tabId = $(this).data('tab');
-                
-                // Pierre deactivates all tabs! 🪨
-                $('.pierre-admin-tab').removeClass('active');
-                $('.pierre-admin-tab-content').removeClass('active');
-                
-                // Pierre activates selected tab! 🪨
-                $(this).addClass('active');
-                $('#' + tabId).addClass('active');
-            });
-        },
-        
-        /**
-         * Pierre updates his admin statistics! 🪨
-         */
-        updateAdminStats: function(stats) {
-            $('.pierre-stats-grid').empty();
-            
-            stats.forEach(function(stat) {
-                var $statBox = $('<div class="pierre-stat-box">' +
-                    '<div class="pierre-stat-number">' + stat.value + '</div>' +
-                    '<div class="pierre-stat-label">' + stat.label + '</div>' +
-                    '</div>');
-                
-                $('.pierre-stats-grid').append($statBox);
-            });
-        },
-        
-        /**
-         * Pierre shows a notice! 🪨
-         */
-        showNotice: function(message, type) {
-            type = type || 'info';
-            
-            var $notice = $('<div class="pierre-admin-notice ' + type + '">' +
-                '<strong>Pierre says:</strong> ' + message +
-                '</div>');
-            
-            // Pierre removes existing notices! 🪨
-            $('.pierre-admin-notice').remove();
-            
-            // Pierre adds his new notice! 🪨
-            $('.wrap').prepend($notice);
-            
-            // Pierre auto-hides his notice! 🪨
-            setTimeout(function() {
-                $notice.fadeOut(function() {
-                    $notice.remove();
-                });
-            }, 5000);
-        },
-        
-        /**
-         * Pierre shows loading state! 🪨
-         */
-        showLoading: function($element) {
-            $element.addClass('loading');
-            $element.prop('disabled', true);
-            
-            if ($element.hasClass('pierre-admin-button')) {
-                $element.data('original-text', $element.text());
-                $element.html('<span class="pierre-admin-spinner"></span>Loading...');
-            }
-        },
-        
-        /**
-         * Pierre hides loading state! 🪨
-         */
-        hideLoading: function($element) {
-            $element.removeClass('loading');
-            $element.prop('disabled', false);
-            
-            if ($element.hasClass('pierre-admin-button')) {
-                $element.text($element.data('original-text'));
-            }
-        },
-        
-        /**
-         * Pierre sets up auto-refresh! 🪨
-         */
-        setupAutoRefresh: function() {
-            // Pierre refreshes every 10 minutes! 🪨
-            setInterval(function() {
-                PierreAdmin.loadAdminStats();
-            }, 10 * 60 * 1000);
-        },
-        
-        /**
-         * Pierre animates numbers! 🪨
-         */
-        animateNumber: function($element, targetValue, duration) {
-            duration = duration || 1000;
-            var startValue = parseInt($element.text()) || 0;
-            var increment = (targetValue - startValue) / (duration / 16);
-            var currentValue = startValue;
-            
-            var timer = setInterval(function() {
-                currentValue += increment;
-                
-                if ((increment > 0 && currentValue >= targetValue) || 
-                    (increment < 0 && currentValue <= targetValue)) {
-                    currentValue = targetValue;
-                    clearInterval(timer);
-                }
-                
-                $element.text(Math.round(currentValue));
-            }, 16);
-        },
-        
-        /**
-         * Pierre formats numbers! 🪨
-         */
-        formatNumber: function(number) {
-            if (number >= 1000000) {
-                return (number / 1000000).toFixed(1) + 'M';
-            } else if (number >= 1000) {
-                return (number / 1000).toFixed(1) + 'K';
-            }
-            return number.toString();
-        },
-        
-        /**
-         * Pierre gets his admin status! 🪨
-         */
-        getStatus: function() {
-            return {
-                initialized: true,
-                autoRefresh: true,
-                tabsSetup: true,
-                message: 'Pierre\'s admin JavaScript is ready! 🪨'
-            };
         }
-    };
+        // Test button handled in dedicated Slack handler below
+    })();
+
+    // Settings: Surveillance and Notification forms save
+    (function(){
+        function wireForm(id){
+            const form = document.getElementById(id);
+            if (!form) return;
+            form.addEventListener('submit', function(e){
+                e.preventDefault();
+                const fd = new FormData(form);
+                fd.append('action', 'pierre_admin_save_settings');
+                fd.append('nonce', window.pierreAdminL10n?.nonce || '');
+                fetch(window.pierreAdminL10n?.ajaxUrl || ajaxurl, { method:'POST', body: fd })
+                    .then(r=>r.json())
+                    .then(json=>{
+                        const msg = (json && (json.data?.message || json.message)) || (json.success ? 'Saved.' : 'Failed.');
+                        alert(msg);
+                    })
+                    .catch(()=>alert('Network error.'));
+            });
+        }
+        wireForm('pierre-surveillance-settings');
+        wireForm('pierre-notification-settings');
+    })();
+
+    // Settings: Security actions (General tab)
+    (function(){
+        function bindBtn(id, action, nonceToUse){
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.addEventListener('click', function(){
+                if (id === 'pierre-clear-all-data' && !confirm('Clear ALL Pierre data?')) return;
+                const fd = new FormData();
+                fd.append('action', action);
+                fd.append('nonce', nonceToUse || window.pierreAdminL10n?.nonce || '');
+                fetch(window.pierreAdminL10n?.ajaxUrl || ajaxurl, { method:'POST', body: fd })
+                    .then(r=>r.json())
+                    .then(json=>{
+                        const msg = (json && (json.data?.message || json.message)) || (json.success ? 'Done.' : 'Failed.');
+                        alert(msg);
+                    })
+                    .catch(()=>alert('Network error.'));
+            });
+        }
+        bindBtn('pierre-flush-cache', 'pierre_flush_cache', window.pierreAdminL10n?.nonceAjax);
+        bindBtn('pierre-reset-settings', 'pierre_reset_settings', window.pierreAdminL10n?.nonceAjax);
+        bindBtn('pierre-clear-all-data', 'pierre_clear_data', window.pierreAdminL10n?.nonceAjax);
+    })();
+
+    // Security tab: audit, logs, clear logs
+    (function(){
+        const wrap = document.querySelector('.wrap');
+        function showNotice(msg, type) {
+            if (!wrap) { alert(msg); return; }
+            const notice = document.createElement('div');
+            notice.className = `notice notice-${type} is-dismissible`;
+            notice.innerHTML = `<p>${msg}</p>`;
+            const dismiss = document.createElement('button');
+            dismiss.type = 'button';
+            dismiss.className = 'notice-dismiss';
+            dismiss.innerHTML = '<span class="screen-reader-text">Dismiss</span>';
+            dismiss.addEventListener('click', ()=>notice.remove());
+            notice.appendChild(dismiss);
+            wrap.prepend(notice);
+            setTimeout(()=>{ try { notice.remove(); } catch(e){} }, 8000);
+        }
+        function handleAction(id, action, confirmMsg){
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.addEventListener('click', function(){
+                if (confirmMsg && !confirm(confirmMsg)) return;
+                const original = btn.textContent;
+                btn.disabled = true;
+                btn.textContent = 'Processing...';
+                const fd = new FormData();
+                fd.append('action', action);
+                fd.append('nonce', window.pierreAdminL10n?.nonceAjax || window.pierreAdminL10n?.nonce || '');
+                fetch(window.pierreAdminL10n?.ajaxUrl || ajaxurl, { method:'POST', body: fd })
+                    .then(r=>r.json())
+                    .then(json=>{
+                        if (json && json.success) {
+                            if (action === 'pierre_security_logs' && json.data?.security_logs) {
+                                const logsDiv = document.getElementById('pierre-logs-content');
+                                if (logsDiv) {
+                                    const logs = json.data.security_logs;
+                                    logsDiv.innerHTML = logs.length ? 
+                                        '<table class="wp-list-table widefat fixed striped"><thead><tr><th>Timestamp</th><th>Event Type</th><th>Details</th></tr></thead><tbody>' +
+                                        logs.map(l=>`<tr><td>${l.timestamp||''}</td><td>${l.event_type||''}</td><td>${JSON.stringify(l.data||{})}</td></tr>`).join('') +
+                                        '</tbody></table>' : '<p>No logs found.</p>';
+                                }
+                                showNotice('Logs loaded.', 'success');
+                            } else if (action === 'pierre_security_audit' && json.data?.audit_results) {
+                                const auditDiv = document.getElementById('pierre-audit-content');
+                                if (auditDiv) {
+                                    const audit = json.data.audit_results;
+                                    auditDiv.innerHTML = `<div><strong>Score:</strong> ${audit.overall_score||0}%<br/>
+                                        <strong>Critical:</strong> ${(audit.critical_issues||[]).length}<br/>
+                                        <strong>Warnings:</strong> ${(audit.warnings||[]).length}<br/>
+                                        <pre>${JSON.stringify(audit, null, 2)}</pre></div>`;
+                                }
+                                showNotice('Audit completed.', 'success');
+                            } else {
+                                showNotice(json.data?.message || json.message || 'Done.', 'success');
+                            }
+                        } else {
+                            showNotice(json.data?.message || json.message || 'Failed.', 'error');
+                        }
+                    })
+                    .catch(()=>showNotice('Network error.', 'error'))
+                    .finally(()=>{
+                        btn.disabled = false;
+                        btn.textContent = original;
+                    });
+            });
+        }
+        handleAction('pierre-run-security-audit', 'pierre_security_audit');
+        handleAction('pierre-view-security-logs', 'pierre_security_logs');
+        handleAction('pierre-clear-security-logs', 'pierre_clear_security_logs', 'Clear all security logs?');
+    })();
     
-    // Pierre starts when document is ready! 🪨
-    $(document).ready(function() {
-        PierreAdmin.init();
-    });
+    // Pierre's surveillance test functionality (dry run) - only on Projects page! 🪨
+    (function() {
+        const testBtn = document.getElementById('pierre-test-surveillance');
+        if (!testBtn) return;
+        
+        const ajaxUrl = document.getElementById('pierre-ajax-url').value;
+        const nonce = document.getElementById('pierre-ajax-nonce').value;
+        const startBtn = document.getElementById('pierre-start-surveillance');
+        const wrap = document.querySelector('.wrap');
+
+        function showNotice(message, type) {
+            const notice = document.createElement('div');
+            notice.className = `notice notice-${type} is-dismissible`;
+            const dismiss = document.createElement('button');
+            dismiss.type = 'button';
+            dismiss.className = 'notice-dismiss';
+            dismiss.innerHTML = `<span class="screen-reader-text">${(window.pierreAdminL10n && window.pierreAdminL10n.dismiss) || 'Dismiss this notice.'}</span>`;
+            dismiss.addEventListener('click', () => {
+                notice.remove();
+            });
+            notice.innerHTML = `<p>${message}</p>`;
+            notice.appendChild(dismiss);
+            wrap && wrap.prepend(notice);
+        }
+
+        testBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            testBtn.disabled = true;
+            const form = new FormData();
+            form.append('action', 'pierre_test_surveillance');
+            form.append('nonce', nonce);
+            fetch(ajaxUrl, { method: 'POST', body: form })
+                .then(r => r.json())
+                .then(json => {
+                    if (json && json.success) {
+                        if (startBtn) {
+                            startBtn.disabled = false;
+                            startBtn.removeAttribute('aria-disabled');
+                        }
+                        const msg = (json && (json.data?.message || json.message)) || (window.pierreAdminL10n?.dryRunSuccess || 'Dry run succeeded. You can now start surveillance.');
+                        showNotice(msg, 'success');
+                    } else {
+                        let base = (json && (json.data?.message || json.message)) || (window.pierreAdminL10n?.dryRunFailed || 'Dry run failed. Check settings and try again.');
+                        const reason = (json && (json.data?.reason || json.reason)) ? `\nReason: ${json.data?.reason || json.reason}` : '';
+                        const details = (json && (json.data?.details || json.details)) ? `\nDetails: ${typeof (json.data?.details || json.details) === 'string' ? (json.data?.details || json.details) : JSON.stringify(json.data?.details || json.details)}` : '';
+                        showNotice(base + reason + details, 'error');
+                    }
+                })
+                .catch(() => {
+                    showNotice(window.pierreAdminL10n?.dryRunError || 'An error occurred during dry run.', 'error');
+                })
+                .finally(() => {
+                    testBtn.disabled = false;
+                });
+        });
+    })();
+
+    // Pierre's per-locale Slack webhook management on Projects page 🪨
+    (function(){
+        const form = document.getElementById('pierre-locale-slack-form');
+        if (!form) return;
+        const input = document.getElementById('pierre-locale-slack-webhook');
+        const localeSelect = document.getElementById('pierre-locale-select');
+        const wrap = document.querySelector('.wrap');
+
+        function showNotice(message, type) {
+            const notice = document.createElement('div');
+            notice.className = `notice notice-${type} is-dismissible`;
+            const dismiss = document.createElement('button');
+            dismiss.type = 'button';
+            dismiss.className = 'notice-dismiss';
+            dismiss.innerHTML = `<span class="screen-reader-text">${(window.pierreAdminL10n && window.pierreAdminL10n.dismiss) || 'Dismiss this notice.'}</span>`;
+            dismiss.addEventListener('click', () => { notice.remove(); });
+            notice.innerHTML = `<p>${message}</p>`;
+            notice.appendChild(dismiss);
+            wrap && wrap.prepend(notice);
+            setTimeout(()=>{ try { notice.remove(); } catch(e){} }, 8000);
+        }
+
+        function syncInputFromSelect(){
+            const opt = localeSelect.options[localeSelect.selectedIndex];
+            if (!opt) return;
+            const hook = opt.getAttribute('data-slack-webhook') || '';
+            input.value = hook;
+        }
+
+        localeSelect && localeSelect.addEventListener('change', syncInputFromSelect);
+        syncInputFromSelect();
+
+        form.addEventListener('submit', function(e){
+            e.preventDefault();
+            const btn = form.querySelector('button[type="submit"]');
+            const original = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = (window.pierreAdminL10n?.saving || 'Saving...');
+
+            const fd = new FormData(form);
+            fd.append('action', 'pierre_save_locale_slack');
+            fd.append('nonce', window.pierreAdminL10n?.nonce || '');
+
+            fetch(window.pierreAdminL10n?.ajaxUrl || ajaxurl, { method:'POST', body: fd })
+                .then(r=>r.json())
+                .then(json=>{
+                    const msg = (json && (json.data?.message || json.message)) || (json.success ? 'Saved.' : 'Failed.');
+                    if (json && json.success) {
+                        // Persist on current option for UX coherence
+                        const opt = localeSelect.options[localeSelect.selectedIndex];
+                        if (opt) { opt.setAttribute('data-slack-webhook', input.value); }
+                        showNotice(msg, 'success');
+                    } else {
+                        showNotice(msg, 'error');
+                    }
+                })
+                .catch(()=>{
+                    showNotice('Network error while saving locale Slack webhook.', 'error');
+                })
+                .finally(()=>{
+                    btn.disabled = false;
+                    btn.textContent = original;
+                });
+        });
+    })();
+    
+    // Pierre's Slack settings form handler - on Settings page! 🪨
+    (function() {
+        const slackForm = document.getElementById('pierre-slack-settings');
+        const testBtn = document.getElementById('pierre-test-slack');
+        const wrap = document.querySelector('.wrap');
+        
+        if (!wrap) return;
+        
+        function showNotice(message, type) {
+            const notice = document.createElement('div');
+            notice.className = `notice notice-${type} is-dismissible`;
+            const dismiss = document.createElement('button');
+            dismiss.type = 'button';
+            dismiss.className = 'notice-dismiss';
+            dismiss.innerHTML = `<span class="screen-reader-text">${(window.pierreAdminL10n && window.pierreAdminL10n.dismiss) || 'Dismiss this notice.'}</span>`;
+            dismiss.addEventListener('click', () => {
+                notice.remove();
+            });
+            notice.innerHTML = `<p>${message}</p>`;
+            notice.appendChild(dismiss);
+            wrap.prepend(notice);
+            setTimeout(() => { try { notice.remove(); } catch(e) {} }, 8000);
+        }
+        
+        // Pierre handles Slack form submission! 🪨
+        if (slackForm) {
+            slackForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.textContent = window.pierreAdminL10n?.saving || 'Saving...';
+                
+                const formData = new FormData(this);
+                formData.append('action', 'pierre_admin_save_settings');
+                formData.append('nonce', window.pierreAdminL10n?.nonce || '');
+                
+                fetch(window.pierreAdminL10n?.ajaxUrl || ajaxurl, { method: 'POST', body: formData })
+                    .then(r => r.json())
+                    .then(json => {
+                        const msg = (json && (json.data?.message || json.message)) || (window.pierreAdminL10n?.saveSuccess || 'Settings saved successfully!');
+                        if (json && json.success) {
+                            showNotice(msg, 'success');
+                        } else {
+                            showNotice(msg, 'error');
+                        }
+                    })
+                    .catch(() => {
+                        showNotice(window.pierreAdminL10n?.saveError || 'An error occurred while saving settings.', 'error');
+                    })
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText;
+                    });
+            });
+        }
+        
+        // Pierre handles Slack test button! 🪨
+        if (testBtn) {
+            testBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const slackForm = document.getElementById('pierre-slack-settings');
+                if (!slackForm) return;
+                
+                testBtn.disabled = true;
+                const originalText = testBtn.textContent;
+                testBtn.textContent = window.pierreAdminL10n?.testing || 'Testing...';
+                
+                const formData = new FormData(slackForm);
+                formData.append('action', 'pierre_admin_test_notification');
+                formData.append('nonce', window.pierreAdminL10n?.nonce || '');
+                
+                fetch(window.pierreAdminL10n?.ajaxUrl || ajaxurl, { method: 'POST', body: formData })
+                    .then(r => r.json())
+                    .then(json => {
+                        const msg = (json && (json.data?.message || json.message)) || (json.success ? (window.pierreAdminL10n?.testSuccess || 'Test succeeded!') : (window.pierreAdminL10n?.testFailed || 'Test failed!'));
+                        if (json && json.success) {
+                            showNotice(msg, 'success');
+                        } else {
+                            showNotice(msg, 'error');
+                        }
+                    })
+                    .catch(() => {
+                        showNotice(window.pierreAdminL10n?.testError || 'An error occurred during test.', 'error');
+                    })
+                    .finally(() => {
+                        testBtn.disabled = false;
+                        testBtn.textContent = originalText;
+                    });
+            });
+        }
+    })();
     
 })(jQuery);

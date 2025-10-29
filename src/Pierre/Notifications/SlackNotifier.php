@@ -265,6 +265,59 @@ class SlackNotifier implements NotifierInterface {
         
         return true;
     }
+
+    /**
+     * Send a message to a specific webhook URL (override)
+     *
+     * @since 1.0.0
+     * @param array $message_data The formatted message
+     * @param string $webhook_url The Slack webhook URL to use
+     * @return bool
+     */
+    private function send_to_specific_webhook(array $message_data, string $webhook_url): bool {
+        if (empty($webhook_url)) {
+            return false;
+        }
+        $args = [
+            'timeout' => self::REQUEST_TIMEOUT,
+            'user-agent' => 'Pierre-WordPress-Translation-Monitor/1.0.0',
+            'headers' => [ 'Content-Type' => 'application/json' ],
+            'body' => wp_json_encode($message_data)
+        ];
+        $response = wp_remote_post($webhook_url, $args);
+        if (is_wp_error($response)) { return false; }
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code !== 200) { return false; }
+        $response_body = wp_remote_retrieve_body($response);
+        if ($response_body !== 'ok') { return false; }
+        return true;
+    }
+
+    /**
+     * Public helper to send a simple text with a specific webhook override
+     *
+     * @since 1.0.0
+     */
+    public function send_with_webhook_override(string $message, string $webhook_url, array $options = []): bool {
+        // If already formatted message is provided, use it directly
+        if (!empty($options['formatted_message']) && is_array($options['formatted_message'])) {
+            $formatted_message = $options['formatted_message'];
+        } else {
+            $formatted_message = $this->format_message($message, $options);
+        }
+        return $this->send_to_specific_webhook($formatted_message, $webhook_url);
+    }
+
+    /**
+     * Test notification for a specific webhook URL
+     *
+     * @since 1.0.0
+     */
+    public function test_notification_for_webhook(string $webhook_url, string $test_message = 'Pierre is testing his notification system! 🪨'): bool {
+        $test_data = $this->message_builder->build_test_message('testing');
+        $test_data['text'] = $test_message;
+        return $this->send_to_specific_webhook($test_data, $webhook_url);
+    }
     
     /**
      * Pierre sets his webhook URL! 🪨

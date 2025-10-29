@@ -62,9 +62,6 @@ class DashboardController {
      */
     public function init(): void {
         try {
-            // Pierre enqueues his public assets! 🪨
-            add_action('wp_enqueue_scripts', [$this, 'enqueue_public_assets']);
-            
             // Pierre sets up his public routing! 🪨
             $this->setup_routing();
             
@@ -403,17 +400,7 @@ class DashboardController {
             <meta charset="<?php bloginfo('charset'); ?>">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title><?php echo esc_html($data['page_title'] ?? 'Pierre Dashboard 🪨'); ?></title>
-            <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f1f1f1; }
-                .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                .header { text-align: center; margin-bottom: 30px; }
-                .header h1 { color: #2271b1; margin: 0; }
-                .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }
-                .stat-card { background: #f8f9fa; padding: 20px; border-radius: 6px; text-align: center; }
-                .stat-number { font-size: 2em; font-weight: bold; color: #2271b1; }
-                .stat-label { color: #666; margin-top: 5px; }
-                .message { background: #e7f3ff; border: 1px solid #2271b1; padding: 15px; border-radius: 6px; margin: 20px 0; }
-            </style>
+            
         </head>
         <body>
             <div class="container">
@@ -531,7 +518,8 @@ class DashboardController {
      * @return bool True if user can view, false otherwise
      */
     private function check_view_permissions(): bool {
-        return current_user_can('pierre_view_dashboard');
+        // Align on admin-only access for now (can be made public later)
+        return current_user_can('manage_options');
     }
     
     /**

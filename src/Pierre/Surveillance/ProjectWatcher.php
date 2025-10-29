@@ -205,6 +205,7 @@ class ProjectWatcher implements WatcherInterface {
             $this->watched_projects[$project_key] = [
                 'slug' => $project_slug,
                 'locale' => $locale_code,
+                'type' => 'meta', // Default type, can be overridden by caller
                 'added_at' => time(),
                 'last_checked' => null,
                 'last_data' => null
@@ -299,8 +300,8 @@ class ProjectWatcher implements WatcherInterface {
             $changes = $this->analyze_changes($project_data, $previous_data);
             
             if (!empty($changes)) {
-                // Pierre sends notifications for changes! 🪨
-                $this->send_change_notifications($project_data, $changes);
+            // Pierre sends notifications for changes! 🪨
+            $this->send_change_notifications($project_data, $changes);
                 $notifications_sent++;
             }
             
@@ -431,12 +432,23 @@ class ProjectWatcher implements WatcherInterface {
                     continue 2;
             }
             
-            // Pierre sends his notification! 🪨
+            // Always send to global webhook (if configured)
             $this->notifier->send_notification(
                 $message['text'],
                 [],
                 ['formatted_message' => $message]
             );
+
+            // Also send to per-locale webhook if configured
+            $locale = $project_data['locale_code'] ?? '';
+            $override = $this->get_locale_webhook($locale);
+            if (!empty($override)) {
+                $this->notifier->send_with_webhook_override(
+                    $message['text'],
+                    $override,
+                    ['formatted_message' => $message]
+                );
+            }
         }
     }
     
@@ -460,5 +472,105 @@ class ProjectWatcher implements WatcherInterface {
     private function save_watched_projects(): void {
         update_option('pierre_watched_projects', $this->watched_projects);
         error_log('Pierre saved his watched projects! 🪨');
+    }
+
+    /**
+     * Pierre tests his surveillance system! 🪨
+     *
+     * This performs a dry run to verify Slack readiness and API scraping
+     * for at least one project/locale.
+     *
+     * @since 1.0.0
+     * @return array { 'success':bool, 'reason':string, 'message':string, 'details':mixed }
+     */
+    public function test_surveillance(): array {
+        try {
+            // 1) Stricte: refuser le test s'il n'y a aucun projet surveillé
+            $projects = $this->get_watched_projects();
+            if (empty($projects)) {
+                return [
+                    'success' => false,
+                    'reason' => 'no_projects',
+                    'message' => __('No watched projects yet. Add a locale and a project before testing.', 'wp-pierre'),
+                ];
+            }
+
+            // 2) Prendre le premier projet réel
+            $candidate = [
+                'slug' => $projects[0]['slug'] ?? '',
+                'locale' => $projects[0]['locale'] ?? '',
+            ];
+            if (empty($candidate['slug']) || empty($candidate['locale'])) {
+                return [
+                    'success' => false,
+                    'reason' => 'no_projects',
+                    'message' => __('Invalid watched project data. Please re-add the project.', 'wp-pierre'),
+                ];
+            }
+
+            // 3) Test scraping API
+            $scrape = $this->scraper->test_scraping($candidate['slug'], $candidate['locale']);
+            if (empty($scrape['success'])) {
+                return [
+                    'success' => false,
+                    'reason' => 'api_error',
+                    'message' => sprintf(
+                        __('Failed to scrape %s (%s). Check the locale code matches wordpress.org locales.', 'wp-pierre'),
+                        $candidate['slug'],
+                        $candidate['locale']
+                    ),
+                    'details' => $scrape,
+                ];
+            }
+
+            // 4) Ping Slack (dry run) – use locale override if configured, else global
+            $override = $this->get_locale_webhook($candidate['locale']);
+            if (empty($override) && !$this->notifier->is_ready()) {
+                return [
+                    'success' => false,
+                    'reason' => 'slack_not_ready',
+                    'message' => __('Slack webhook is not configured (neither global nor per-locale).', 'wp-pierre'),
+                ];
+            }
+
+            $ok = !empty($override)
+                ? $this->notifier->test_notification_for_webhook($override, __('Pierre dry run: notifications OK (locale).', 'wp-pierre'))
+                : $this->notifier->test_notification(__('Pierre dry run: notifications OK.', 'wp-pierre'));
+            if (!$ok) {
+                return [
+                    'success' => false,
+                    'reason' => 'slack_send_error',
+                    'message' => __('Slack test failed. Verify webhook URL and Slack response.', 'wp-pierre'),
+                ];
+            }
+
+            return [
+                'success' => true,
+                'reason' => 'ok',
+                'message' => __('Dry run succeeded. You can now start surveillance.', 'wp-pierre'),
+                'details' => [ 'project' => $candidate, 'scrape' => $scrape ],
+            ];
+        } catch (\Exception $e) {
+            error_log('Pierre encountered an error during test surveillance: ' . $e->getMessage() . ' 😢');
+            return [
+                'success' => false,
+                'reason' => 'unexpected_error',
+                'message' => __('Unexpected error during test surveillance.', 'wp-pierre'),
+            ];
+        }
+    }
+
+    /**
+     * Get Slack webhook URL configured for a given locale (if any)
+     *
+     * @since 1.0.0
+     */
+    private function get_locale_webhook(string $locale_code): ?string {
+        if (empty($locale_code)) { return null; }
+        $settings = get_option('pierre_settings', []);
+        if (!empty($settings['locales_slack'][$locale_code])) {
+            return $settings['locales_slack'][$locale_code];
+        }
+        return null;
     }
 }

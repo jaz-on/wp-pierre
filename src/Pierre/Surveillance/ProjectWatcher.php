@@ -21,6 +21,9 @@ use Pierre\Performance\PerformanceOptimizer;
  * @since 1.0.0
  */
 class ProjectWatcher implements WatcherInterface {
+    /** Debug helper */
+    private function is_debug(): bool { return defined('PIERRE_DEBUG') ? (bool) PIERRE_DEBUG : false; }
+    private function log_debug(string $m): void { if ($this->is_debug()) { do_action('wp_pierre_debug', $m, ['source' => 'ProjectWatcher']); } }
     
     /**
      * Pierre's translation scraper - he collects data! 🪨
@@ -86,25 +89,48 @@ class ProjectWatcher implements WatcherInterface {
     public function start_surveillance(): bool {
         try {
             if ($this->surveillance_active) {
-                error_log('Pierre is already watching! 🪨');
+                $this->log_debug('Pierre is already watching! 🪨');
                 return true;
             }
             
-            error_log('Pierre is starting his surveillance... 🪨');
+            $this->log_debug('Pierre is starting his surveillance... 🪨');
             
             // Pierre gets his watched projects! 🪨
-            $projects_to_watch = $this->get_watched_projects();
-            
+            $projects = $this->get_watched_projects();
+
+            // Initialize next_check field if missing and apply jitter
+            $now = time();
+            foreach ($projects as $k => $p) {
+                if (empty($p['next_check'])) {
+                    $projects[$k]['next_check'] = $now + wp_rand(0, 300);
+                }
+            }
+
+            // Only process projects due for a check (staggered by next_check)
+            $projects_to_watch = array_values(array_filter($projects, function($p) use ($now) {
+                return (int)($p['next_check'] ?? 0) <= $now;
+            }));
+
             if (empty($projects_to_watch)) {
-                error_log('Pierre has no projects to watch! 😢');
+                $this->log_debug('Pierre has no projects to watch! 😢');
                 return false;
             }
-            
+
+            // Shuffle to distribute load over time
+            shuffle($projects_to_watch);
+
+            // Max per check (from settings, default 10); acts as pagination window
+            $settings = get_option('pierre_settings', []);
+            $max = (int) ($settings['max_projects_per_check'] ?? 50);
+            if ($max > 0) {
+                $projects_to_watch = array_slice($projects_to_watch, 0, $max);
+            }
+
             // Pierre scrapes data for all projects! 🪨
             $scraped_data = $this->scraper->scrape_multiple_projects($projects_to_watch);
             
             if (empty($scraped_data)) {
-                error_log('Pierre failed to scrape any project data! 😢');
+                $this->log_debug('Pierre failed to scrape any project data! 😢');
                 return false;
             }
             
@@ -112,12 +138,12 @@ class ProjectWatcher implements WatcherInterface {
             $this->analyze_and_notify($scraped_data);
             
             $this->surveillance_active = true;
-            error_log('Pierre started his surveillance successfully! 🪨');
+            $this->log_debug('Pierre started his surveillance successfully! 🪨');
             
             return true;
             
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error starting surveillance: ' . $e->getMessage() . ' 😢');
+            $this->log_debug('Pierre encountered an error starting surveillance: ' . $e->getMessage() . ' 😢');
             return false;
         }
     }
@@ -131,17 +157,17 @@ class ProjectWatcher implements WatcherInterface {
     public function stop_surveillance(): bool {
         try {
             if (!$this->surveillance_active) {
-                error_log('Pierre is not currently watching! 🪨');
+                $this->log_debug('Pierre is not currently watching! 🪨');
                 return true;
             }
             
             $this->surveillance_active = false;
-            error_log('Pierre stopped his surveillance! 🪨');
+            $this->log_debug('Pierre stopped his surveillance! 🪨');
             
             return true;
             
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error stopping surveillance: ' . $e->getMessage() . ' 😢');
+            $this->log_debug('Pierre encountered an error stopping surveillance: ' . $e->getMessage() . ' 😢');
             return false;
         }
     }
@@ -154,6 +180,45 @@ class ProjectWatcher implements WatcherInterface {
      */
     public function is_surveillance_active(): bool {
         return $this->surveillance_active;
+    }
+
+    /**
+     * Flush caches and runtime data related to surveillance
+     */
+    public function flush_cache(): void {
+        // Invalidate internal cache manager groups commonly used by the watcher
+        try { $this->cache_manager->flush_group('surveillance'); } catch (\Exception $e) {}
+        try { $this->cache_manager->flush_group('api'); } catch (\Exception $e) {}
+        try { $this->cache_manager->flush_group('database'); } catch (\Exception $e) {}
+        try { $this->cache_manager->flush_all(); } catch (\Exception $e) {}
+
+        // Clear options used for discovery cache/logs so the next run rebuilds
+        delete_option('pierre_locales_cache');
+        delete_option('pierre_selected_locales');
+        delete_option('pierre_locales_log');
+    }
+
+    /**
+     * Clear all persisted surveillance data (keeps settings)
+     */
+    public function clear_all_data(): void {
+        // Reset watched projects store
+        $this->watched_projects = [];
+        update_option('pierre_watched_projects', $this->watched_projects);
+
+        // Clear discovery caches/logs
+        delete_option('pierre_locales_cache');
+        delete_option('pierre_selected_locales');
+        delete_option('pierre_locales_log');
+
+        // Clear last run trackers
+        delete_option('pierre_last_surv_run');
+        delete_option('pierre_last_surv_duration_ms');
+        delete_option('pierre_last_digest_run');
+        delete_option('pierre_last_digest_duration_ms');
+
+        // Flush transient/object caches
+        $this->flush_cache();
     }
     
     /**
@@ -179,17 +244,25 @@ class ProjectWatcher implements WatcherInterface {
      * @param string $locale_code The locale code to monitor
      * @return bool True if project is now being watched, false otherwise
      */
-    public function watch_project(string $project_slug, string $locale_code): bool {
+    public function watch_project(string $project_slug, string $locale_code, string $project_type = 'meta'): bool {
         try {
             // Pierre sanitizes his inputs! 🪨
             $project_slug = sanitize_key($project_slug);
-            $locale_code = sanitize_key($locale_code);
+            // Normaliser le code locale (ex: fr_FR)
+            $locale_code = preg_replace_callback(
+                '/^([a-z]{2})(?:_([a-zA-Z]{2}))?$/',
+                static function ($m) {
+                    return isset($m[2]) ? strtolower($m[1]) . '_' . strtoupper($m[2]) : strtolower($m[1]);
+                },
+                trim((string) $locale_code)
+            );
             
             $project_key = "{$project_slug}_{$locale_code}";
+            $project_type = sanitize_key($project_type ?: 'meta');
             
             // Pierre checks if he's already watching this project! 🪨
             if (isset($this->watched_projects[$project_key])) {
-                error_log("Pierre is already watching {$project_slug} ({$locale_code})! 🪨");
+                $this->log_debug("Pierre is already watching {$project_slug} ({$locale_code})! 🪨");
                 return true;
             }
             
@@ -197,7 +270,7 @@ class ProjectWatcher implements WatcherInterface {
             $test_data = $this->scraper->test_scraping($project_slug, $locale_code);
             
             if (!$test_data['success']) {
-                error_log("Pierre cannot watch {$project_slug} ({$locale_code}) - scraping failed! 😢");
+                $this->log_debug("Pierre cannot watch {$project_slug} ({$locale_code}) - scraping failed! 😢");
                 return false;
             }
             
@@ -205,10 +278,12 @@ class ProjectWatcher implements WatcherInterface {
             $this->watched_projects[$project_key] = [
                 'slug' => $project_slug,
                 'locale' => $locale_code,
-                'type' => 'meta', // Default type, can be overridden by caller
+                'type' => $this->watched_projects[$project_key]['type'] ?? $project_type,
                 'added_at' => time(),
                 'last_checked' => null,
-                'last_data' => null
+                'last_data' => $test_data['data'] ?? null,
+                // next check time with small jitter to avoid thundering herd
+                'next_check' => time() + wp_rand(0, 300)
             ];
             
             // Pierre saves his watch list! 🪨
@@ -217,11 +292,11 @@ class ProjectWatcher implements WatcherInterface {
             // Pierre invalidates his cache! 🪨
             $this->cache_manager->delete('watched_projects', 'surveillance');
             
-            error_log("Pierre is now watching {$project_slug} ({$locale_code})! 🪨");
+            $this->log_debug("Pierre is now watching {$project_slug} ({$locale_code})! 🪨");
             return true;
             
         } catch (\Exception $e) {
-            error_log("Pierre encountered an error watching {$project_slug} ({$locale_code}): " . $e->getMessage() . ' 😢');
+            $this->log_debug("Pierre encountered an error watching {$project_slug} ({$locale_code}): " . $e->getMessage() . ' 😢');
             return false;
         }
     }
@@ -238,13 +313,20 @@ class ProjectWatcher implements WatcherInterface {
         try {
             // Pierre sanitizes his inputs! 🪨
             $project_slug = sanitize_key($project_slug);
-            $locale_code = sanitize_key($locale_code);
+            // Normaliser le code locale (ex: fr_FR)
+            $locale_code = preg_replace_callback(
+                '/^([a-z]{2})(?:_([a-zA-Z]{2}))?$/',
+                static function ($m) {
+                    return isset($m[2]) ? strtolower($m[1]) . '_' . strtoupper($m[2]) : strtolower($m[1]);
+                },
+                trim((string) $locale_code)
+            );
             
             $project_key = "{$project_slug}_{$locale_code}";
             
             // Pierre checks if he's watching this project! 🪨
             if (!isset($this->watched_projects[$project_key])) {
-                error_log("Pierre is not watching {$project_slug} ({$locale_code})! 🪨");
+                $this->log_debug("Pierre is not watching {$project_slug} ({$locale_code})! 🪨");
                 return true;
             }
             
@@ -254,11 +336,11 @@ class ProjectWatcher implements WatcherInterface {
             // Pierre saves his watch list! 🪨
             $this->save_watched_projects();
             
-            error_log("Pierre stopped watching {$project_slug} ({$locale_code})! 🪨");
+            $this->log_debug("Pierre stopped watching {$project_slug} ({$locale_code})! 🪨");
             return true;
             
         } catch (\Exception $e) {
-            error_log("Pierre encountered an error unwatching {$project_slug} ({$locale_code}): " . $e->getMessage() . ' 😢');
+            $this->log_debug("Pierre encountered an error unwatching {$project_slug} ({$locale_code}): " . $e->getMessage() . ' 😢');
             return false;
         }
     }
@@ -305,19 +387,18 @@ class ProjectWatcher implements WatcherInterface {
                 $notifications_sent++;
             }
             
-            // Pierre updates his stored data! 🪨
+            // Pierre updates his stored data and schedules next_check with jitter! 🪨
             $this->watched_projects[$project_key]['last_data'] = $project_data;
             $this->watched_projects[$project_key]['last_checked'] = time();
+            $interval_minutes = (int)($settings['surveillance_interval'] ?? 15);
+            $this->watched_projects[$project_key]['next_check'] = time() + max(60, $interval_minutes * 60) + wp_rand(0, 300);
         }
         
         // Pierre saves his updated data! 🪨
         $this->save_watched_projects();
         
-        if ($notifications_sent > 0) {
-            error_log("Pierre sent {$notifications_sent} notifications! 🪨");
-        } else {
-            error_log('Pierre found no changes to report! 🪨');
-        }
+        if ($notifications_sent > 0) { $this->log_debug("Pierre sent {$notifications_sent} notifications! 🪨"); }
+        else { $this->log_debug('Pierre found no changes to report! 🪨'); }
     }
     
     /**
@@ -347,7 +428,7 @@ class ProjectWatcher implements WatcherInterface {
         // Pierre checks for completion changes! 🪨
         $current_completion = $current_stats['completion_percentage'] ?? 0;
         $previous_completion = $previous_stats['completion_percentage'] ?? 0;
-        
+
         if (abs($current_completion - $previous_completion) >= 1) {
             $changes[] = [
                 'type' => 'completion_update',
@@ -359,23 +440,58 @@ class ProjectWatcher implements WatcherInterface {
                 ]
             ];
         }
+
+        // Milestones crossed (e.g., 50/80/100)
+        $locale_for_cfg = $current_data['locale_code'] ?? ($current_data['locale'] ?? '');
+        $milestones = $this->get_milestones($locale_for_cfg);
+        foreach ($milestones as $m) {
+            if ($previous_completion < $m && $current_completion >= $m) {
+                $changes[] = [
+                    'type' => 'milestone',
+                    'message' => 'Milestone reached',
+                    'data' => [
+                        'current' => $current_data,
+                        'milestone' => $m
+                    ]
+                ];
+            }
+        }
         
         // Pierre checks for new strings! 🪨
         $current_total = $current_stats['total'] ?? 0;
         $previous_total = $previous_stats['total'] ?? 0;
         
         if ($current_total > $previous_total) {
+            $new_strings = $current_total - $previous_total;
+            $threshold = $this->get_new_strings_threshold($locale_for_cfg);
+            if ($new_strings >= $threshold) {
+                $changes[] = [
+                    'type' => 'new_strings',
+                    'message' => 'New strings detected',
+                    'data' => [
+                        'current' => $current_data,
+                        'previous' => $previous_data,
+                        'new_strings_count' => $new_strings
+                    ]
+                ];
+            }
+        }
+        
+        // Pierre checks for approvals (translations approved) 🪨
+        $curr_translated = (int)($current_stats['translated'] ?? 0);
+        $prev_translated = (int)($previous_stats['translated'] ?? 0);
+        $approved = $curr_translated - $prev_translated;
+        if ($approved > 0) {
             $changes[] = [
-                'type' => 'new_strings',
-                'message' => 'New strings detected',
+                'type' => 'approval',
+                'message' => 'Recent approvals',
                 'data' => [
                     'current' => $current_data,
-                    'previous' => $previous_data,
-                    'new_strings_count' => $current_total - $previous_total
+                    'approved_count' => $approved
                 ]
             ];
         }
-        
+
         // Pierre checks for strings needing attention! 🪨
         $current_needs_attention = ($current_stats['waiting'] ?? 0) + ($current_stats['fuzzy'] ?? 0);
         $previous_needs_attention = ($previous_stats['waiting'] ?? 0) + ($previous_stats['fuzzy'] ?? 0);
@@ -414,6 +530,16 @@ class ProjectWatcher implements WatcherInterface {
                         $change['data']['new_strings_count']
                     );
                     break;
+                case 'approval':
+                    if (method_exists($message_builder, 'build_approval_message')) {
+                        $message = $message_builder->build_approval_message(
+                            $change['data']['current'],
+                            (int) ($change['data']['approved_count'] ?? 0)
+                        );
+                    } else {
+                        continue 2;
+                    }
+                    break;
                     
                 case 'completion_update':
                     $message = $message_builder->build_completion_update_message(
@@ -427,28 +553,139 @@ class ProjectWatcher implements WatcherInterface {
                         $change['data']['current']
                     );
                     break;
+                case 'milestone':
+                    if (method_exists($message_builder, 'build_milestone_message')) {
+                        $message = $message_builder->build_milestone_message(
+                            $change['data']['current'],
+                            (int) ($change['data']['milestone'] ?? 0)
+                        );
+                    } else {
+                        continue 2;
+                    }
+                    break;
                     
                 default:
                     continue 2;
             }
             
-            // Always send to global webhook (if configured)
-            $this->notifier->send_notification(
-                $message['text'],
-                [],
-                ['formatted_message' => $message]
-            );
+            $locale = $project_data['locale_code'] ?? ($project_data['locale'] ?? '');
 
-            // Also send to per-locale webhook if configured
-            $locale = $project_data['locale_code'] ?? '';
-            $override = $this->get_locale_webhook($locale);
-            if (!empty($override)) {
-                $this->notifier->send_with_webhook_override(
-                    $message['text'],
-                    $override,
-                    ['formatted_message' => $message]
-                );
+            // Context for scope filtering
+            $context = [
+                'event_type' => $change['type'],
+                'locale' => $locale,
+                'project' => [
+                    'type' => (string)($project_data['project_type'] ?? ($project_data['type'] ?? 'meta')),
+                    'slug' => (string)($project_data['project_slug'] ?? ($project_data['slug'] ?? '')),
+                ],
+                'metrics' => [
+                    'new_strings_count' => (int)($change['data']['new_strings_count'] ?? 0),
+                    'milestone' => (int)($change['data']['milestone'] ?? 0),
+                ],
+            ];
+
+            // Dispatch to global webhook (unified config)
+            $gw = $this->get_global_webhook_config();
+            if (!empty($gw['enabled']) && !empty($gw['webhook_url'])) {
+                $this->evaluate_and_dispatch_webhook($gw, $context, $message, 'global');
             }
+
+            // Dispatch to locale webhook (unified config)
+            $lw = $this->get_locale_webhook_config($locale);
+            if (!empty($lw['enabled']) && !empty($lw['webhook_url'])) {
+                // Implicit scope: this locale only
+                $lw['scopes'] = $lw['scopes'] ?? ['locales'=>[$locale],'projects'=>[]];
+                if (empty($lw['scopes']['locales'])) { $lw['scopes']['locales'] = [$locale]; }
+                $this->evaluate_and_dispatch_webhook($lw, $context, $message, 'locale');
+            }
+        }
+    }
+
+    /** Unified global webhook config */
+    private function get_global_webhook_config(): array {
+        $settings = get_option('pierre_settings', []);
+        $gw = (array)($settings['global_webhook'] ?? []);
+        // Back-compat: map legacy if needed
+        if (empty($gw) && !empty($settings['slack_webhook_url'])) {
+            $gw = [
+                'enabled' => !empty($settings['notifications_enabled']),
+                'webhook_url' => $settings['slack_webhook_url'],
+                'types' => (array)($settings['notification_types'] ?? ['new_strings','completion_update','needs_attention','milestone']),
+                'threshold' => (int)(($settings['notification_defaults']['new_strings_threshold'] ?? 20)),
+                'milestones' => (array)(($settings['notification_defaults']['milestones'] ?? [50,80,100])),
+                'mode' => (string)(($settings['notification_defaults']['mode'] ?? 'immediate')),
+                'digest' => (array)(($settings['notification_defaults']['digest'] ?? ['type'=>'interval','interval_minutes'=>60,'fixed_time'=>'09:00'])),
+                'scopes' => [ 'locales' => [], 'projects' => [] ],
+            ];
+        }
+        return $gw;
+    }
+
+    /** Unified locale webhook config */
+    private function get_locale_webhook_config(string $locale): array {
+        $settings = get_option('pierre_settings', []);
+        $lw = (array)($settings['locales'][$locale]['webhook'] ?? []);
+        // Back-compat: map legacy single URL if present
+        if (empty($lw) && !empty($settings['locales_slack'][$locale] ?? '')) {
+            $lw = [
+                'enabled' => true,
+                'webhook_url' => $settings['locales_slack'][$locale],
+                'types' => (array)($settings['notification_types'] ?? ['new_strings','completion_update','needs_attention','milestone']),
+            ];
+        }
+        return $lw;
+    }
+
+    /** Evaluate types/scopes/thresholds and send (or enqueue) */
+    private function evaluate_and_dispatch_webhook(array $webhook, array $context, array $message, string $channel): void {
+        $type = (string)$context['event_type'];
+        $allowed = (array)($webhook['types'] ?? []);
+        if (!in_array($type, $allowed, true)) { return; }
+
+        // Scope filtering
+        $sc = (array)($webhook['scopes'] ?? []);
+        $sc_locales = (array)($sc['locales'] ?? []);
+        $sc_projects = (array)($sc['projects'] ?? []);
+        if (!empty($sc_locales) && !in_array($context['locale'], $sc_locales, true)) { return; }
+        if (!empty($sc_projects)) {
+            $hit = false;
+            foreach ($sc_projects as $p) {
+                if (($p['type'] ?? '') === ($context['project']['type'] ?? '') && ($p['slug'] ?? '') === ($context['project']['slug'] ?? '')) { $hit = true; break; }
+            }
+            if (!$hit) { return; }
+        }
+
+        // Per-webhook thresholds
+        if ($type === 'new_strings') {
+            $min = isset($webhook['threshold']) ? (int)$webhook['threshold'] : 0;
+            if (($context['metrics']['new_strings_count'] ?? 0) < $min) { return; }
+        }
+        if ($type === 'milestone') {
+            $req = (array)($webhook['milestones'] ?? []);
+            if (!empty($req) && !in_array((int)($context['metrics']['milestone'] ?? 0), array_map('intval', $req), true)) { return; }
+        }
+
+        // Dispatch mode
+        $mode = (string)($webhook['mode'] ?? '');
+        if ($mode === 'digest') {
+            $queue_key = $channel === 'global' ? 'pierre_digest_queue_global' : ('pierre_digest_queue_' . $context['locale']);
+            $queue = get_transient($queue_key);
+            if (!is_array($queue)) { $queue = []; }
+            $queue[] = [
+                'type' => $type,
+                'project_data' => $context['project'] + ['locale_code' => $context['locale']],
+                'message' => $message,
+                'ts' => time(),
+                'channel' => $channel,
+            ];
+            set_transient($queue_key, $queue, 12 * HOUR_IN_SECONDS);
+            return;
+        }
+
+        // Immediate send
+        $url = (string) ($webhook['webhook_url'] ?? '');
+        if ($url !== '') {
+            $this->notifier->send_with_webhook_override($message['text'], $url, ['formatted_message' => $message]);
         }
     }
     
@@ -460,7 +697,7 @@ class ProjectWatcher implements WatcherInterface {
      */
     private function load_watched_projects(): void {
         $this->watched_projects = get_option('pierre_watched_projects', []);
-        error_log('Pierre loaded ' . count($this->watched_projects) . ' watched projects! 🪨');
+        $this->log_debug('Pierre loaded ' . count($this->watched_projects) . ' watched projects! 🪨');
     }
     
     /**
@@ -471,7 +708,7 @@ class ProjectWatcher implements WatcherInterface {
      */
     private function save_watched_projects(): void {
         update_option('pierre_watched_projects', $this->watched_projects);
-        error_log('Pierre saved his watched projects! 🪨');
+        $this->log_debug('Pierre saved his watched projects! 🪨');
     }
 
     /**
@@ -515,7 +752,8 @@ class ProjectWatcher implements WatcherInterface {
                     'success' => false,
                     'reason' => 'api_error',
                     'message' => sprintf(
-                        __('Failed to scrape %s (%s). Check the locale code matches wordpress.org locales.', 'wp-pierre'),
+                        // translators: 1: project slug, 2: project type
+                        __('Failed to scrape %1$s (%2$s). Check the locale code matches wordpress.org locales.', 'wp-pierre'),
                         $candidate['slug'],
                         $candidate['locale']
                     ),
@@ -551,7 +789,7 @@ class ProjectWatcher implements WatcherInterface {
                 'details' => [ 'project' => $candidate, 'scrape' => $scrape ],
             ];
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error during test surveillance: ' . $e->getMessage() . ' 😢');
+            $this->log_debug('Pierre encountered an error during test surveillance: ' . $e->getMessage() . ' 😢');
             return [
                 'success' => false,
                 'reason' => 'unexpected_error',
@@ -566,11 +804,52 @@ class ProjectWatcher implements WatcherInterface {
      * @since 1.0.0
      */
     private function get_locale_webhook(string $locale_code): ?string {
-        if (empty($locale_code)) { return null; }
+        $cfg = $this->get_locale_webhook_config($locale_code);
+        $url = (string)($cfg['webhook_url'] ?? '');
+        return $url !== '' ? $url : null;
+    }
+
+    private function get_settings(): array {
         $settings = get_option('pierre_settings', []);
-        if (!empty($settings['locales_slack'][$locale_code])) {
-            return $settings['locales_slack'][$locale_code];
-        }
-        return null;
+        if (!is_array($settings)) { return []; }
+        return $settings;
+    }
+
+    private function get_locale_config(string $locale): array {
+        $settings = $this->get_settings();
+        $local = (array) ($settings['locales'][$locale] ?? []);
+        $defaults = (array) ($settings['notification_defaults'] ?? []);
+        return [$defaults, $local];
+    }
+
+    private function get_new_strings_threshold(string $locale): int {
+        [$defaults, $local] = $this->get_locale_config($locale);
+        if (isset($local['new_strings_threshold'])) { return max(0, (int) $local['new_strings_threshold']); }
+        return max(0, (int) ($defaults['new_strings_threshold'] ?? 20));
+    }
+
+    private function get_milestones(string $locale): array {
+        [$defaults, $local] = $this->get_locale_config($locale);
+        $list = $local['milestones'] ?? ($defaults['milestones'] ?? [50,80,100]);
+        if (!is_array($list)) { return [50,80,100]; }
+        $list = array_values(array_unique(array_map('intval', $list)));
+        sort($list);
+        return $list;
+    }
+
+    private function get_locale_mode(string $locale_code): string {
+        $settings = $this->get_settings();
+        $local = (array) ($settings['locales'][$locale_code] ?? []);
+        if (!empty($local['mode'])) { return (string) $local['mode']; }
+        return (string) ($settings['notification_defaults']['mode'] ?? 'immediate');
+    }
+
+    private function enqueue_digest(string $locale_code, array $item): void {
+        if (empty($locale_code)) { return; }
+        $key = 'pierre_digest_queue_' . $locale_code;
+        $queue = get_transient($key);
+        if (!is_array($queue)) { $queue = []; }
+        $queue[] = $item;
+        set_transient($key, $queue, 12 * HOUR_IN_SECONDS);
     }
 }

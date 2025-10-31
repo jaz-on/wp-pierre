@@ -1,0 +1,29 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [ '7.4', '8.0', '8.1', '8.2', '8.3' ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2, cs2pr
+      - name: Validate composer
+        run: composer validate --no-interaction
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+      - name: Lint PHP syntax
+        run: |
+          find . -name "*.php" -print0 | xargs -0 -n1 php -l
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit --colors=always
+      - name: Run PHPCS
+        run: vendor/bin/phpcs -q --report=full

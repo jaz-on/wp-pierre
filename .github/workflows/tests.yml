@@ -72,6 +72,7 @@ jobs:
 
       - name: Push coverage badge to gh-badges branch
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
+        continue-on-error: true
         run: |
           # Save the badge before switching branches
           cp assets/badges/coverage.svg /tmp/coverage.svg
@@ -94,4 +95,4 @@ jobs:
           # Commit and push
           git add assets/badges/coverage.svg
           git commit -m "chore(ci): update coverage badge [skip ci]" || echo "No changes to commit"
-          git push origin gh-badges || echo "Failed to push"
+          git push origin gh-badges || echo "Failed to push (this is expected on first run)"

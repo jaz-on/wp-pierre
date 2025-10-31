@@ -26,6 +26,10 @@ Pierre is a modern WordPress plugin that monitors WordPress Polyglots translatio
 **TranslationScraper** (`TranslationScraper.php`)
 - Scrapes translation data from translate.wordpress.org API
 - Caching with WordPress transients (1 hour timeout)
+- HTTP defaults centralisés (UA/timeout/headers) via `Plugin::get_http_defaults()`
+- Détection dynamique du segment (`wp`, `wp-plugins`, `wp-themes`, `meta`, `apps`) avec mémoïsation par `(type,slug)`
+- Backoff par projet (respect `Retry-After` 429, fallback 300s) + retry léger 1x sur 5xx/erreur réseau
+- Progression de run (transient `pierre_surv_progress`) et arrêt best-effort via transient `pierre_surv_abort`
 - Methods: `scrape_project_data()`, `scrape_multiple_projects()`, `calculate_stats()`
 
 **ProjectWatcher** (`ProjectWatcher.php`)
@@ -53,7 +57,7 @@ Pierre is a modern WordPress plugin that monitors WordPress Polyglots translatio
 
 **TeamRepository** (`TeamRepository.php`)
 - Database operations for user-project assignments
-- Table: `{$wpdb->prefix}wpupdates_user_projects`
+- Table: `{$wpdb->prefix}pierre_user_projects`
 - Methods: `assign_user_to_project()`, `get_user_assignments()`, `remove_user_from_project()`
 
 **UserProjectLink** (`UserProjectLink.php`)
@@ -77,10 +81,10 @@ Pierre is a modern WordPress plugin that monitors WordPress Polyglots translatio
 
 ## Database Schema
 
-### Custom Table: `wpupdates_user_projects`
+### Custom Table: `pierre_user_projects`
 
 ```sql
-CREATE TABLE wpupdates_user_projects (
+CREATE TABLE pierre_user_projects (
     id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
     user_id bigint(20) unsigned NOT NULL,
     project_type varchar(50) NOT NULL,
@@ -114,26 +118,15 @@ CREATE TABLE wpupdates_user_projects (
 - `admin_bar_menu` → Admin bar links
 - `admin_notices` → Admin notices display
 
-**Public Integration**:
-- `init` → Rewrite rules
-- `template_redirect` → Custom page handling
-- `wp_loaded` → Rewrite rules flush
+## Admin AJAX Endpoints
 
-### Capabilities
+New endpoints:
 
-**Custom Capabilities**:
-- `wpupdates_manage_projects` - Manage translation projects
-- `wpupdates_manage_teams` - Manage translation teams
-- `wpupdates_view_dashboard` - View Pierre dashboard
-- `wpupdates_manage_settings` - Manage Pierre settings
-- `wpupdates_view_reports` - View translation reports
-- `wpupdates_assign_projects` - Assign projects to users
-- `wpupdates_manage_notifications` - Manage notification settings
+- `pierre_abort_run` (POST, nonce `pierre_admin_ajax`, cap `pierre_manage_projects`): sets abort flag `pierre_abort_run` consumed by CronManager to stop current run/digest.
+- `pierre_get_progress` (POST, nonce `pierre_admin_ajax`, cap `pierre_manage_projects`): returns `{ progress:{ processed,total,ts }, aborting:bool }` from transients/options.
 
-**Custom Roles**:
-- `pierre_admin` - Full access to all Pierre features
-- `pierre_manager` - Manage teams and projects
-- `pierre_contributor` - View dashboard and reports
+Common endpoints:
+- `pierre_admin_save_settings`, `pierre_admin_test_notification`, `pierre_fetch_locales`, `pierre_run_surveillance_now`, `pierre_run_cleanup_now`, exports.
 
 ## API Integration
 
@@ -141,9 +134,11 @@ CREATE TABLE wpupdates_user_projects (
 
 **Base URL**: `https://translate.wordpress.org/api/projects`
 
+**Segments**:
+- `wp` (core), `wp-plugins` (plugins), `wp-themes` (themes), `meta`, `apps`
+
 **Endpoints**:
-- `/{project_slug}/{locale_code}/` - Project translation data
-- `/{project_slug}/` - Project metadata
+- `/{segment}/{project_slug}/{locale_code}/{set}/` - Project translation data (set par défaut: `default`)
 
 **Response Format**:
 ```json
@@ -164,40 +159,39 @@ CREATE TABLE wpupdates_user_projects (
 ### Slack Webhook Integration
 
 **Webhook URL**: Configured in admin settings
-**Payload Format**:
+
+**Payload Format (preferred Blocks + compatible Attachments)**:
 ```json
 {
   "text": "Pierre's message",
+  "blocks": [
+    {
+      "type": "section",
+      "text": { "type": "mrkdwn", "text": "Pierre's message" }
+    }
+  ],
   "attachments": [
     {
       "color": "good",
-      "fields": [
-        {
-          "title": "Project",
-          "value": "Project Name",
-          "short": true
-        }
-      ]
+      "footer": "Pierre - WordPress Translation Monitor",
+      "footer_icon": "https://s.w.org/images/wmark.png"
     }
   ]
 }
 ```
 
-## Security Features
+## Runtime Metrics
 
-### Input Sanitization
-- All user inputs sanitized with WordPress functions
-- `sanitize_key()`, `sanitize_text_field()`, `sanitize_url()`
-- Database queries use prepared statements
+- `pierre_last_surv_duration_ms` — last surveillance run duration (ms)
+- `pierre_last_digest_duration_ms` — last digest duration (ms)
+- `pierre_last_surv_run` — last run timestamp
+- `pierre_last_digest_run` — last digest timestamp
 
-### Permission Checks
-- Capability verification for all admin actions
-- Nonce verification for AJAX requests
-- User existence validation
+## Logging Policy
 
-### Output Escaping
-- `esc_html()`, `esc_url()`, `esc_attr()` for all outputs
-- XSS prevention in templates and responses
+- Central logger via `do_action('wp_pierre_debug', $message, $context)`.
+- Throttle at 60s per signature in `Plugin::handle_debug()` to avoid log storms.
+- Key logs include webhook tests, locales refresh, surveillance run/cleanup, digests, API calls timings/backoff.
 
 ## Testing
 
@@ -241,6 +235,39 @@ composer test-coverage
 - Default values for missing data
 - Graceful handling of missing dependencies
 
+### AJAX Error Contract
+
+All AJAX handlers return a uniform JSON error format:
+
+```json
+{
+  "success": false,
+  "data": {
+    "code": "invalid_nonce",
+    "message": "Pierre says: Invalid nonce! 😢",
+    "details": { "...": "optional" }
+  }
+}
+```
+
+Standard error codes:
+- `invalid_nonce`: Nonce invalide ou absent
+- `forbidden`: Capacité insuffisante pour l’action
+- `invalid_payload`: Charge utile invalide ou paramètres manquants
+- `missing_locale`: Code de locale requis manquant
+- `empty_library`: Bibliothèque de projets vide
+- `partial_failure`: Opération partiellement réussie (voir `details.errors`)
+- `no_changes`: Rien à appliquer (aucune modification)
+- `slack_test_failed`: Test du webhook Slack échoué (voir `details.error`)
+- `cooldown`: Action trop fréquente; respectez l’intervalle
+- `upstream_empty`: Données amont (WP.org) vides/indisponibles
+
+Conventions:
+- HTTP 403 pour `invalid_nonce` et `forbidden`
+- HTTP 400 pour erreurs de validation (`invalid_payload`, `missing_locale`, etc.)
+- HTTP 429 pour `cooldown`
+- HTTP 5xx pour erreurs amont (`upstream_empty` → 502)
+
 ## Development Guidelines
 
 ### Code Standards
@@ -280,3 +307,116 @@ composer test-coverage
 ---
 
 *Pierre says: This documentation covers all the technical aspects of my plugin! If you need more details, just ask! 🪨*
+
+## Configuration & Storage
+
+### Option `pierre_settings` (structure)
+- `slack_webhook_url` (string, legacy convenience)
+- `notification_defaults`:
+  - `types` (array: `new_strings`, `completion_update`, `needs_attention`, `milestone`)
+  - `new_strings_threshold` (int)
+  - `milestones` (int[])
+  - `mode` (`immediate`|`digest`)
+  - `digest` { `type` (`interval`|`fixed_time`), `interval_minutes` (>=15), `fixed_time` (HH:MM) }
+- `surveillance_interval` (minutes, default 15)
+- `global_webhook` (objet unifié, voir section Unified Webhook Model)
+- `locales_slack` (map simplifiée locale→url, legacy)
+- `locales`:
+  - `[<locale_code>]`:
+    - `webhook` (objet unifié pour la locale)
+    - `override` (bool) + paramètres `mode/digest/threshold/milestones` si override
+- `projects_discovery_library` (liste des projets connus, normalisée)
+
+Conseils:
+- Export JSON de l’option (via WP-CLI ou phpMyAdmin) recommandé pour sauvegarde/restauration.
+
+## Discovery (Locales & Projects)
+
+- Sources: API Polyglots + pages Team Polyglots (détection translate_slug/slack) + pages Handbook (liste Slack locaux)
+- Locales Discovery: persistées, réutilisées pour filtrer les propositions de projets; enrichissement « fort » hebdo via cron
+- Projects Discovery: saisie/chargement d’une « library » (type, slug) ligne par ligne.
+- Formats `scopes.projects`: une ligne par projet `type, slug` (ex.: `plugin, woocommerce`).
+
+Limites & cache:
+- Ratelimits externes: réponses mises en cache via transients.
+- Bouton « refresh » recommandé après 12h si données caduques.
+
+## Surveillance & Cron
+
+- Hooks WP-Cron: `pierre_surveillance_check` (toutes les 15 min par défaut), `pierre_cleanup_old_data` (daily), `pierre_refresh_locales_cache` (weekly).
+- Cooldown anti-spam pour exécutions forcées: 2 minutes (global/locale/projet).
+- WP-Cron désactivé: planifier via cron système (wp-cron.php) ou `wp cron event run pierre_surveillance_check`.
+
+WP-CLI (exemples):
+```bash
+wp cron event run pierre_surveillance_check
+wp option get pierre_settings --format=json
+```
+
+## Événements & Seuils
+
+- `new_strings`: déclenché si nouveaux strings ≥ `threshold`.
+Recommandations de presets:
+- Sobre: `new_strings_threshold=0`, `milestones=[100]`, `mode=digest (60 min)`
+- Active: `new_strings_threshold=20`, `milestones=[50,80,100]`, `mode=immediate`
+
+## Observabilité & Contrôles
+- Logs structurés via `do_action('wp_pierre_debug', ...)` (`api_call`, `backoff_set`, `digest_sent`, etc.)
+- Progression du run: `pierre_surv_progress` (processed/total)
+- Arrêt best-effort: `pierre_abort_surveillance_run` (AJAX) → set transient `pierre_surv_abort`
+- `completion_update`: envoi si progression détectée (delta % > 0).
+- `needs_attention`: si `waiting`+`fuzzy` > 0.
+- `milestone`: si `completion` atteint une valeur listée dans `milestones`.
+- `approval`: envoi d’approbations récentes (si exposé par la collecte).
+
+## Slack: tests & exemples
+
+Test rapide via cURL:
+```bash
+curl -X POST -H 'Content-type: application/json' \
+  --data '{"text":"Pierre test webhook 🪨"}' \
+  https://hooks.slack.com/services/T000/B000/XXXX
+```
+
+Blocks multi-sections (extrait):
+```json
+{
+  "text": "🧪 Test",
+  "blocks": [
+    {"type":"section","text":{"type":"mrkdwn","text":"🧪 *Test*"}},
+    {"type":"divider"}
+  ]
+}
+```
+
+Politique d’erreur:
+- HTTP≠200 ou body≠`ok` → échec consigné via `error_log()`.
+- `is_ready()` faux si URL manquante/incorrecte.
+
+## Sécurité & Permissions
+
+- Capacités personnalisées (préfixe `pierre_`) pour pages/admin actions (voir Capabilities).
+- AJAX: nonce requis, vérifs `current_user_can()`; sanitization de toutes entrées.
+- URLs Slack validées (`hooks.slack.com`) avant sauvegarde.
+
+## Dépannage
+
+- Pas de messages Slack: vérifier URL, tester via bouton/`curl`, consulter logs PHP, vérifier cooldown (2 min), s’assurer que WP-Cron tourne.
+- Discovery vide: attendre l’expiration du cache, vérifier connectivité, recharger la library projets.
+- Doublons de messages: vérifier overlap Global+Locale (scopes identiques) et ajuster `scopes`.
+- Digest non envoyé: confirmer `mode=digest` + fenêtre (`interval_minutes`≥15 ou `fixed_time` HH:MM) et exécution du cron.
+
+## Tests
+
+- PHPUnit 10+, mocks des appels externes (Slack/API Polyglots).
+- Catégories: unités (MessageBuilder, SlackNotifier), intégration (ProjectWatcher).
+- Coverage disponible via `composer test-coverage`.
+
+## Glossaire
+
+- GTE/PTE: rôles Polyglots.
+- `project_type`: `core|plugin|theme|meta|app`.
+- `locale_code`: code locale (ex. `fr`, `es_ES`).
+- `set`: sous-ensemble de traduction (par défaut `default`).
+- `scopes`: filtrage global/local par locales/projets.
+- `digest`: regroupement d’événements, `interval` ou `fixed_time`.

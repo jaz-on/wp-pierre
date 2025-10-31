@@ -24,11 +24,13 @@ class MessageBuilder {
      * @var array
      */
     private array $templates = [
-        'new_strings' => '🆕 *New strings detected!* 🪨\n\n*Project:* {project_name}\n*Locale:* {locale_name}\n*New strings:* {count}\n*Total completion:* {completion}%\n\nPierre found new strings to translate! 🎉',
-        'completion_update' => '📈 *Translation progress update!* 🪨\n\n*Project:* {project_name}\n*Locale:* {locale_name}\n*Completion:* {completion}% ({translated}/{total})\n*Change:* {change:+d}% since last check\n\nPierre is tracking the progress! 📊',
-        'needs_attention' => '⚠️ *Translation needs attention!* 🪨\n\n*Project:* {project_name}\n*Locale:* {locale_name}\n*Waiting:* {waiting} strings\n*Fuzzy:* {fuzzy} strings\n*Total completion:* {completion}%\n\nPierre found strings that need review! 🔍',
-        'error' => '❌ *Translation monitoring error!* 🪨\n\n*Project:* {project_name}\n*Locale:* {locale_name}\n*Error:* {error_message}\n\nPierre encountered an issue! 😢',
-        'test' => '🧪 *Pierre\'s test message!* 🪨\n\nPierre is testing his notification system!\n\n*Status:* {status}\n*Time:* {timestamp}\n\nPierre says: Everything is working! ✅'
+        'new_strings' => "🆕 *New strings detected!* 🪨\n\n*Project:* {project_name}\n*Locale:* {locale_name}\n*New strings:* {count}\n*Total completion:* {completion}%\n\n<{link}|Open on translate.wordpress.org>",
+        'completion_update' => "📈 *Translation progress update!* 🪨\n\n*Project:* {project_name}\n*Locale:* {locale_name}\n*Completion:* {completion}% ({translated}/{total})\n*Change:* {change:+d}%\n\n<{link}|Open on translate.wordpress.org>",
+        'needs_attention' => "⚠️ *Translation needs attention!* 🪨\n\n*Project:* {project_name}\n*Locale:* {locale_name}\n*Waiting:* {waiting}\n*Fuzzy:* {fuzzy}\n*Completion:* {completion}%\n\n<{link}|Open on translate.wordpress.org>",
+        'approval' => "✅ *Recent approvals!* 🪨\n\n*Project:* {project_name}\n*Locale:* {locale_name}\n*Approved since last check:* {approved}\n\n<{link}|Open on translate.wordpress.org>",
+        'milestone' => "🏁 *Milestone reached!* 🪨\n\n*Project:* {project_name}\n*Locale:* {locale_name}\n*Completion:* {completion}%\n\n<{link}|Open on translate.wordpress.org>",
+        'error' => "❌ *Translation monitoring error!* 🪨\n\n*Project:* {project_name}\n*Locale:* {locale_name}\n*Error:* {error_message}",
+        'test' => "🧪 *Pierre's test message!* 🪨\n\n*Status:* {status}\n*Time:* {timestamp}"
     ];
     
     /**
@@ -40,11 +42,17 @@ class MessageBuilder {
      * @return array Formatted message for Slack
      */
     public function build_new_strings_message(array $project_data, int $new_strings_count): array {
+        $link = $this->build_translate_link(
+            (string)($project_data['project_type'] ?? 'meta'),
+            (string)($project_data['project_slug'] ?? ''),
+            (string)($project_data['locale_code'] ?? '')
+        );
         $message = $this->format_template('new_strings', [
             'project_name' => $project_data['project_name'] ?? 'Unknown Project',
             'locale_name' => $project_data['locale_name'] ?? 'Unknown Locale',
             'count' => $new_strings_count,
-            'completion' => $project_data['stats']['completion_percentage'] ?? 0
+            'completion' => $project_data['stats']['completion_percentage'] ?? 0,
+            'link' => $link
         ]);
         
         return $this->build_slack_message($message, 'good');
@@ -63,13 +71,19 @@ class MessageBuilder {
         $previous_completion = $previous_data['stats']['completion_percentage'] ?? 0;
         $completion_change = $current_completion - $previous_completion;
         
+        $link = $this->build_translate_link(
+            (string)($project_data['project_type'] ?? 'meta'),
+            (string)($project_data['project_slug'] ?? ''),
+            (string)($project_data['locale_code'] ?? '')
+        );
         $message = $this->format_template('completion_update', [
             'project_name' => $project_data['project_name'] ?? 'Unknown Project',
             'locale_name' => $project_data['locale_name'] ?? 'Unknown Locale',
             'completion' => $current_completion,
             'translated' => $project_data['stats']['translated'] ?? 0,
             'total' => $project_data['stats']['total'] ?? 0,
-            'change' => $completion_change
+            'change' => $completion_change,
+            'link' => $link
         ]);
         
         $color = $completion_change > 0 ? 'good' : ($completion_change < 0 ? 'warning' : 'info');
@@ -84,12 +98,18 @@ class MessageBuilder {
      * @return array Formatted message for Slack
      */
     public function build_needs_attention_message(array $project_data): array {
+        $link = $this->build_translate_link(
+            (string)($project_data['project_type'] ?? 'meta'),
+            (string)($project_data['project_slug'] ?? ''),
+            (string)($project_data['locale_code'] ?? '')
+        );
         $message = $this->format_template('needs_attention', [
             'project_name' => $project_data['project_name'] ?? 'Unknown Project',
             'locale_name' => $project_data['locale_name'] ?? 'Unknown Locale',
             'waiting' => $project_data['stats']['waiting'] ?? 0,
             'fuzzy' => $project_data['stats']['fuzzy'] ?? 0,
-            'completion' => $project_data['stats']['completion_percentage'] ?? 0
+            'completion' => $project_data['stats']['completion_percentage'] ?? 0,
+            'link' => $link
         ]);
         
         return $this->build_slack_message($message, 'warning');
@@ -127,6 +147,36 @@ class MessageBuilder {
             'timestamp' => current_time('Y-m-d H:i:s')
         ]);
         
+        return $this->build_slack_message($message, 'good');
+    }
+
+    public function build_approval_message(array $project_data, int $approved_count): array {
+        $link = $this->build_translate_link(
+            (string)($project_data['project_type'] ?? 'meta'),
+            (string)($project_data['project_slug'] ?? ''),
+            (string)($project_data['locale_code'] ?? '')
+        );
+        $message = $this->format_template('approval', [
+            'project_name' => $project_data['project_name'] ?? 'Unknown Project',
+            'locale_name' => $project_data['locale_name'] ?? 'Unknown Locale',
+            'approved' => $approved_count,
+            'link' => $link
+        ]);
+        return $this->build_slack_message($message, 'good');
+    }
+
+    public function build_milestone_message(array $project_data, int $milestone): array {
+        $link = $this->build_translate_link(
+            (string)($project_data['project_type'] ?? 'meta'),
+            (string)($project_data['project_slug'] ?? ''),
+            (string)($project_data['locale_code'] ?? '')
+        );
+        $message = $this->format_template('milestone', [
+            'project_name' => $project_data['project_name'] ?? 'Unknown Project',
+            'locale_name' => $project_data['locale_name'] ?? 'Unknown Locale',
+            'completion' => $project_data['stats']['completion_percentage'] ?? 0,
+            'link' => $link
+        ]);
         return $this->build_slack_message($message, 'good');
     }
     
@@ -190,8 +240,19 @@ class MessageBuilder {
      * @return array Formatted Slack message
      */
     private function build_slack_message(string $text, string $color = 'good'): array {
+        // Provide Blocks (preferred) and keep attachments for broad compatibility
+        $blocks = [
+            [
+                'type' => 'section',
+                'text' => [
+                    'type' => 'mrkdwn',
+                    'text' => $text
+                ]
+            ]
+        ];
         return [
             'text' => $text,
+            'blocks' => $blocks,
             'attachments' => [
                 [
                     'color' => $color,
@@ -201,6 +262,32 @@ class MessageBuilder {
                 ]
             ]
         ];
+    }
+
+    /**
+     * Build translate.wordpress.org link for a project/locale
+     */
+    private function build_translate_link(string $project_type, string $project_slug, string $locale_code, string $set = 'default'): string {
+        $segments = [
+            'core' => 'wp',
+            'plugin' => 'wp-plugins',
+            'theme' => 'wp-themes',
+            'meta' => 'meta',
+            'app' => 'apps',
+        ];
+        $type = $segments[$project_type] ?? $segments['meta'];
+        $project_slug = sanitize_key($project_slug);
+        // Normaliser le code locale (ex: fr_FR)
+        $locale_code = preg_replace_callback(
+            '/^([a-z]{2})(?:_([a-zA-Z]{2}))?$/',
+            static function ($m) {
+                return isset($m[2]) ? strtolower($m[1]) . '_' . strtoupper($m[2]) : strtolower($m[1]);
+            },
+            trim((string) $locale_code)
+        );
+        $set = sanitize_key($set);
+        $url = 'https://translate.wordpress.org/projects/' . $type . '/' . $project_slug . '/' . $locale_code . '/' . $set . '/';
+        return esc_url_raw($url);
     }
     
     /**

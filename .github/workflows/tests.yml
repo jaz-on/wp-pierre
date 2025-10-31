@@ -70,16 +70,20 @@ jobs:
           sed -i "s/{{PCT}}/$PCT/g" assets/badges/coverage.svg
           sed -i "s/{{COLOR}}/$COLOR/g" assets/badges/coverage.svg
 
-      - name: Prepare gh-badges branch (no push by default)
-        env:
-          PUSH_BADGE: ${{ vars.PUSH_BADGE || 'false' }}
+      - name: Push coverage badge to gh-badges branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
+          # Save the badge before switching branches
+          cp assets/badges/coverage.svg /tmp/coverage.svg
+          # Fetch or create gh-badges branch
           git fetch --depth=1 origin gh-badges || true
           git checkout -B gh-badges || git checkout gh-badges
+          # Restore the badge and ensure directory exists
           mkdir -p assets/badges
-          mv -f assets/badges/coverage.svg assets/badges/coverage.svg
+          cp -f /tmp/coverage.svg assets/badges/coverage.svg
+          # Commit and push
           git add assets/badges/coverage.svg
-          git config user.name "github-actions"
-          git config user.email "github-actions@users.noreply.github.com"
-          git commit -m "chore(ci): update coverage badge" || echo "No changes"
-          if [ "$PUSH_BADGE" = "true" ]; then git push origin gh-badges; else echo "Skipping push (PUSH_BADGE=false)"; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(ci): update coverage badge [skip ci]" || echo "No changes to commit"
+          git push origin gh-badges || echo "Failed to push (branch may not exist yet)"

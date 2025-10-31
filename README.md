@@ -3,9 +3,10 @@
 [![CI](https://github.com/jaz-on/wp-pierre/actions/workflows/ci.yml/badge.svg)](https://github.com/jaz-on/wp-pierre/actions/workflows/ci.yml)
 [![Tests](https://github.com/jaz-on/wp-pierre/actions/workflows/tests.yml/badge.svg)](https://github.com/jaz-on/wp-pierre/actions/workflows/tests.yml)
 [![Coverage](https://raw.githubusercontent.com/jaz-on/wp-pierre/gh-badges/assets/badges/coverage.svg)](https://github.com/jaz-on/wp-pierre/actions/workflows/tests.yml)
+[![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)](https://github.com/jaz-on/wp-pierre/releases)
+
 [![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-8.3%2B-777BB4.svg)](https://php.net/)
-[![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)](https://github.com/jaz-on/wp-pierre/releases)
 [![License](https://img.shields.io/badge/License-GPL%20v2%2B-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 
 WordPress plugin that monitors WordPress Polyglots translations and notifies teams via Slack. Built with PHP 8.3+, WordPress 6.0+, and following WordPress Coding Standards.
@@ -66,8 +67,6 @@ Just like Pierre helps bridge the gap between different languages in WordPress! 
 ### Via Composer
 ```bash
 composer require wp-pierre/pierre
-```
-
 ```
 
 ## Contributing

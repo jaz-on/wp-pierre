@@ -62,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation**: Technical docs with Pierre's friendly voice
 
 ### Database Changes 📊
-- **New Table**: `wpupdates_user_projects` for user-project assignments
+- **New Table**: `pierre_user_projects` for user-project assignments
 - **Custom Capabilities**: 7 new WordPress capabilities for fine-grained permissions
 - **Custom Roles**: 3 new roles (pierre_admin, pierre_manager, pierre_contributor)
 - **Options**: Plugin settings stored in WordPress options table

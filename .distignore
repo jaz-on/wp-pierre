@@ -16,6 +16,7 @@ tests/
 docs/
 *.md
 !README.md
+!readme.txt
 
 # IDE files
 .vscode/
@@ -42,6 +43,8 @@ create-dist.sh
 junit.xml
 phpcs.xml
 .editorconfig
+phpcs.xml.dist
+CHANGELOG.md
 
 # Distribution directory (avoid recursion)
 dist/

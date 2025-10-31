@@ -73,3 +73,6 @@ Thumbs.db
 # Pierre specific
 /pierre-settings-backup/
 /pierre-logs/
+
+# Composer binary
+composer.phar

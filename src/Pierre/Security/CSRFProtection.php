@@ -128,7 +128,7 @@ class CSRFProtection {
                 'action' => $action,
                 'user_id' => get_current_user_id(),
                 'ip_address' => $this->get_client_ip(),
-                'user_agent' => wp_unslash($_SERVER['HTTP_USER_AGENT']) ?? 'Unknown'
+                'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : 'Unknown'
             ]);
             
             return [
@@ -138,7 +138,7 @@ class CSRFProtection {
             ];
             
         } catch (\Exception $e) {
-            error_log('Pierre encountered a CSRF validation error: ' . $e->getMessage() . ' 😢');
+            do_action('wp_pierre_debug', 'CSRF validation error: ' . $e->getMessage(), ['source' => 'CSRFProtection']);
             return [
                 'valid' => false,
                 'message' => __('Pierre says: CSRF validation error!', 'wp-pierre') . ' 😢',
@@ -154,7 +154,7 @@ class CSRFProtection {
      * @return bool True if referrer is valid
      */
     private function check_referrer(): bool {
-        $referrer = wp_unslash($_SERVER['HTTP_REFERER']) ?? '';
+        $referrer = isset($_SERVER['HTTP_REFERER']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_REFERER'])) : '';
         
         if (empty($referrer)) {
             return false;
@@ -217,7 +217,7 @@ class CSRFProtection {
         
         foreach ($ip_keys as $key) {
             if (array_key_exists($key, $_SERVER) === true) {
-                foreach (explode(',', wp_unslash($_SERVER[$key])) as $ip) {
+                foreach (explode(',', sanitize_text_field(wp_unslash($_SERVER[$key]))) as $ip) {
                     $ip = trim($ip);
                     
                     if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
@@ -227,7 +227,7 @@ class CSRFProtection {
             }
         }
         
-        return wp_unslash($_SERVER['REMOTE_ADDR']) ?? '0.0.0.0';
+        return isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '0.0.0.0';
     }
     
     /**
@@ -259,8 +259,8 @@ class CSRFProtection {
         
         update_option('pierre_security_logs', $security_logs);
         
-        // Pierre also logs to error log for immediate monitoring! 🪨
-        error_log("Pierre Security Event: {$event_type} - " . json_encode($log_entry));
+        // Pierre also exposes a debug hook for immediate monitoring (no default logger)
+        do_action('wp_pierre_debug', 'Security Event: ' . $event_type, ['source' => 'CSRFProtection', 'entry' => $log_entry]);
     }
     
     /**
@@ -348,7 +348,7 @@ class CSRFProtection {
             ];
             
         } catch (\Exception $e) {
-            error_log('Pierre encountered a token validation error: ' . $e->getMessage() . ' 😢');
+            do_action('wp_pierre_debug', 'Token validation error: ' . $e->getMessage(), ['source' => 'CSRFProtection']);
             return [
                 'valid' => false,
                 'message' => __('Pierre says: Token validation error!', 'wp-pierre') . ' 😢'

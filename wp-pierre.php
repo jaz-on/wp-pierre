@@ -59,6 +59,13 @@ if (file_exists($pierre_composer_autoload)) {
     }
 }
 
+// Enable plugin debug logs when WP_DEBUG is on, unless explicitly disabled
+if (!defined('PIERRE_DEBUG')) {
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        define('PIERRE_DEBUG', true);
+    }
+}
+
 /**
  * Pierre's main function - where the magic begins! 🪨
  * 

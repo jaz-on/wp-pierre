@@ -26,4 +26,4 @@ jobs:
       - name: Run PHPUnit
         run: vendor/bin/phpunit --colors=always
       - name: Run PHPCS
-        run: vendor/bin/phpcs -q --report=full
+        run: vendor/bin/phpcs -q --report=full --standard=phpcs.xml

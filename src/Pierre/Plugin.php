@@ -18,6 +18,9 @@ use Pierre\Teams\RoleManager;
 use Pierre\Teams\TeamRepository;
 use Pierre\Admin\AdminController;
 use Pierre\Frontend\DashboardController;
+use function __;
+use function admin_url;
+use function wp_create_nonce;
 
 /**
  * Main Plugin class - Pierre's command center! 🪨
@@ -89,7 +92,7 @@ class Plugin {
      */
     public function __construct() {
         // Pierre is ready to work! 🪨
-        error_log('Pierre is being constructed... 🪨');
+        $this->log_debug('Pierre is being constructed... 🪨');
     }
     
     /**
@@ -105,20 +108,23 @@ class Plugin {
         }
         
         try {
-            // Pierre loads his text domain for translations! 🪨
-            $this->load_textdomain();
             
             // Pierre initializes his components! 🪨
             $this->init_components();
             
+            // Register cron schedules as early as possible (before any reschedule)
+            if (isset($this->cron_manager)) {
+                $this->cron_manager->register_schedules();
+            }
+
             // Pierre sets up his hooks! 🪨
             $this->init_hooks();
             
             $this->initialized = true;
-            error_log('Pierre is fully initialized and ready to work! 🪨');
+            $this->log_debug('Pierre is fully initialized and ready to work! 🪨');
             
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error during initialization: ' . $e->getMessage() . ' 😢');
+            $this->log_debug('Pierre encountered an error during initialization: ' . $e->getMessage() . ' 😢');
             wp_die('Pierre says: Something went wrong during initialization! Please check the error logs. 🪨');
         }
     }
@@ -142,14 +148,19 @@ class Plugin {
             
             // Pierre schedules his surveillance! 🪨
             $this->schedule_cron_events();
+            // Auto-start surveillance immediately if configured (default: ON if unset) 🪨
+            $settings = get_option('pierre_settings', []);
+            if (!array_key_exists('auto_start_surveillance', $settings) || !empty($settings['auto_start_surveillance'])) {
+                $this->project_watcher->start_surveillance();
+            }
             
             // Pierre flushes rewrite rules! 🪨
             flush_rewrite_rules();
             
-            error_log('Pierre has been activated successfully! 🪨');
+            $this->log_debug('Pierre has been activated successfully! 🪨');
             
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error during activation: ' . $e->getMessage() . ' 😢');
+            $this->log_debug('Pierre encountered an error during activation: ' . $e->getMessage() . ' 😢');
             wp_die('Pierre says: Activation failed! Please check the error logs. 🪨');
         }
     }
@@ -168,10 +179,10 @@ class Plugin {
             // Pierre flushes rewrite rules! 🪨
             flush_rewrite_rules();
             
-            error_log('Pierre has been deactivated! 🪨');
+            $this->log_debug('Pierre has been deactivated! 🪨');
             
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error during deactivation: ' . $e->getMessage() . ' 😢');
+            $this->log_debug('Pierre encountered an error during deactivation: ' . $e->getMessage() . ' 😢');
         }
     }
     
@@ -189,27 +200,13 @@ class Plugin {
             // Pierre removes his options! 🪨
             $this->remove_options();
             
-            error_log('Pierre has been completely uninstalled! 🪨');
+            $this->log_debug('Pierre has been completely uninstalled! 🪨');
             
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error during uninstall: ' . $e->getMessage() . ' 😢');
+            $this->log_debug('Pierre encountered an error during uninstall: ' . $e->getMessage() . ' 😢');
         }
     }
-    
-    /**
-     * Pierre loads his text domain for translations! 🪨
-     * 
-     * @since 1.0.0
-     * @return void
-     */
-    private function load_textdomain(): void {
-        load_plugin_textdomain(
-            'wp-pierre',
-            false,
-            dirname(PIERRE_PLUGIN_BASENAME) . '/languages'
-        );
-    }
-    
+      
     /**
      * Pierre initializes all his components! 🪨
      * 
@@ -239,12 +236,26 @@ class Plugin {
      */
     private function init_hooks(): void {
         // Pierre hooks into WordPress actions! 🪨
-        add_action('init', [$this, 'init_public_hooks']);
+        // Only bind public hooks on front (avoid admin-ajax/heartbeat noise)
+        if (!is_admin() && !(function_exists('wp_doing_ajax') && wp_doing_ajax())) {
+            add_action('init', [$this, 'init_public_hooks']);
+        }
         add_action('admin_init', [$this, 'init_admin_hooks']);
-        // Ensure admin menu is registered at the right timing
-        add_action('admin_menu', [$this->admin_controller, 'add_admin_menu']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_public_scripts']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
+
+        // Centralized debug logger (state-change/throttled). Any component can do: do_action('wp_pierre_debug', 'message', ['scope'=>'X'])
+        add_action('wp_pierre_debug', [$this, 'handle_debug'], 10, 2);
+
+        // (debug hook removed)
+
+        // Register admin menus early, before admin_menu fires
+        if (isset($this->admin_controller)) {
+            add_action('admin_menu', [$this->admin_controller, 'add_admin_menu']);
+            add_action('network_admin_menu', [$this->admin_controller, 'add_admin_menu']);
+            add_action('user_admin_menu', [$this->admin_controller, 'add_admin_menu']);
+            add_action('admin_bar_menu', [$this->admin_controller, 'add_admin_bar_menu'], 100);
+        }
     }
     
     /**
@@ -254,8 +265,31 @@ class Plugin {
      * @return void
      */
     public function init_public_hooks(): void {
+        // Skip when running in admin or ajax contexts
+        if (is_admin() || (function_exists('wp_doing_ajax') && wp_doing_ajax())) { return; }
         // Pierre sets up his public routing! 🪨
         $this->frontend_controller->init();
+    }
+
+    /**
+     * Centralized throttled debug handler. Avoids log storms while keeping useful traces.
+     */
+    public function handle_debug(string $message, array $context = []): void {
+        if (!$this->is_debug()) { return; }
+        // Build a signature from message + important context keys
+        $scope = isset($context['scope']) ? (string)$context['scope'] : 'general';
+        $sigBase = $message . '|' . $scope;
+        if (isset($context['action'])) { $sigBase .= '|a:' . (string)$context['action']; }
+        if (isset($context['code'])) { $sigBase .= '|c:' . (string)$context['code']; }
+        $sig = 'pierre_log_' . md5($sigBase);
+        // Throttle: 60s per unique signature
+        if (get_transient($sig)) { return; }
+        set_transient($sig, 1, 60);
+        // Compose enriched line (include scope and selected context keys)
+        $line = '[wp-pierre][' . $scope . '] ' . $message;
+        if (isset($context['action'])) { $line .= ' action=' . $context['action']; }
+        if (isset($context['code'])) { $line .= ' code=' . (string)$context['code']; }
+        error_log($line);
     }
     
     /**
@@ -265,7 +299,20 @@ class Plugin {
      * @return void
      */
     public function init_admin_hooks(): void {
+        // Prevent double-binding within the same request
+        static $adminBooted = false;
+        if ($adminBooted) { return; }
+        $adminBooted = true;
+
         // Pierre sets up his admin interface! 🪨
+        // Add capabilities only once (persisted flag); activation already seeds caps
+        if (isset($this->role_manager) && !get_option('pierre_caps_initialized')) {
+            $this->role_manager->add_capabilities();
+            update_option('pierre_caps_initialized', time());
+        }
+        if (defined('PIERRE_DEBUG') && PIERRE_DEBUG) {
+            error_log('PIERRE Plugin::init_admin_hooks fired');
+        }
         $this->admin_controller->init();
     }
     
@@ -301,8 +348,38 @@ class Plugin {
             [],
             PIERRE_VERSION
         );
-        
-        // No admin JS interactivity: do not enqueue script or localize data
+        // Enqueue admin interactivity script and localize runtime data
+        wp_enqueue_script(
+            'pierre-admin',
+            PIERRE_PLUGIN_URL . 'assets/js/admin.js',
+            ['jquery'],
+            PIERRE_VERSION,
+            true
+        );
+        wp_localize_script(
+            'pierre-admin',
+            'pierreAdminL10n',
+            [
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                // Two nonce contexts exist in handlers; expose both for consistency
+                'nonce' => wp_create_nonce('pierre_admin_ajax'),
+                'nonceAjax' => wp_create_nonce('pierre_ajax'),
+                'dismiss' => __('Dismiss this notice.', 'wp-pierre'),
+                'saving' => __('Saving...', 'wp-pierre'),
+                'testing' => __('Testing...', 'wp-pierre'),
+                'saveSuccess' => __('Settings saved successfully!', 'wp-pierre'),
+                'saveError' => __('An error occurred while saving settings.', 'wp-pierre'),
+                'testSuccess' => __('Test succeeded!', 'wp-pierre'),
+                'testFailed' => __('Test failed!', 'wp-pierre'),
+                'testError' => __('An error occurred during test.', 'wp-pierre'),
+                'dryRunSuccess' => __('Dry run succeeded. You can now start surveillance.', 'wp-pierre'),
+                'dryRunFailed' => __('Dry run failed. Check settings and try again.', 'wp-pierre'),
+                'dryRunError' => __('An error occurred during dry run.', 'wp-pierre'),
+                'progressIdle' => __('Progress: idle', 'wp-pierre'),
+                'progressAborting' => __('Progress: Aborting…', 'wp-pierre'),
+                'progressLabel' => __('Progress: %1$s/%2$s', 'wp-pierre'),
+            ]
+        );
     }
     
     /**
@@ -334,9 +411,14 @@ class Plugin {
         ) {$charset_collate};";
         
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        dbDelta($sql);
+        // If table already exists, skip dbDelta to avoid noisy primary key adjustments
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_name));
+        if (!$exists) {
+            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+            dbDelta($sql);
+        }
         
-        error_log('Pierre created his database tables! 🪨');
+        $this->log_debug('Pierre created his database tables! 🪨');
     }
     
     /**
@@ -347,7 +429,7 @@ class Plugin {
      */
     private function setup_capabilities(): void {
         $this->role_manager->add_capabilities();
-        error_log('Pierre set up his capabilities! 🪨');
+        $this->log_debug('Pierre set up his capabilities! 🪨');
     }
     
     /**
@@ -358,7 +440,7 @@ class Plugin {
      */
     private function schedule_cron_events(): void {
         $this->cron_manager->schedule_events();
-        error_log('Pierre scheduled his surveillance events! 🪨');
+        $this->log_debug('Pierre scheduled his surveillance events! 🪨');
     }
     
     /**
@@ -369,7 +451,7 @@ class Plugin {
      */
     private function clear_cron_events(): void {
         $this->cron_manager->clear_events();
-        error_log('Pierre cleared his scheduled events! 🪨');
+        $this->log_debug('Pierre cleared his scheduled events! 🪨');
     }
     
     /**
@@ -384,7 +466,7 @@ class Plugin {
         $table_name = $wpdb->prefix . 'pierre_user_projects';
         $wpdb->query("DROP TABLE IF EXISTS {$table_name}");
         
-        error_log('Pierre removed his database tables! 🪨');
+        $this->log_debug('Pierre removed his database tables! 🪨');
     }
     
     /**
@@ -397,8 +479,26 @@ class Plugin {
         delete_option('pierre_settings');
         delete_option('pierre_version');
         
-        error_log('Pierre removed his options! 🪨');
+        $this->log_debug('Pierre removed his options! 🪨');
+
     }
+
+    /**
+     * Whether verbose debug logging is enabled.
+     */
+    private function is_debug(): bool {
+        return defined('PIERRE_DEBUG') ? (bool) PIERRE_DEBUG : false;
+    }
+
+    /**
+     * Log a debug message if debug is enabled.
+     */
+    private function log_debug(string $message): void {
+        if ($this->is_debug()) {
+            do_action('wp_pierre_debug', $message, ['source' => 'Plugin']);
+        }
+    }
+
     
     /**
      * Pierre gets his cron manager! 🪨
@@ -428,5 +528,23 @@ class Plugin {
      */
     public function get_slack_notifier(): SlackNotifier {
         return $this->slack_notifier;
+    }
+
+    /**
+     * Centralized HTTP defaults (timeout, UA, headers) for all outbound requests.
+     */
+    public static function get_http_defaults(): array {
+        $settings = get_option('pierre_settings', []);
+        $timeout = isset($settings['request_timeout']) ? max(3, (int) $settings['request_timeout']) : 30;
+        $ua = 'wp-pierre/' . (defined('PIERRE_VERSION') ? PIERRE_VERSION : '1.0.0') . '; ' . home_url('/');
+        return [
+            'timeout' => $timeout,
+            'redirection' => 3,
+            'user-agent' => $ua,
+            'headers' => [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ],
+        ];
     }
 }

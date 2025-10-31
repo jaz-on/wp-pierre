@@ -1,3 +1,5 @@
+<div align="center">
+
 # Pierre - WordPress Translation Monitor 🪨
 
 [![CI](https://github.com/jaz-on/wp-pierre/actions/workflows/ci.yml/badge.svg)](https://github.com/jaz-on/wp-pierre/actions/workflows/ci.yml)
@@ -8,6 +10,8 @@
 [![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-8.3%2B-777BB4.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPL%20v2%2B-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
+
+</div>
 
 WordPress plugin that monitors WordPress Polyglots translations and notifies teams via Slack. Built with PHP 8.3+, WordPress 6.0+, and following WordPress Coding Standards.
 

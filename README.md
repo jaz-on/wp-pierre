@@ -14,11 +14,19 @@ WordPress plugin that monitors WordPress Polyglots translations and notifies tea
 
 Pierre loves WordPress, Pierre loves WordPress when it displays **IN HIS PREFERRED LANGUAGE**, Pierre also loves translating some strings on translate.wordpress.org casually.
 
-This project is a rewrite of [Pascal Casier's wpupdates](https://wp-info.org/wpupdates-to-slack/) from 2016, which helped translators get Slack notifications about strings waiting for translation. WP-Pierre modernizes this idea with better UX and a personality—hence the rock emoji.
+But Pierre really struggles to be consistent and keep up with the release pace of the plugins and themes he helps translate.
 
-*The name "Pierre" nods to the [Pierre de Rosette](https://fr.wikipedia.org/wiki/Pierre_de_Rosette) (Rosetta Stone), bridging languages just like Pierre bridges WordPress translations. It translates easily: Peter (EN/DE), Pedro (ES), Πέτρος (GR), Pietro (IT), Piotr (PL), etc.* 🪨
+So he talks to his Jason, a frenchmen who doesn't translate much like Pierre, but often discusses with locale managers, GTE, PTE and remembers an old project initiated by a friend of his: a Belgian named Pascal Casier. The thing is, Pascal is a nerd who loves tinkering with APIs and render datas in a nice way, especially those from wordpress.org. In 2016, he built small tools to crawl, then display data from translate.wordpress.org and thus help translators get notified on their Slack about strings waiting for translation.
 
----
+So Jason basically decided to rewrite the whole thing from scratch to offer a better experience for the community. As the project wasn't really fun to use, he decided to make it more user-friendly by giving it a personality and a rock emoji.
+
+**INTRODUCING to you: WP-Pierre.** The evolution of this old idea, a WordPress plugin coupled with a website https://pierre.jasonrouet.com/ (temporary URL) to simplify access to this tool for any local WordPress community and manage: adding translation teams + connecting your local community Slack.
+
+*Fun fact: The name Pierre is a nod to the [Pierre de Rosette (French)](https://fr.wikipedia.org/wiki/Pierre_de_Rosette), or Rosetta Stone in English. Pierre's also a surname which translates easily across languages: Peter (DE/EN), Peio (EU), Pedro (ES), Πέτρος (GR), Pier/Pietro (IT), Piotr (PL), etc.
+
+Just like Pierre helps bridge the gap between different languages in WordPress! 🪨
+
+(What a great story, don't you think? It took me 2 hours to write it, but it's worth it. IT'S WORTH IT, RIGHT? RIGHT!?! To be fair, I had a lot of fun writing it. And I'm sure you're happy that I didn't stick with my first idea of naming it after [Pierre-François-Xavier Bouchard](https://fr.wikipedia.org/wiki/Pierre-Fran%C3%A7ois-Xavier_Bouchard)! 🤡)*
 
 ## Features
 
@@ -60,52 +68,6 @@ This project is a rewrite of [Pascal Casier's wpupdates](https://wp-info.org/wpu
 composer require wp-pierre/pierre
 ```
 
-## Usage
-
-- **Administrators**: Monitor projects, configure surveillance, manage teams, view reports
-- **Team Members**: Access public dashboard, track progress, receive Slack notifications
-- **Stakeholders**: View public dashboard for project visibility without admin access
-
-## API & Extensibility
-
-### AJAX Endpoints
-- `pierre_start_surveillance` - Start surveillance monitoring
-- `pierre_stop_surveillance` - Stop surveillance monitoring
-- `pierre_add_project` - Add a new project to monitor
-- `pierre_remove_project` - Remove a project from monitoring
-- `pierre_admin_save_settings` - Save plugin settings
-
-### Hooks & Filters
-```php
-// Customize notification messages
-add_filter('pierre_notification_message', function($message, $type) {
-    return $message;
-}, 10, 2);
-
-// Modify surveillance intervals
-add_filter('pierre_surveillance_interval', function($interval) {
-    return 30; // 30 minutes
-});
-```
-
-## Troubleshooting
-
-**No Slack messages**
-- Verify webhook URL via "Test Webhook" or cURL: `curl -X POST -H 'Content-type: application/json' --data '{"text":"Test"}' YOUR_WEBHOOK_URL`
-- Check cooldown (up to 2 min between forced runs)
-- Ensure WP-Cron runs (host/system cron)
-
-**Empty Discovery**
-- Wait for cache expiration (transients) or reload projects library
-- Check connectivity
-
-**Duplicate notifications**
-- Control Global + Locale webhook scopes to avoid overlaps
-
-### WP-CLI Helpers
-```bash
-wp cron event run pierre_surveillance_check
-wp option get pierre_settings --format=json
 ```
 
 ## Contributing
@@ -128,7 +90,7 @@ You can sponsor me on [Ko-fi](https://ko-fi.com/jasonrouet) or [GitHub Sponsors]
 ## Acknowledgments
 
 - WordPress Polyglots team for the translation platform
-- Pascal Casier for the initial wpupdates idea (2016)
+This project is a rewrite of [Pascal Casier's wpupdates](https://wp-info.org/wpupdates-to-slack/) from 2016, which helped translators get Slack notifications about strings waiting for translation. WP-Pierre modernizes this idea with better UX and a personality—hence the rock emoji.
 
 ---
 

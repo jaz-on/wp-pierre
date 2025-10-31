@@ -7,6 +7,21 @@
 
 (function($) {
     'use strict';
+    // Inject Pierre nonce automatically if missing
+    $.ajaxPrefilter(function(options, originalOptions){
+        try {
+            var url = (options && options.url) || '';
+            if (!/admin-ajax\.php/i.test(url)) { return; }
+            if ((options.type || options.method || 'GET').toUpperCase() !== 'POST') { return; }
+            if (originalOptions && originalOptions.data instanceof FormData) { return; }
+            var dataStr = typeof originalOptions.data === 'string' ? originalOptions.data : '';
+            if (/(?:^|&|=)nonce=/.test(dataStr)) { return; }
+            var nonce = (window.pierre_ajax && window.pierre_ajax.nonce) || (window.pierreAjax && window.pierreAjax.nonce) || (window.pierre_ajax_nonce) || (window.pierreAjaxNonce) || (window.pierre_ajax && window.pierre_ajax.nonce);
+            if (!nonce && typeof pierre_ajax !== 'undefined') { nonce = pierre_ajax.nonce; }
+            if (!nonce) { return; }
+            options.data = (dataStr ? dataStr + '&' : '') + 'nonce=' + encodeURIComponent(nonce);
+        } catch (e) {}
+    });
     
     // Pierre's main object! 🪨
     window.Pierre = {

@@ -21,6 +21,9 @@ use Pierre\Notifications\SlackNotifier;
  * @since 1.0.0
  */
 class DashboardController {
+    /** Debug helper */
+    private function is_debug(): bool { return defined('PIERRE_DEBUG') ? (bool) PIERRE_DEBUG : false; }
+    private function log_debug(string $m): void { if ($this->is_debug()) { error_log('[wp-pierre] ' . $m); } }
     
     /**
      * Pierre's user project link - he manages assignments! 🪨
@@ -67,11 +70,10 @@ class DashboardController {
             
             // Pierre sets up his AJAX handlers! 🪨
             $this->setup_ajax_handlers();
-            
-            error_log('Pierre initialized his public interface! 🪨');
+            // Reduce log noise: do not log routine init every request
             
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error initializing public interface: ' . $e->getMessage() . ' 😢');
+            $this->log_debug('Pierre encountered an error initializing public interface: ' . $e->getMessage() . ' 😢');
         }
     }
     
@@ -105,7 +107,7 @@ class DashboardController {
         // Pierre localizes his script! 🪨
         wp_localize_script('pierre-public-js', 'pierreAjax', [
             'ajaxurl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('pierre_public_nonce'),
+            'nonce' => wp_create_nonce('pierre_ajax'),
             'strings' => [
                 'loading' => __('Loading...', 'wp-pierre'),
                 'error' => __('An error occurred', 'wp-pierre'),
@@ -447,6 +449,15 @@ class DashboardController {
         add_action('wp_ajax_pierre_get_projects', [$this, 'ajax_get_projects']);
         add_action('wp_ajax_pierre_test_notification', [$this, 'ajax_test_notification']);
     }
+
+    /**
+     * Uniform JSON error response for AJAX handlers
+     */
+    private function respond_error(string $code, string $message, int $status = 403, $details = null): void {
+        $data = ['code' => $code, 'message' => $message];
+        if ($details !== null) { $data['details'] = $details; }
+        wp_send_json_error($data, $status);
+    }
     
     /**
      * Pierre handles AJAX stats request! 🪨
@@ -456,13 +467,13 @@ class DashboardController {
      */
     public function ajax_get_stats(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
+            $this->respond_error('invalid_nonce', 'Pierre says: Invalid nonce! 😢', 403);
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('pierre_view_dashboard')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            $this->respond_error('forbidden', 'Pierre says: You don\'t have permission! 😢', 403);
         }
         
         $stats = $this->get_dashboard_stats();
@@ -477,13 +488,13 @@ class DashboardController {
      */
     public function ajax_get_projects(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
+            $this->respond_error('invalid_nonce', 'Pierre says: Invalid nonce! 😢', 403);
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('pierre_view_dashboard')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            $this->respond_error('forbidden', 'Pierre says: You don\'t have permission! 😢', 403);
         }
         
         $projects = $this->project_watcher->get_watched_projects();
@@ -498,13 +509,13 @@ class DashboardController {
      */
     public function ajax_test_notification(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
-            wp_die('Pierre says: Invalid nonce! 😢');
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
+            $this->respond_error('invalid_nonce', 'Pierre says: Invalid nonce! 😢', 403);
         }
         
         // Pierre checks permissions! 🪨
         if (!current_user_can('pierre_manage_notifications')) {
-            wp_die('Pierre says: You don\'t have permission! 😢');
+            $this->respond_error('forbidden', 'Pierre says: You don\'t have permission! 😢', 403);
         }
         
         $result = $this->slack_notifier->test_notification();
@@ -518,8 +529,8 @@ class DashboardController {
      * @return bool True if user can view, false otherwise
      */
     private function check_view_permissions(): bool {
-        // Align on admin-only access for now (can be made public later)
-        return current_user_can('manage_options');
+        // Public access for MVP; consider capability gate later if needed
+        return true;
     }
     
     /**
@@ -561,8 +572,14 @@ class DashboardController {
      * @return array Projects for the locale
      */
     private function get_projects_for_locale(string $locale): array {
-        // Pierre will implement this in future phases! 🪨
-        return [];
+        $watched = get_option('pierre_watched_projects', []);
+        if (!is_array($watched)) { return []; }
+        $list = [];
+        foreach ($watched as $p) {
+            $lc = $p['locale'] ?? ($p['locale_code'] ?? '');
+            if ($lc === $locale) { $list[] = $p; }
+        }
+        return $list;
     }
     
     /**

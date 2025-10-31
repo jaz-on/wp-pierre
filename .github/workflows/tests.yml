@@ -27,7 +27,7 @@ jobs:
       - name: Run PHPUnit with coverage
         run: |
           mkdir -p build/logs
-          vendor/bin/phpunit -c phpunit.xml --coverage-clover build/logs/clover.xml
+          vendor/bin/phpunit -c phpunit.xml --coverage-clover build/logs/clover.xml || exit 1
 
       - name: Compute coverage percent
         id: cov
@@ -71,19 +71,27 @@ jobs:
           sed -i "s/{{COLOR}}/$COLOR/g" assets/badges/coverage.svg
 
       - name: Push coverage badge to gh-badges branch
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
         run: |
           # Save the badge before switching branches
           cp assets/badges/coverage.svg /tmp/coverage.svg
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           # Fetch or create gh-badges branch
-          git fetch --depth=1 origin gh-badges || true
-          git checkout -B gh-badges || git checkout gh-badges
+          git fetch --depth=1 origin gh-badges 2>/dev/null || echo "Branch gh-badges does not exist yet, will create"
+          # Create or checkout branch
+          if git show-ref --verify --quiet refs/remotes/origin/gh-badges; then
+            git checkout gh-badges
+            git pull origin gh-badges || true
+          else
+            git checkout --orphan gh-badges
+            git rm -rf . || true
+          fi
           # Restore the badge and ensure directory exists
           mkdir -p assets/badges
           cp -f /tmp/coverage.svg assets/badges/coverage.svg
           # Commit and push
           git add assets/badges/coverage.svg
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -m "chore(ci): update coverage badge [skip ci]" || echo "No changes to commit"
-          git push origin gh-badges || echo "Failed to push (branch may not exist yet)"
+          git push origin gh-badges || echo "Failed to push"

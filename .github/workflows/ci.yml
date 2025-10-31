@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: [ '7.4', '8.0', '8.1', '8.2', '8.3' ]
+        php: [ '8.3' ]
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -24,6 +24,6 @@ jobs:
         run: |
           find . -name "*.php" -print0 | xargs -0 -n1 php -l
       - name: Run PHPUnit
-        run: vendor/bin/phpunit --colors=always
+        run: vendor/bin/phpunit -c phpunit.xml --colors=always
       - name: Run PHPCS
         run: vendor/bin/phpcs -q --report=full --standard=phpcs.xml

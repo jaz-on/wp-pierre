@@ -3,7 +3,7 @@ Contributors: jaz_on
 Tags: translation, polyglots, slack, notifications, monitoring
 Requires at least: 6.0
 Tested up to: 6.8
-Requires PHP: 8.3
+Requires PHP: 8.1
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -72,13 +72,7 @@ Yes! Pierre is fully internationalized and ready for translation into any langua
 
 = Changelog =
 
-= 1.0.5 =
-* Fixed critical naming inconsistencies causing fatal errors
-* Corrected WordPress trademark usage in plugin name
-* Fixed resource loading issues (CSS/JS now properly enqueued)
-* Added comprehensive i18n improvements with translator comments
-* Replaced deprecated functions with WordPress alternatives
-* Enhanced security with proper input validation and output escaping
+Note: On WordPress.org, translations are auto-loaded from the `languages/` directory. No manual `load_plugin_textdomain()` is needed.
 
 = 1.0.4 =
 * Fixed component initialization order to prevent typed property errors

@@ -151,7 +151,7 @@ function pierre_get_cache_stats(): array {
         ];
         
     } catch (\Exception $e) {
-        error_log("Pierre encountered an error getting cache stats: " . $e->getMessage() . " 😢");
+        do_action('wp_pierre_debug', 'Error getting cache stats: ' . $e->getMessage(), ['source' => 'performance-config']);
         return [
             'total_entries' => 0,
             'expired_entries' => 0,
@@ -189,11 +189,11 @@ function pierre_flush_all_cache(): int {
             }
         }
         
-        error_log("Pierre flushed {$flushed_count} cache entries! 🪨");
+        do_action('wp_pierre_debug', 'Flushed cache entries: ' . $flushed_count, ['source' => 'performance-config']);
         return $flushed_count;
         
     } catch (\Exception $e) {
-        error_log("Pierre encountered an error flushing cache: " . $e->getMessage() . " 😢");
+        do_action('wp_pierre_debug', 'Error flushing cache: ' . $e->getMessage(), ['source' => 'performance-config']);
         return 0;
     }
 }
@@ -263,7 +263,7 @@ function pierre_optimize_wordpress(): void {
             });
         }
         
-        error_log('Pierre optimized WordPress for better performance! 🪨');
+        do_action('wp_pierre_debug', 'Optimized WordPress for better performance', ['source' => 'performance-config']);
     });
 }
 
@@ -285,11 +285,15 @@ function pierre_init_performance_optimizations(): void {
     add_action('wp_footer', function() {
         if (current_user_can('manage_options') && get_option('pierre_debug_mode', false)) {
             $memory_usage = pierre_get_memory_usage();
-            echo "<!-- Pierre's Performance Stats: Memory: {$memory_usage['current_usage_mb']}MB, Peak: {$memory_usage['peak_usage_mb']}MB -->";
+			printf(
+				"<!-- Pierre's Performance Stats: Memory: %sMB, Peak: %sMB -->",
+				esc_html((string) $memory_usage['current_usage_mb']),
+				esc_html((string) $memory_usage['peak_usage_mb'])
+			);
         }
     });
     
-    error_log('Pierre initialized performance optimizations! 🪨');
+    do_action('wp_pierre_debug', 'Initialized performance optimizations', ['source' => 'performance-config']);
 }
 
 // Pierre starts his performance optimizations! 🪨

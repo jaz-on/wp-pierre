@@ -60,7 +60,7 @@ class PerformanceOptimizer {
         $cached_data = get_transient($cache_key);
         
         if ($cached_data !== false) {
-            error_log("Pierre found cached API data for {$cache_key}! 🪨");
+            do_action('wp_pierre_debug', 'Cache hit (API): ' . $cache_key, ['source' => 'PerformanceOptimizer']);
             return $cached_data;
         }
         
@@ -70,7 +70,7 @@ class PerformanceOptimizer {
         if ($fresh_data !== null) {
             // Pierre caches the fresh data! 🪨
             set_transient($cache_key, $fresh_data, $timeout);
-            error_log("Pierre cached fresh API data for {$cache_key}! 🪨");
+            do_action('wp_pierre_debug', 'Cache set (API): ' . $cache_key, ['source' => 'PerformanceOptimizer']);
         }
         
         return $fresh_data;
@@ -90,7 +90,7 @@ class PerformanceOptimizer {
         $cached_data = get_transient($cache_key);
         
         if ($cached_data !== false) {
-            error_log("Pierre found cached DB data for {$cache_key}! 🪨");
+            do_action('wp_pierre_debug', 'Cache hit (DB): ' . $cache_key, ['source' => 'PerformanceOptimizer']);
             return $cached_data;
         }
         
@@ -100,7 +100,7 @@ class PerformanceOptimizer {
         if ($fresh_data !== null) {
             // Pierre caches the fresh data! 🪨
             set_transient($cache_key, $fresh_data, $timeout);
-            error_log("Pierre cached fresh DB data for {$cache_key}! 🪨");
+            do_action('wp_pierre_debug', 'Cache set (DB): ' . $cache_key, ['source' => 'PerformanceOptimizer']);
         }
         
         return $fresh_data;
@@ -133,7 +133,7 @@ class PerformanceOptimizer {
         $results = [];
         $total_items = count($data);
         
-        error_log("Pierre processing {$total_items} items in batches of {$batch_size}! 🪨");
+        do_action('wp_pierre_debug', 'Batch processing start', ['source' => 'PerformanceOptimizer', 'total' => $total_items, 'batch' => $batch_size]);
         
         for ($i = 0; $i < $total_items; $i += $batch_size) {
             $batch = array_slice($data, $i, $batch_size);
@@ -149,7 +149,7 @@ class PerformanceOptimizer {
             }
         }
         
-        error_log("Pierre completed batch processing! 🪨");
+        do_action('wp_pierre_debug', 'Batch processing complete', ['source' => 'PerformanceOptimizer']);
         return $results;
     }
     
@@ -173,14 +173,14 @@ class PerformanceOptimizer {
             }
             
             if ($wpdb->last_error) {
-                error_log("Pierre encountered a DB error: " . $wpdb->last_error . " 😢");
+                do_action('wp_pierre_debug', 'DB error: ' . $wpdb->last_error, ['source' => 'PerformanceOptimizer']);
                 return [];
             }
             
             return $results ?: [];
             
         } catch (\Exception $e) {
-            error_log("Pierre encountered an error executing query: " . $e->getMessage() . " 😢");
+            do_action('wp_pierre_debug', 'Query exception: ' . $e->getMessage(), ['source' => 'PerformanceOptimizer']);
             return [];
         }
     }
@@ -214,11 +214,11 @@ class PerformanceOptimizer {
                 }
             }
             
-            error_log("Pierre flushed {$flushed_count} cache entries matching {$pattern}! 🪨");
+            do_action('wp_pierre_debug', 'Flushed cache by pattern', ['source' => 'PerformanceOptimizer', 'pattern' => $pattern, 'count' => $flushed_count]);
             return $flushed_count;
             
         } catch (\Exception $e) {
-            error_log("Pierre encountered an error flushing cache: " . $e->getMessage() . " 😢");
+            do_action('wp_pierre_debug', 'Flush cache exception: ' . $e->getMessage(), ['source' => 'PerformanceOptimizer']);
             return 0;
         }
     }
@@ -241,7 +241,7 @@ class PerformanceOptimizer {
             $total_flushed += $this->flush_cache_pattern($pattern);
         }
         
-        error_log("Pierre flushed {$total_flushed} total cache entries! 🪨");
+        do_action('wp_pierre_debug', 'Flushed total cache entries', ['source' => 'PerformanceOptimizer', 'count' => $total_flushed]);
         return $total_flushed;
     }
     
@@ -277,7 +277,7 @@ class PerformanceOptimizer {
             remove_action('wp_head', 'rsd_link');
             remove_action('wp_head', 'wp_shortlink_wp_head');
             
-            error_log('Pierre optimized WordPress queries! 🪨');
+            do_action('wp_pierre_debug', 'Optimized WordPress queries', ['source' => 'PerformanceOptimizer']);
         });
     }
     

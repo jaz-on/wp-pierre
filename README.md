@@ -1,3 +1,26 @@
+<!-- Coverage badge served from gh-badges branch (set by CI). Replace OWNER/REPO if forking. -->
+<!-- ![coverage](https://raw.githubusercontent.com/OWNER/REPO/gh-badges/assets/badges/coverage.svg) -->
+
+# Quick start
+
+1) Installer & activer
+- Téléversez le dossier dans `wp-content/plugins/` et activez-le.
+
+2) Webhook global Slack
+- Allez dans Admin → Pierre → Settings → onglet « Global Webhook ».
+- Activez, collez l’URL Slack, choisissez les `types` (ex. `new_strings`, `milestone`).
+- Choisissez le `mode`: `immediate` ou `digest` (intervalle ou heure fixe), puis « Test Webhook ».
+
+3) Découverte des locales
+- Admin → Pierre → Settings → « Locales Discovery » : sélectionnez vos locales (ex. `fr`, `es`).
+- Optionnel: pour une locale, configurez un `Locale Webhook` (canal dédié, seuils, digest).
+
+4) Découverte des projets
+- Admin → Pierre → Settings → « Projects Discovery » : cochez les projets à surveiller.
+
+5) Lancer la surveillance
+- Page « Projects » : exécutez un « Dry run », puis « Start Surveillance ».
+
 # Pierre - WordPress Translation Monitor 🪨
 
 [![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-blue.svg)](https://wordpress.org/)
@@ -60,7 +83,7 @@ Pierre is a WordPress plugin that monitors WordPress Polyglots translations and 
 ## Requirements
 
 - **WordPress**: 6.0 or higher
-- **PHP**: 8.3 or higher
+- **PHP**: 8.1 or higher
 - **MySQL**: 5.7+ or MariaDB 10.3+
 - **Slack**: Webhook URL for notifications (optional)
 
@@ -84,17 +107,16 @@ After activation, Pierre will automatically:
 - Set up custom user roles and capabilities
 - Initialize the surveillance system
 
-### 2. **Slack Integration**
-1. Go to **Pierre** → **Settings**
-2. Enter your Slack webhook URL
-3. Test the connection to ensure notifications work
-4. Configure notification preferences
+### 2. **Slack (webhooks global & local)**
+1. **Global**: Settings → Global Webhook (URL, types, seuils, mode `immediate`/`digest`)
+2. **Local**: Settings → Locales Discovery → ouvrir une locale → `Locale Webhook`
+3. Testez le webhook pour vérifier la livraison
 
 ### 3. **Add Translation Projects**
 1. Go to **Pierre** → **Projects**
 2. Click **Add New Project**
 3. Enter the project slug (e.g., `wp`, `woocommerce`)
-4. Select the locale code (e.g., `fr`, `es`, `de`)
+4. Select the locale code (e.g., `fr`, `es`, `de`) — ou utilisez « Projects Discovery »
 5. Click **Add Project**
 
 ### 4. **Assign Team Members**
@@ -183,3 +205,35 @@ See [CHANGELOG.md](CHANGELOG.md) for a complete list of changes.
 **Pierre says: Thank you for using WordPress Translation Monitor! 🪨**
 
 *Made with ❤️ for the WordPress translation community, hope it helps!*
+
+## Troubleshooting
+
+- Aucun message Slack
+  - Vérifiez l’URL (Slack Incoming Webhook), testez via « Test Webhook » ou cURL (ci-dessous)
+  - Respectez le cooldown (jusqu’à 2 min entre deux runs forcés)
+  - Assurez-vous que WP-Cron s’exécute (hébergeur/cron système)
+
+- Discovery vide
+  - Réessayez après expiration du cache (transients), vérifiez la connectivité
+  - Rechargez la library de projets (Settings → Projects Discovery)
+
+- i18n
+  - Sur WordPress.org, le chargement du textdomain est automatique depuis `languages/`. Aucun chargement manuel requis dans le code.
+
+- Doublons de notifications
+  - Contrôlez Global Webhook + Locale Webhook sur le même périmètre; ajustez `scopes`
+
+### Tester un webhook Slack (cURL)
+
+```bash
+curl -X POST -H 'Content-type: application/json' \
+  --data '{"text":"Pierre test webhook 🪨"}' \
+  https://hooks.slack.com/services/T000/B000/XXXX
+```
+
+### WP-CLI utile
+
+```bash
+wp cron event run pierre_surveillance_check
+wp option get pierre_settings --format=json
+```

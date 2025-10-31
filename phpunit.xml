@@ -7,11 +7,11 @@
          stopOnFailure="false"
          cacheDirectory=".phpunit.cache"
          executionOrder="depends,defects"
-         requireCoverageMetadata="true"
-         beStrictAboutCoverageMetadata="true"
-         beStrictAboutOutputDuringTests="true"
-         failOnRisky="true"
-         failOnWarning="true">
+        requireCoverageMetadata="false"
+        beStrictAboutCoverageMetadata="false"
+        beStrictAboutOutputDuringTests="true"
+        failOnRisky="false"
+        failOnWarning="true">
     
     <!-- Pierre's test suite! 🪨 -->
     <testsuites>

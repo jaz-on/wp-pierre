@@ -36,9 +36,20 @@ class RoleManager {
      * @return void
      */
     public function add_capabilities(): void {
+        // Grant all custom caps to Administrator role explicitly at activation/runtime safeguard
+        $admin = get_role('administrator');
+        if ($admin) {
+            foreach ($this->caps as $cap) {
+                if (!$admin->has_cap($cap)) {
+                    $admin->add_cap($cap);
+                }
+            }
+        }
+
         add_filter('user_has_cap', function($allcaps, $caps, $args, $user){
-            // Administrateurs WordPress ont tous les droits Pierre
-            if ($user && user_can($user->ID, 'administrator')) {
+            // IMPORTANT: ne jamais appeler user_can() ici (risque de récursion)
+            // Si l'utilisateur a déjà la capacité 'administrator', lui accorder les caps Pierre
+            if (!empty($allcaps['administrator'])) {
                 foreach ($this->caps as $cap) {
                     $allcaps[$cap] = true;
                 }
@@ -46,7 +57,64 @@ class RoleManager {
             return $allcaps;
         }, 10, 4);
 
-        error_log('Pierre added his capabilities! 🪨');
+        if (defined('PIERRE_DEBUG') && PIERRE_DEBUG) {
+            error_log('Pierre added his capabilities! 🪨');
+        }
+
+        // Map meta capabilities to dynamic decisions based on Teams assignments (LM/GTE/PTE)
+        add_filter('map_meta_cap', function(array $required, string $cap, int $user_id, array $args) {
+            // IMPORTANT: do not call user_can()/current_user_can() here (recursion)
+            // Short-circuit for site administrators by inspecting roles/caps directly
+            $user = get_userdata($user_id);
+            if ($user && (in_array('administrator', (array) $user->roles, true) || !empty($user->allcaps['manage_options']))) {
+                return ['exist'];
+            }
+
+            // Small helpers to read context
+            $get = static function (string $key, $default = '') use ($args) {
+                return $args[$key] ?? $default;
+            };
+
+            $locale  = sanitize_key($get('locale', ''));
+            $type    = sanitize_key($get('project')['type'] ?? '');
+            $slug    = sanitize_key($get('project')['slug'] ?? '');
+            $projKey = ($type && $slug) ? ($type . ':' . $slug) : '';
+
+            // Load assignments from options
+            $lm_map  = (array) get_option('pierre_locale_managers', []);
+            $gte_map = (array) get_option('pierre_gte', []);
+            $pte_map = (array) get_option('pierre_pte', []);
+
+            $LM  = (array) ($lm_map[$locale] ?? []);
+            $GTE = (array) ($gte_map[$locale] ?? []);
+            $PTE = (array) (($pte_map[$locale] ?? [])[$projKey] ?? []);
+
+            $in = static function (int $uid, array $list): bool {
+                return in_array($uid, $list, true);
+            };
+
+            switch ($cap) {
+                case 'pierre_manage_locale':
+                    // Locale Manager of the locale can manage (and WP admins already allowed above)
+                    return ($locale && $in($user_id, $LM)) ? ['exist'] : ['do_not_allow'];
+
+                case 'pierre_manage_project_locale':
+                    // LM or GTE of locale, or PTE of that specific project
+                    return ($locale && ($in($user_id, $LM) || $in($user_id, $GTE) || ($projKey && $in($user_id, $PTE))))
+                        ? ['exist'] : ['do_not_allow'];
+
+                case 'pierre_assign_user_locale':
+                    // Only Locale Managers can assign users for a locale
+                    return ($locale && $in($user_id, $LM)) ? ['exist'] : ['do_not_allow'];
+
+                case 'pierre_view_reports_locale':
+                    // Any of LM/GTE/PTE for the context can view locale-level reports
+                    return ($locale && ($in($user_id, $LM) || $in($user_id, $GTE) || $in($user_id, $PTE)))
+                        ? ['exist'] : ['do_not_allow'];
+            }
+
+            return $required;
+        }, 10, 4);
     }
 
     /**
@@ -134,5 +202,21 @@ class RoleManager {
         }
         
         return in_array($user_id, $managers, true);
+    }
+
+    /**
+     * Check if user can manage locale notification settings (Locale Manager or Admin).
+     * GTE allowed per requirement.
+     */
+    public function user_can_manage_locale_settings(int $user_id, string $locale_code): bool {
+        if (user_can($user_id, 'administrator')) { return true; }
+        if ($locale_code === '') { return false; }
+        // Locale Managers list
+        $map = get_option('pierre_locale_managers', []);
+        $is_manager = is_array($map) && in_array($user_id, (array)($map[$locale_code] ?? []), true);
+        if ($is_manager) { return true; }
+        // GTE: future mapping; for now, reuse pierre_manage_notifications if granted
+        if (user_can($user_id, 'pierre_manage_notifications')) { return true; }
+        return false;
     }
 }

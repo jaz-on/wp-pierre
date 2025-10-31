@@ -122,7 +122,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
             <button class="pierre-button secondary" id="pierre-test-notification">
                 Test Notification 🪨
             </button>
-            <?php if (current_user_can('wpupdates_view_dashboard')): ?>
+            <?php if (current_user_can('pierre_view_dashboard')): ?>
             <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-dashboard')); ?>" class="pierre-button">
                 <?php echo esc_html__('Admin Dashboard', 'wp-pierre'); ?> 🪨
             </a>
@@ -141,7 +141,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
     // Pierre's public JavaScript variables! 🪨
     var pierre_ajax = {
         ajax_url: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
-        nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
+        nonce: '<?php echo esc_attr(wp_create_nonce('pierre_ajax')); ?>'
     };
     </script>
     <?php wp_footer(); ?>

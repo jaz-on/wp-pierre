@@ -70,6 +70,7 @@ $base_url = admin_url('admin.php?page=pierre-locale-view&locale=' . esc_attr($lo
         <div class="pierre-card" style="margin-top: 20px;">
             <h2><?php echo esc_html__('Add Project to Watch', 'wp-pierre'); ?></h2>
             <form id="pierre-add-project-locale-form" class="pierre-form-compact">
+                <?php wp_nonce_field('wp_pierre_action'); ?>
                 <input type="hidden" name="locale_code" value="<?php echo esc_attr($locale_code); ?>" />
                 <div class="pierre-form-group">
                     <label for="project_type"><?php echo esc_html__('Project Type:', 'wp-pierre'); ?></label>
@@ -97,6 +98,7 @@ $base_url = admin_url('admin.php?page=pierre-locale-view&locale=' . esc_attr($lo
                             <th scope="col"><?php echo esc_html__('Project', 'wp-pierre'); ?></th>
                             <th scope="col"><?php echo esc_html__('Type', 'wp-pierre'); ?></th>
                             <th scope="col"><?php echo esc_html__('Last Check', 'wp-pierre'); ?></th>
+                            <th scope="col"><?php echo esc_html__('Next Check', 'wp-pierre'); ?></th>
                             <th scope="col"><?php echo esc_html__('Actions', 'wp-pierre'); ?></th>
                         </tr>
                     </thead>
@@ -108,6 +110,7 @@ $base_url = admin_url('admin.php?page=pierre-locale-view&locale=' . esc_attr($lo
                             <td><?php echo esc_html($slug); ?></td>
                             <td><?php echo esc_html($project['type'] ?? __('Unknown', 'wp-pierre')); ?></td>
                             <td><?php echo !empty($project['last_checked']) ? esc_html(human_time_diff($project['last_checked'], current_time('timestamp')) . ' ago') : esc_html__('Never', 'wp-pierre'); ?></td>
+                            <td><?php $next_check = $project['next_check'] ?? null; echo $next_check ? esc_html(human_time_diff(current_time('timestamp'), $next_check) . ' from now') : esc_html__('N/A', 'wp-pierre'); ?></td>
                             <td>
                                 <button class="button button-small pierre-remove-project" 
                                     data-project="<?php echo esc_attr($slug); ?>"
@@ -126,23 +129,65 @@ $base_url = admin_url('admin.php?page=pierre-locale-view&locale=' . esc_attr($lo
 
     <?php elseif ($current_tab === 'notifications'): ?>
         <div class="pierre-card" style="margin-top: 20px;">
-            <h2><?php echo esc_html__('Slack Integration', 'wp-pierre'); ?></h2>
-            <form id="pierre-locale-slack-form" class="pierre-form-compact">
+            <h2><?php echo esc_html__('Locale Slack WebHook', 'wp-pierre'); ?></h2>
+            <?php $lw = $data['locale_webhook'] ?? []; $lw_types = $lw['types'] ?? ['new_strings','completion_update','needs_attention','milestone']; $lwd = $lw['digest'] ?? []; ?>
+            <form id="pierre-locale-webhook-form" class="pierre-form-compact">
                 <input type="hidden" name="locale_code" value="<?php echo esc_attr($locale_code); ?>" />
                 <div class="pierre-form-group">
-                    <label for="slack_webhook_url"><?php echo esc_html__('Slack Webhook URL (override global):', 'wp-pierre'); ?></label>
-                    <input type="url" id="slack_webhook_url" name="slack_webhook_url" class="regular-text" 
-                        value="<?php echo esc_attr($slack_webhook); ?>"
+                    <label for="locale_webhook_url"><?php echo esc_html__('Webhook URL (this locale)', 'wp-pierre'); ?></label>
+                    <input type="url" id="locale_webhook_url" name="locale_webhook_url" class="regular-text" 
+                        value="<?php echo esc_attr($lw['webhook_url'] ?? $slack_webhook); ?>"
                         placeholder="https://hooks.slack.com/services/..." />
-                    <p class="description">
-                        <?php echo esc_html__('If empty, global Slack (Settings) will be used. This locale-specific webhook takes priority.', 'wp-pierre'); ?>
-                    </p>
                 </div>
+                <div class="pierre-form-group">
+                    <label for="locale_webhook_enabled">
+                        <input type="checkbox" id="locale_webhook_enabled" name="locale_webhook_enabled" <?php checked(!empty($lw['enabled'] ?? true)); ?> />
+                        <?php echo esc_html__('Enable', 'wp-pierre'); ?>
+                    </label>
+                </div>
+                <fieldset class="pierre-form-group pierre-fieldset">
+                    <legend><?php echo esc_html__('Types', 'wp-pierre'); ?></legend>
+                    <label><input type="checkbox" name="locale_webhook_types[]" value="new_strings" <?php checked(in_array('new_strings',$lw_types,true)); ?> /> new_strings</label>
+                    <label><input type="checkbox" name="locale_webhook_types[]" value="completion_update" <?php checked(in_array('completion_update',$lw_types,true)); ?> /> completion_update</label>
+                    <label><input type="checkbox" name="locale_webhook_types[]" value="needs_attention" <?php checked(in_array('needs_attention',$lw_types,true)); ?> /> needs_attention</label>
+                    <label><input type="checkbox" name="locale_webhook_types[]" value="milestone" <?php checked(in_array('milestone',$lw_types,true)); ?> /> milestone</label>
+                </fieldset>
+                <fieldset class="pierre-form-group pierre-fieldset">
+                    <legend><?php echo esc_html__('Thresholds & Digest', 'wp-pierre'); ?></legend>
+                    <p><label><?php echo esc_html__('New strings threshold', 'wp-pierre'); ?>
+                        <input type="number" name="locale_webhook_threshold" min="0" value="<?php echo esc_attr($lw['threshold'] ?? ''); ?>" placeholder="—" />
+                    </label></p>
+                    <p><label><?php echo esc_html__('Milestones (comma-separated)', 'wp-pierre'); ?>
+                        <input type="text" name="locale_webhook_milestones" value="<?php echo esc_attr(isset($lw['milestones']) ? implode(',', (array)$lw['milestones']) : ''); ?>" placeholder="— (uses global defaults)" />
+                    </label></p>
+                    <?php $lwmode = $lw['mode'] ?? ''; ?>
+                    <p><label><?php echo esc_html__('Mode', 'wp-pierre'); ?>
+                        <select name="locale_webhook_mode">
+                            <option value="">—</option>
+                            <option value="immediate" <?php selected($lwmode,'immediate'); ?>>immediate</option>
+                            <option value="digest" <?php selected($lwmode,'digest'); ?>>digest</option>
+                        </select>
+                    </label></p>
+                    <?php $lwdt = $lwd['type'] ?? ''; ?>
+                    <p><label><?php echo esc_html__('Digest Type', 'wp-pierre'); ?>
+                        <select name="locale_webhook_digest_type">
+                            <option value="">—</option>
+                            <option value="interval" <?php selected($lwdt,'interval'); ?>>interval</option>
+                            <option value="fixed_time" <?php selected($lwdt,'fixed_time'); ?>>fixed_time</option>
+                        </select>
+                    </label></p>
+                    <p><label><?php echo esc_html__('Interval (minutes)', 'wp-pierre'); ?>
+                        <input type="number" min="15" name="locale_webhook_digest_interval_minutes" value="<?php echo esc_attr($lwd['interval_minutes'] ?? ''); ?>" placeholder="—" />
+                    </label></p>
+                    <p><label><?php echo esc_html__('Fixed time (HH:MM)', 'wp-pierre'); ?>
+                        <input type="time" name="locale_webhook_digest_fixed_time" value="<?php echo esc_attr($lwd['fixed_time'] ?? ''); ?>" />
+                    </label></p>
+                </fieldset>
                 <div class="pierre-form-actions">
-                    <button type="submit" class="button button-primary"><?php echo esc_html__('Save', 'wp-pierre'); ?></button>
-                    <button type="button" class="button" id="pierre-test-locale-slack"><?php echo esc_html__('Test Webhook', 'wp-pierre'); ?></button>
+                    <button type="submit" class="button button-primary"><?php echo esc_html__('Save Webhook', 'wp-pierre'); ?></button>
                 </div>
             </form>
+            <p class="description"><?php echo esc_html__('Leave empty values to inherit global defaults.', 'wp-pierre'); ?></p>
         </div>
 
     <?php elseif ($current_tab === 'team'): ?>
@@ -363,6 +408,31 @@ $base_url = admin_url('admin.php?page=pierre-locale-view&locale=' . esc_attr($lo
                     this.disabled = false;
                     this.textContent = original;
                 });
+        });
+    }
+
+    // Locale overrides form
+    const overridesForm = document.getElementById('pierre-locale-overrides-form');
+    if (overridesForm) {
+        overridesForm.addEventListener('submit', function(e){
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const original = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '<?php echo esc_js(__('Saving...', 'wp-pierre')); ?>';
+
+            const formData = new FormData(this);
+            formData.append('action', 'pierre_save_locale_overrides');
+            formData.append('nonce', window.pierreAdminL10n?.nonce || '');
+
+            fetch(window.pierreAdminL10n?.ajaxUrl || ajaxurl, { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(json => {
+                    const msg = (json && (json.data?.message || json.message)) || (json.success ? '<?php echo esc_js(__('Saved!', 'wp-pierre')); ?>' : '<?php echo esc_js(__('Failed to save.', 'wp-pierre')); ?>');
+                    alert(msg);
+                })
+                .catch(() => { alert('<?php echo esc_js(__('Network error.', 'wp-pierre')); ?>'); })
+                .finally(() => { btn.disabled = false; btn.textContent = original; });
         });
     }
 

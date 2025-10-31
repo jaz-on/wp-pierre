@@ -38,19 +38,10 @@
     <rule ref="Generic.PHP.DisallowShortOpenTag"/>
     <rule ref="Generic.PHP.DisallowAlternativePHPTags"/>
     
-    <!-- Pierre's documentation rules! 🪨 -->
-    <rule ref="WordPress-Docs.RequireFileHeader"/>
-    <rule ref="WordPress-Docs.RequirePackageTag"/>
-    <rule ref="WordPress-Docs.RequireSinceTag"/>
-    
     <!-- Pierre's security rules! 🪨 -->
     <rule ref="WordPress.Security.EscapeOutput"/>
     <rule ref="WordPress.Security.NonceVerification"/>
     <rule ref="WordPress.Security.ValidatedSanitizedInput"/>
-    
-    <!-- Pierre's performance rules! 🪨 -->
-    <rule ref="WordPress.Performance.SlowDBQuery"/>
-    <rule ref="WordPress.Performance.SlowQuery"/>
     
     <!-- Pierre's naming conventions! 🪨 -->
     <rule ref="WordPress.NamingConventions.ValidFunctionName"/>

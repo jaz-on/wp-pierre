@@ -28,7 +28,7 @@ if (!defined('PIERRE_PLUGIN_DIR')) {
 }
 
 if (!defined('PIERRE_PLUGIN_URL')) {
-    define('PIERRE_PLUGIN_URL', 'http://localhost/wp-content/plugins/wp-pierre/');
+    define('PIERRE_PLUGIN_URL', 'https://example.org/wp-content/plugins/wp-pierre/');
 }
 
 if (!defined('PIERRE_PLUGIN_BASENAME')) {
@@ -41,25 +41,32 @@ require_once PIERRE_PLUGIN_DIR . 'vendor/autoload.php';
 // Pierre mocks WordPress functions! 🪨
 if (!function_exists('wp_die')) {
     function wp_die($message = '', $title = '', $args = []) {
-        throw new Exception('wp_die called: ' . $message);
+        throw new Exception('wp_die called: ' . esc_html($message));
     }
 }
 
 if (!function_exists('error_log')) {
     function error_log($message) {
         // Pierre logs to console in tests! 🪨
-        echo "Pierre's Log: " . $message . "\n";
+        echo "Pierre's Log: " . esc_html($message) . "\n";
     }
 }
 
 if (!function_exists('get_option')) {
     function get_option($option, $default = false) {
+        global $___test_options;
+        if (is_array($___test_options ?? null) && array_key_exists($option, $___test_options)) {
+            return $___test_options[$option];
+        }
         return $default;
     }
 }
 
 if (!function_exists('update_option')) {
     function update_option($option, $value, $autoload = null) {
+        global $___test_options;
+        if (!is_array($___test_options ?? null)) { $___test_options = []; }
+        $___test_options[$option] = $value;
         return true;
     }
 }
@@ -122,10 +129,16 @@ if (!function_exists('wp_remote_get')) {
     }
 }
 
+if (!function_exists('wp_remote_head')) {
+    function wp_remote_head($url, $args = []) {
+        return [ 'body' => '', 'response' => ['code' => 405], 'headers' => [] ];
+    }
+}
+
 if (!function_exists('wp_remote_post')) {
     function wp_remote_post($url, $args = []) {
         return [
-            'body' => '{"ok": true}',
+            'body' => 'ok',
             'response' => ['code' => 200],
             'headers' => []
         ];
@@ -149,6 +162,19 @@ if (!function_exists('wp_remote_retrieve_body')) {
         return $response['body'] ?? '';
     }
 }
+
+// Common WP constants used in code
+if (!defined('HOUR_IN_SECONDS')) define('HOUR_IN_SECONDS', 3600);
+if (!defined('MINUTE_IN_SECONDS')) define('MINUTE_IN_SECONDS', 60);
+if (!defined('DAY_IN_SECONDS')) define('DAY_IN_SECONDS', 86400);
+if (!defined('WEEK_IN_SECONDS')) define('WEEK_IN_SECONDS', 604800);
+
+// Common WP functions used in code
+if (!function_exists('esc_url_raw')) { function esc_url_raw($url){ return filter_var($url, FILTER_SANITIZE_URL); } }
+if (!function_exists('wp_json_encode')) { function wp_json_encode($data){ return json_encode($data); } }
+if (!function_exists('do_action')) { function do_action($hook, ...$args){ /* noop in tests */ } }
+if (!function_exists('home_url')) { function home_url($path = '/'){ return 'https://example.org/'; } }
+if (!function_exists('trailingslashit')) { function trailingslashit($s){ return rtrim($s, '/').'/'; } }
 
 if (!function_exists('get_current_user_id')) {
     function get_current_user_id() {
@@ -178,9 +204,19 @@ if (!function_exists('sanitize_key')) {
     }
 }
 
+if (!function_exists('wp_strip_all_tags')) {
+    function wp_strip_all_tags($string, $remove_breaks = false) {
+        $string = strip_tags($string);
+        if ($remove_breaks) {
+            $string = preg_replace('/[\r\n\t ]+/', ' ', $string);
+        }
+        return trim($string);
+    }
+}
+
 if (!function_exists('sanitize_text_field')) {
     function sanitize_text_field($str) {
-        return trim(strip_tags($str));
+        return trim(wp_strip_all_tags($str));
     }
 }
 

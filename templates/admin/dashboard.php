@@ -31,7 +31,7 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
     </div>
     <?php endif; ?>
 
-    <div class="pierre-grid">
+    <div class="pierre-grid pierre-grid--cards">
         <div class="pierre-card">
             <h2><?php echo esc_html__('Surveillance Status', 'wp-pierre'); ?></h2>
             <?php if (isset($data['surveillance_status'])): ?>

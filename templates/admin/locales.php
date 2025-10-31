@@ -91,7 +91,7 @@ $locale_stats = $data['locale_stats'] ?? [];
                 <tr class="no-items">
                     <td class="colspanchange" colspan="6">
                         <?php echo esc_html__('No active locales found.', 'wp-pierre'); ?>
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-settings#locales-discovery')); ?>"><?php echo esc_html__('Add your first locale from Settings', 'wp-pierre'); ?></a>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-settings#discovery')); ?>"><?php echo esc_html__('Add your first locale from Settings', 'wp-pierre'); ?></a>
                     </td>
                 </tr>
             <?php endif; ?>

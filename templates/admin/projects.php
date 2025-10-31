@@ -29,7 +29,9 @@ sort($active_locales);
 
 <div class="wrap">
     <h1 class="wp-heading-inline"><?php echo esc_html__('Projects', 'wp-pierre'); ?></h1>
-    <a href="#" class="page-title-action" id="pierre-add-project-toggle"><?php echo esc_html__('Add Project', 'wp-pierre'); ?></a>
+    <?php if ( current_user_can('pierre_manage_projects') ) : ?>
+        <a href="#" class="page-title-action" id="pierre-add-project-toggle"><?php echo esc_html__('Add Project', 'wp-pierre'); ?></a>
+    <?php endif; ?>
     <hr class="wp-header-end">
 
     <?php 
@@ -48,6 +50,7 @@ sort($active_locales);
     <?php endif; ?>
 
     <!-- Add Project Form (initially hidden, toggled) -->
+    <?php if ( current_user_can('pierre_manage_projects') ) : ?>
     <div id="pierre-add-project-form-container" class="pierre-card" style="display:none;margin-bottom:20px;">
         <h2><?php echo esc_html__('Add Project to Watch', 'wp-pierre'); ?></h2>
         <form id="pierre-add-project-form" class="pierre-form-compact">
@@ -88,6 +91,7 @@ sort($active_locales);
             </div>
         </form>
     </div>
+    <?php endif; ?>
 
     <!-- Surveillance Controls -->
     <div class="pierre-card">
@@ -162,6 +166,7 @@ sort($active_locales);
                 <th scope="col" class="manage-column column-type"><?php echo esc_html__('Type', 'wp-pierre'); ?></th>
                 <th scope="col" class="manage-column column-status"><?php echo esc_html__('Status', 'wp-pierre'); ?></th>
                 <th scope="col" class="manage-column column-last-check"><?php echo esc_html__('Last Check', 'wp-pierre'); ?></th>
+                <th scope="col" class="manage-column column-next-check"><?php echo esc_html__('Next Check', 'wp-pierre'); ?></th>
                 <th scope="col" class="manage-column column-actions"><?php echo esc_html__('Actions', 'wp-pierre'); ?></th>
             </tr>
         </thead>
@@ -185,13 +190,15 @@ sort($active_locales);
                                     <?php echo esc_html__('View locale', 'wp-pierre'); ?>
                                 </a>
                             </span>
-                            <span class="delete">
-                                <a href="#" class="pierre-remove-project-link" 
-                                    data-project="<?php echo esc_attr($slug); ?>"
-                                    data-locale="<?php echo esc_attr($locale); ?>">
-                                    <?php echo esc_html__('Remove', 'wp-pierre'); ?>
-                                </a>
-                            </span>
+                            <?php if ( current_user_can('pierre_manage_projects') ) : ?>
+                                <span class="delete">
+                                    <a href="#" class="pierre-remove-project-link" 
+                                        data-project="<?php echo esc_attr($slug); ?>"
+                                        data-locale="<?php echo esc_attr($locale); ?>">
+                                        <?php echo esc_html__('Remove', 'wp-pierre'); ?>
+                                    </a>
+                                </span>
+                            <?php endif; ?>
                         </div>
                     </td>
                     <td class="column-locale">
@@ -208,7 +215,23 @@ sort($active_locales);
                     <td class="column-last-check">
                         <?php 
                         $last_checked = $project['last_checked'] ?? null;
-                        echo $last_checked ? esc_html(human_time_diff($last_checked, current_time('timestamp')) . ' ago') : esc_html__('Never', 'wp-pierre');
+                        if ($last_checked) {
+                            /* translators: %s: human time diff (e.g., "5 mins") */
+                            printf(esc_html__('%s ago', 'wp-pierre'), esc_html(human_time_diff($last_checked, current_time('timestamp'))));
+                        } else {
+                            echo esc_html__('Never', 'wp-pierre');
+                        }
+                        ?>
+                    </td>
+                    <td class="column-next-check">
+                        <?php 
+                        $next_check = $project['next_check'] ?? null;
+                        if ($next_check) {
+                            /* translators: %s: human time diff (e.g., "in 5 mins") */
+                            printf(esc_html__('%s from now', 'wp-pierre'), esc_html(human_time_diff(current_time('timestamp'), $next_check)));
+                        } else {
+                            echo esc_html__('N/A', 'wp-pierre');
+                        }
                         ?>
                     </td>
                     <td class="column-actions">
@@ -241,6 +264,7 @@ sort($active_locales);
                 <th scope="col" class="manage-column column-type"><?php echo esc_html__('Type', 'wp-pierre'); ?></th>
                 <th scope="col" class="manage-column column-status"><?php echo esc_html__('Status', 'wp-pierre'); ?></th>
                 <th scope="col" class="manage-column column-last-check"><?php echo esc_html__('Last Check', 'wp-pierre'); ?></th>
+                <th scope="col" class="manage-column column-next-check"><?php echo esc_html__('Next Check', 'wp-pierre'); ?></th>
                 <th scope="col" class="manage-column column-actions"><?php echo esc_html__('Actions', 'wp-pierre'); ?></th>
             </tr>
         </tfoot>
@@ -329,13 +353,17 @@ sort($active_locales);
                 .then(r => r.json())
                 .then(json => {
                     const msg = (json && (json.data?.message || json.message)) || (json.success ? '<?php echo esc_js(__('Project added!', 'wp-pierre')); ?>' : '<?php echo esc_js(__('Failed to add project.', 'wp-pierre')); ?>');
-                    alert(msg);
                     if (json && json.success) {
-                        location.reload();
+                        if (window.pierreNotice) { window.pierreNotice('success', msg); setTimeout(()=>location.reload(), 600); }
+                        else { alert(msg); location.reload(); }
+                    } else {
+                        if (window.pierreNotice) { window.pierreNotice('error', msg); }
+                        else { alert(msg); }
                     }
                 })
                 .catch(() => {
-                    alert('<?php echo esc_js(__('Network error.', 'wp-pierre')); ?>');
+                    const m = '<?php echo esc_js(__('Network error.', 'wp-pierre')); ?>';
+                    if (window.pierreNotice) { window.pierreNotice('error', m); } else { alert(m); }
                 })
                 .finally(() => {
                     btn.disabled = false;
@@ -361,13 +389,16 @@ sort($active_locales);
                 .then(r => r.json())
                 .then(json => {
                     if (json && json.success) {
-                        location.reload();
+                        if (window.pierreNotice) { window.pierreNotice('success', '<?php echo esc_js(__('Project removed.', 'wp-pierre')); ?>'); setTimeout(()=>location.reload(), 600); }
+                        else { location.reload(); }
                     } else {
-                        alert('<?php echo esc_js(__('Failed to remove project.', 'wp-pierre')); ?>');
+                        const m = '<?php echo esc_js(__('Failed to remove project.', 'wp-pierre')); ?>';
+                        if (window.pierreNotice) { window.pierreNotice('error', m); } else { alert(m); }
                     }
                 })
                 .catch(() => {
-                    alert('<?php echo esc_js(__('Network error.', 'wp-pierre')); ?>');
+                    const m = '<?php echo esc_js(__('Network error.', 'wp-pierre')); ?>';
+                    if (window.pierreNotice) { window.pierreNotice('error', m); } else { alert(m); }
                 });
         });
     });

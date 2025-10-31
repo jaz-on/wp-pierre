@@ -116,7 +116,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
                 <button class="pierre-button secondary" id="pierre-test-notification">
                     Test Notification 🪨
                 </button>
-                <?php if (current_user_can('wpupdates_manage_projects')): ?>
+                <?php if (current_user_can('pierre_manage_projects')): ?>
                 <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-projects')); ?>" class="pierre-button">
                     Manage in Admin 🪨
                 </a>
@@ -132,7 +132,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
                     <div class="pierre-activity-content">
                         <strong>Translation Progress</strong>
                         <p>Project completion increased to <?php echo esc_html($data['completion'] ?? '0'); ?>%</p>
-                        <span class="pierre-activity-time">Last updated: <?php echo current_time('Y-m-d H:i:s'); ?></span>
+                        <span class="pierre-activity-time">Last updated: <?php echo esc_html(current_time('Y-m-d H:i:s')); ?></span>
                     </div>
                 </div>
                 
@@ -166,7 +166,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
             <a href="<?php echo esc_url(home_url('/pierre/')); ?>" class="pierre-button">
                 <?php echo esc_html__('Back to Dashboard', 'wp-pierre'); ?> 🪨
             </a>
-            <?php if (current_user_can('wpupdates_view_dashboard')): ?>
+            <?php if (current_user_can('pierre_view_dashboard')): ?>
             <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-dashboard')); ?>" class="pierre-button">
                 <?php echo esc_html__('Admin Dashboard', 'wp-pierre'); ?> 🪨
             </a>
@@ -185,7 +185,7 @@ $data = $GLOBALS['pierre_template_data'] ?? [];
     // Pierre's public JavaScript variables! 🪨
     var pierre_ajax = {
         ajax_url: '<?php echo esc_url(admin_url('admin-ajax.php')); ?>',
-        nonce: '<?php echo wp_create_nonce('pierre_ajax'); ?>'
+        nonce: '<?php echo esc_attr(wp_create_nonce('pierre_ajax')); ?>'
     };
     </script>
     <?php wp_footer(); ?>

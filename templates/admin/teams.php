@@ -22,6 +22,14 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
     <?php /* Team Statistics card removed to avoid redundancy with lists below */ ?>
 
     <div class="pierre-card">
+        <h2><?php echo esc_html__('Sources & Help', 'wp-pierre'); ?></h2>
+        <p class="description">
+            <?php echo esc_html__('Roles, responsibilities and current translation teams are documented in the Polyglots handbook:', 'wp-pierre'); ?>
+            <a href="https://make.wordpress.org/polyglots/handbook/translating/teams/" target="_blank" rel="noopener">make.wordpress.org/polyglots/handbook/translating/teams/</a>
+        </p>
+    </div>
+
+    <div class="pierre-card">
             <h2><?php echo esc_html__('Available Users', 'wp-pierre'); ?></h2>
             <div class="tablenav top">
                 <div class="alignleft actions">
@@ -93,7 +101,7 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
     </div>
 
     <!-- Modal/Inline form for user assignment -->
-    <div id="pierre-assign-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:20px;border:1px solid #ccc;box-shadow:0 2px 10px rgba(0,0,0,0.2);z-index:100000;max-width:600px;width:90%;">
+    <div id="pierre-assign-modal" class="pierre-modal">
         <h2><?php echo esc_html__('Assign User to Locale/Project', 'wp-pierre'); ?></h2>
         <p><strong><?php echo esc_html__('User:', 'wp-pierre'); ?></strong> <span id="pierre-assign-user-name"></span></p>
         <form id="pierre-assign-form" class="pierre-form-compact">
@@ -146,7 +154,7 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
             </div>
         </form>
     </div>
-    <div id="pierre-assign-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:99999;"></div>
+    <div id="pierre-assign-overlay" class="pierre-overlay"></div>
 
     <script>
     (function(){

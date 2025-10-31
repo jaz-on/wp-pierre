@@ -1,588 +1,2412 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
+# Copyright (C) 2025 Jason Rouet
+# This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-28 23:39+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Project-Id-Version: Pierre - Translation Monitor 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/jaz-on/wp-pierre/issues\n"
+"Last-Translator: \n"
+"Language-Team: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2025-10-30T15:49:50+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: wp-pierre\n"
 
-#: src/Pierre/Security/CSRFProtection.php:59
-msgid "Pierre says: Invalid nonce! CSRF attack detected!"
+#. Plugin Name of the plugin
+#: wp-pierre.php
+msgid "Pierre - Translation Monitor"
 msgstr ""
 
-#: src/Pierre/Security/CSRFProtection.php:70
-msgid "Pierre says: Invalid referrer! CSRF attack detected!"
+#. Plugin URI of the plugin
+#: wp-pierre.php
+msgid "https://github.com/jaz-on/wp-pierre"
 msgstr ""
 
-#: src/Pierre/Security/CSRFProtection.php:82
-msgid "Pierre says: Rate limit exceeded! Too many requests!"
+#. Description of the plugin
+#: wp-pierre.php
+msgid "Pierre monitors WordPress Polyglots translations and notifies teams via Slack 🪨"
 msgstr ""
 
-#: src/Pierre/Security/CSRFProtection.php:94
+#. Author of the plugin
+#: wp-pierre.php
+msgid "Jason Rouet"
+msgstr ""
+
+#. Author URI of the plugin
+#: wp-pierre.php
+msgid "https://profiles.wordpress.org/jaz_on/"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:333
+#: templates/admin/locale-view.php:32
+msgid "Overview"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:334
+msgid "Pierre monitors locales/projects and notifies via Slack. Use Settings for global rules and Locale view for overrides."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:339
+msgid "Best practices"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:340
+msgid "Start by adding locales, then add projects."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:340
+msgid "Prefer digest mode to reduce noise."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:344
+msgid "Resources"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:345
+#: wp-pierre.php:86
+msgid "Settings"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:385
+#: src/Pierre/Surveillance/ProjectWatcher.php:735
+msgid "Dry run succeeded. You can now start surveillance."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:386
+msgid "Dry run failed. Check settings and try again."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:387
+msgid "An error occurred during dry run."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:458
+#: src/Pierre/Admin/AdminController.php:470
+#: src/Pierre/Admin/AdminController.php:1696
+msgid "Permission denied"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:459
+#: src/Pierre/Admin/AdminController.php:471
+#: src/Pierre/Admin/AdminController.php:1697
+msgid "Invalid nonce"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:497
+#: src/Pierre/Admin/AdminController.php:516
+#: src/Pierre/Admin/AdminController.php:535
+#: src/Pierre/Admin/AdminController.php:554
+#: src/Pierre/Admin/AdminController.php:579
+#: src/Pierre/Admin/AdminController.php:598
+#: src/Pierre/Admin/AdminController.php:672
+#: src/Pierre/Admin/AdminController.php:691
+msgid "Pierre says: You don't have permission to view this page!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:560
+msgid "Pierre says: Locale parameter is required!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:625
+msgid "General"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:626
+msgid "Global Webhook"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:627
+#: templates/admin/settings-discovery.php:22
+msgid "Locales Discovery"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:628
+#: templates/admin/settings-projects-discovery.php:15
+msgid "Projects Discovery"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:878
+msgid "Locale Manager"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:879
+msgid "GTE (General Translation Editor)"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:880
+msgid "PTE (Plugin Translation Editor)"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:881
+msgid "Contributor"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:882
+msgid "Validator"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:948
+#: src/Pierre/Admin/AdminController.php:1023
+#: templates/admin/locale-view.php:55
+#: templates/admin/locale-view.php:111
+#: templates/admin/locales.php:63
+#: templates/admin/projects.php:212
+msgid "Never"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1023
+msgid "Recent"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1037
+#: src/Pierre/Admin/AdminController.php:1102
+#: src/Pierre/Admin/AdminController.php:1198
+#: src/Pierre/Admin/AdminController.php:1270
+#: src/Pierre/Admin/AdminController.php:1315
+#: src/Pierre/Admin/AdminController.php:1344
+#: src/Pierre/Admin/AdminController.php:1378
+#: src/Pierre/Admin/AdminController.php:1411
+#: src/Pierre/Admin/AdminController.php:1850
+#: src/Pierre/Admin/AdminController.php:1871
+#: src/Pierre/Admin/AdminController.php:1909
+#: src/Pierre/Admin/AdminController.php:1941
+#: src/Pierre/Admin/AdminController.php:1983
+#: src/Pierre/Admin/AdminController.php:2035
+#: src/Pierre/Admin/AdminController.php:2160
+#: src/Pierre/Admin/AdminController.php:2212
+#: src/Pierre/Admin/AdminController.php:2258
+#: src/Pierre/Admin/AdminController.php:2279
+#: src/Pierre/Admin/AdminController.php:2303
+#: src/Pierre/Admin/AdminController.php:2372
+#: src/Pierre/Admin/AdminController.php:2406
+#: src/Pierre/Admin/AdminController.php:2429
+#: src/Pierre/Admin/AdminController.php:2452
+#: src/Pierre/Admin/AdminController.php:2476
+#: src/Pierre/Admin/AdminController.php:2514
+#: src/Pierre/Admin/AdminController.php:2552
+#: src/Pierre/Admin/AdminController.php:2757
+#: src/Pierre/Admin/AdminController.php:2791
+#: src/Pierre/Admin/AdminController.php:2828
+msgid "Pierre says: Invalid nonce!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1041
+#: src/Pierre/Admin/AdminController.php:1202
+#: src/Pierre/Admin/AdminController.php:1274
+#: src/Pierre/Admin/AdminController.php:1318
+#: src/Pierre/Admin/AdminController.php:1347
+#: src/Pierre/Admin/AdminController.php:1381
+#: src/Pierre/Admin/AdminController.php:1417
+#: src/Pierre/Admin/AdminController.php:1855
+#: src/Pierre/Admin/AdminController.php:1914
+#: src/Pierre/Admin/AdminController.php:1947
+#: src/Pierre/Admin/AdminController.php:1986
+#: src/Pierre/Admin/AdminController.php:2041
+#: src/Pierre/Admin/AdminController.php:2164
+#: src/Pierre/Admin/AdminController.php:2217
+#: src/Pierre/Admin/AdminController.php:2263
+#: src/Pierre/Admin/AdminController.php:2284
+#: src/Pierre/Admin/AdminController.php:2308
+#: src/Pierre/Admin/AdminController.php:2377
+#: src/Pierre/Admin/AdminController.php:2411
+#: src/Pierre/Admin/AdminController.php:2434
+#: src/Pierre/Admin/AdminController.php:2457
+#: src/Pierre/Admin/AdminController.php:2481
+#: src/Pierre/Admin/AdminController.php:2519
+#: src/Pierre/Admin/AdminController.php:2557
+msgid "Pierre says: You don't have permission!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1047
+msgid "Invalid payload."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1055
+msgid "Locale managers saved."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1106
+msgid "Pierre says: You don't have permission! Only site administrators can add locales."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1112
+msgid "No locales selected."
+msgstr ""
+
+#. translators: %s is the invalid locale code
+#: src/Pierre/Admin/AdminController.php:1123
+#, php-format
+msgid "Invalid locale code: %s"
+msgstr ""
+
+#. translators: %s is the locale code
+#: src/Pierre/Admin/AdminController.php:1139
+#, php-format
+msgid "Locale %s not found in WordPress.org translations."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1165
+msgid "Some locales could not be added."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1173
+msgid "No new locales to add (they may already be active)."
+msgstr ""
+
+#. translators: %s is a comma-separated list of locales
+#: src/Pierre/Admin/AdminController.php:1185
+#, php-format
+msgid "Locales added: %s"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1208
+#: src/Pierre/Admin/AdminController.php:1278
+#: src/Pierre/Admin/AdminController.php:1351
+#: src/Pierre/Admin/AdminController.php:1385
+#: src/Pierre/Admin/AdminController.php:2169
+msgid "Locale code is required."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1217
+msgid "Invalid Slack webhook URL."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1224
+msgid "Locale Slack webhook saved."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1309
+msgid "Locale webhook saved."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1338
+msgid "Projects discovery library saved."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1355
+#: src/Pierre/Admin/AdminController.php:1389
+msgid "Library is empty."
+msgstr ""
+
+#. translators: 1: number of projects added, 2: number of errors
+#: src/Pierre/Admin/AdminController.php:1372
+#, php-format
+msgid "Added %1$d project(s), %2$d error(s)."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1473
+msgid "Pierre says: No locales found from WordPress.org. Please check outgoing HTTP."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1691
+msgid "Anomalies log cleared."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1879
+msgid "Pierre says: You don't have permission! Only Locale Managers and site administrators can assign users."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1968
+msgid "Slack webhook test succeeded! Check your Slack channel."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1974
+msgid "Slack webhook test failed. Verify the webhook URL is correct."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1989
+#: src/Pierre/Admin/AdminController.php:2006
+msgid "Surveillance run triggered."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1995
+#: src/Pierre/Admin/AdminController.php:2012
+msgid "Invalid nonce."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:1998
+#: src/Pierre/Admin/AdminController.php:2015
+msgid "Permission denied."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2002
+#: src/Pierre/Admin/AdminController.php:2019
+msgid "Please wait before running again (cooldown 60s)."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2023
+msgid "Cleanup run triggered."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2151
+msgid "Settings saved successfully!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2200
+msgid "Locale overrides saved."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2227
+msgid "Please wait before forcing another scan for this project/locale (cooldown 2 min)."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2234
+msgid "Please wait before forcing another scan for this locale (cooldown 2 min)."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2240
+msgid "Please wait before forcing another scan (cooldown 2 min)."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2322
+#: src/Pierre/Admin/AdminController.php:2384
+msgid "Pierre says: Project slug and locale code are required!"
+msgstr ""
+
+#. translators: %s is the locale code
+#: src/Pierre/Admin/AdminController.php:2338
+#, php-format
+msgid "Locale %s is not valid or not found in WordPress.org translations."
+msgstr ""
+
+#. translators: 1: project slug, 2: project type, 3: locale code
+#: src/Pierre/Admin/AdminController.php:2357
+#, php-format
+msgid "Project %1$s (%2$s) added to surveillance for locale %3$s!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2359
+msgid "Pierre says: Failed to add project! Check the project slug and locale code."
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2393
+msgid "Pierre says: Failed to remove project!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2487
+msgid "Pierre says: Report type is required!"
+msgstr ""
+
+#. translators: %s is the report type (e.g., "projects", "teams")
+#: src/Pierre/Admin/AdminController.php:2497
+#, php-format
+msgid "Pierre exported %s report successfully!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2501
+msgid "Pierre says: Failed to generate report!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2535
+msgid "Pierre exported all reports successfully!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2539
+msgid "Pierre says: Failed to generate reports!"
+msgstr ""
+
+#. translators: %s is the schedule frequency (e.g., "daily", "weekly")
+#: src/Pierre/Admin/AdminController.php:2569
+#, php-format
+msgid "Pierre scheduled reports for %s!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2573
+msgid "Pierre says: Failed to schedule reports!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2763
+#: src/Pierre/Admin/AdminController.php:2797
+#: src/Pierre/Admin/AdminController.php:2834
+#: src/Pierre/Security/CSRFProtection.php:120
 msgid "Pierre says: Insufficient permissions!"
 msgstr ""
 
-#: src/Pierre/Security/CSRFProtection.php:110
+#: src/Pierre/Admin/AdminController.php:2771
+msgid "Pierre completed security audit!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2777
+msgid "Pierre says: Security audit failed!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2808
+msgid "Pierre retrieved security logs!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2814
+msgid "Pierre says: Failed to retrieve security logs!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2844
+msgid "Pierre cleared security logs!"
+msgstr ""
+
+#: src/Pierre/Admin/AdminController.php:2847
+#: src/Pierre/Admin/AdminController.php:2852
+msgid "Pierre says: Failed to clear security logs!"
+msgstr ""
+
+#: src/Pierre/Frontend/DashboardController.php:110
+msgid "Loading..."
+msgstr ""
+
+#: src/Pierre/Frontend/DashboardController.php:111
+msgid "An error occurred"
+msgstr ""
+
+#: src/Pierre/Frontend/DashboardController.php:112
+msgid "Success!"
+msgstr ""
+
+#: src/Pierre/Security/CSRFProtection.php:85
+msgid "Pierre says: Invalid nonce! CSRF attack detected!"
+msgstr ""
+
+#: src/Pierre/Security/CSRFProtection.php:96
+msgid "Pierre says: Invalid referrer! CSRF attack detected!"
+msgstr ""
+
+#: src/Pierre/Security/CSRFProtection.php:108
+msgid "Pierre says: Rate limit exceeded! Too many requests!"
+msgstr ""
+
+#: src/Pierre/Security/CSRFProtection.php:136
 msgid "Pierre says: CSRF protection passed!"
 msgstr ""
 
-#: src/Pierre/Security/CSRFProtection.php:118
+#: src/Pierre/Security/CSRFProtection.php:144
 msgid "Pierre says: CSRF validation error!"
 msgstr ""
 
-#: src/Pierre/Security/CSRFProtection.php:284
+#: src/Pierre/Security/CSRFProtection.php:310
 msgid "Pierre says: Invalid token format!"
 msgstr ""
 
-#: src/Pierre/Security/CSRFProtection.php:292
+#: src/Pierre/Security/CSRFProtection.php:318
 msgid "Pierre says: Token action mismatch!"
 msgstr ""
 
-#: src/Pierre/Security/CSRFProtection.php:300
+#: src/Pierre/Security/CSRFProtection.php:326
 msgid "Pierre says: Token expired!"
 msgstr ""
 
-#: src/Pierre/Security/CSRFProtection.php:311
+#: src/Pierre/Security/CSRFProtection.php:337
 msgid "Pierre says: Token not found or expired!"
 msgstr ""
 
-#: src/Pierre/Security/CSRFProtection.php:320
+#: src/Pierre/Security/CSRFProtection.php:346
 msgid "Pierre says: Token is valid!"
 msgstr ""
 
-#: src/Pierre/Security/CSRFProtection.php:328
+#: src/Pierre/Security/CSRFProtection.php:354
 msgid "Pierre says: Token validation error!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:95
+#: src/Pierre/Security/security-config.php:88
+msgid "Pierre says: Invalid file upload!"
+msgstr ""
+
+#: src/Pierre/Security/security-config.php:97
+msgid "Pierre says: File too large! Maximum 5MB allowed."
+msgstr ""
+
+#: src/Pierre/Security/security-config.php:109
+msgid "Pierre says: File type not allowed!"
+msgstr ""
+
+#: src/Pierre/Security/security-config.php:116
+msgid "Pierre says: File extension not allowed!"
+msgstr ""
+
+#: src/Pierre/Security/security-config.php:138
+msgid "Pierre says: MIME type not allowed!"
+msgstr ""
+
+#: src/Pierre/Security/security-config.php:144
+msgid "Pierre says: File upload is valid!"
+msgstr ""
+
+#. translators: %s is the WordPress version
+#: src/Pierre/Security/SecurityAuditor.php:136
 #, php-format
 msgid "WordPress %s is up to date!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:96
-#: src/Pierre/Security/SecurityManager.php:546
+#. translators: %1$s is current version, %2$s is latest version
+#: src/Pierre/Security/SecurityAuditor.php:138
+#: src/Pierre/Security/SecurityManager.php:554
 #, php-format
-msgid "WordPress update available! Current: %s, Latest: %s"
+msgid "WordPress update available! Current: %1$s, Latest: %2$s"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:107
+#: src/Pierre/Security/SecurityAuditor.php:149
 msgid "Debug mode is enabled! Disable in production."
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:108
+#: src/Pierre/Security/SecurityAuditor.php:150
 msgid "Debug mode is disabled!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:119
+#: src/Pierre/Security/SecurityAuditor.php:161
 msgid "File editing is disabled!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:120
+#: src/Pierre/Security/SecurityAuditor.php:162
 msgid "File editing is enabled! Consider disabling."
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:152
+#: src/Pierre/Security/SecurityAuditor.php:194
 msgid "Plugin file permissions are secure!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:153
+#: src/Pierre/Security/SecurityAuditor.php:195
 msgid "Plugin file permissions are too permissive!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:171
+#: src/Pierre/Security/SecurityAuditor.php:213
 msgid "Sensitive files found in plugin directory!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:172
+#: src/Pierre/Security/SecurityAuditor.php:214
 msgid "No sensitive files found!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:193
+#: src/Pierre/Security/SecurityAuditor.php:235
 msgid "Plugin headers are complete!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:194
+#: src/Pierre/Security/SecurityAuditor.php:236
 msgid "Plugin headers are incomplete!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:226
+#: src/Pierre/Security/SecurityAuditor.php:268
 msgid "Using default table prefix! Consider changing."
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:227
+#: src/Pierre/Security/SecurityAuditor.php:269
 msgid "Using custom table prefix!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:239
+#: src/Pierre/Security/SecurityAuditor.php:281
 msgid "Using root database user! Create dedicated user."
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:240
+#: src/Pierre/Security/SecurityAuditor.php:282
 msgid "Using dedicated database user!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:273
+#: src/Pierre/Security/SecurityAuditor.php:315
 msgid "Uploads directory is protected!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:274
+#: src/Pierre/Security/SecurityAuditor.php:316
 msgid "Uploads directory needs protection!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:288
+#: src/Pierre/Security/SecurityAuditor.php:330
 msgid "wp-config.php permissions are secure!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:289
+#: src/Pierre/Security/SecurityAuditor.php:331
 msgid "wp-config.php permissions are too permissive!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:319
+#: src/Pierre/Security/SecurityAuditor.php:361
 msgid "HTTPS is enabled!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:320
+#: src/Pierre/Security/SecurityAuditor.php:362
 msgid "HTTPS is not enabled! Enable SSL."
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:360
+#: src/Pierre/Security/SecurityAuditor.php:402
 msgid "Input validation class exists!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:361
+#: src/Pierre/Security/SecurityAuditor.php:403
 msgid "Input validation class missing!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:391
+#: src/Pierre/Security/SecurityAuditor.php:433
 msgid "Output sanitization class exists!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:392
+#: src/Pierre/Security/SecurityAuditor.php:434
 msgid "Output sanitization class missing!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:422
+#: src/Pierre/Security/SecurityAuditor.php:464
 msgid "Two-factor authentication is available!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:423
+#: src/Pierre/Security/SecurityAuditor.php:465
 msgid "Two-factor authentication not enabled!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:453
+#: src/Pierre/Security/SecurityAuditor.php:495
 msgid "Capability checks are implemented!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:454
+#: src/Pierre/Security/SecurityAuditor.php:496
 msgid "Capability checks need implementation!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:484
+#: src/Pierre/Security/SecurityAuditor.php:526
 msgid "Session cookies are secure!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:485
+#: src/Pierre/Security/SecurityAuditor.php:527
 msgid "Session cookies are not secure!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:515
+#: src/Pierre/Security/SecurityAuditor.php:557
 msgid "SSL/TLS is enabled!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:516
+#: src/Pierre/Security/SecurityAuditor.php:558
 msgid "SSL/TLS is not enabled!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:546
+#: src/Pierre/Security/SecurityAuditor.php:588
 msgid "Security logging is implemented!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:547
+#: src/Pierre/Security/SecurityAuditor.php:589
 msgid "Security logging needs implementation!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:587
+#. translators: %1$d is found headers count, %2$d is total headers count
+#: src/Pierre/Security/SecurityAuditor.php:631
 #, php-format
-msgid "%d/%d security headers found!"
+msgid "%1$d/%2$d security headers found!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:626
+#. translators: %1$s is category name, %2$d is score percentage
+#: src/Pierre/Security/SecurityAuditor.php:671
 #, php-format
-msgid "Improve %s security (Score: %d%%)"
+msgid "Improve %1$s security (Score: %2$d%%)"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:645
+#: src/Pierre/Security/SecurityAuditor.php:690
 msgid "Update WordPress to latest version"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:646
+#: src/Pierre/Security/SecurityAuditor.php:691
 msgid "Disable debug mode in production"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:647
+#: src/Pierre/Security/SecurityAuditor.php:692
 msgid "Disable file editing"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:650
+#: src/Pierre/Security/SecurityAuditor.php:695
 msgid "Review plugin file permissions"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:651
+#: src/Pierre/Security/SecurityAuditor.php:696
 msgid "Remove sensitive files from plugin directory"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:652
+#: src/Pierre/Security/SecurityAuditor.php:697
 msgid "Complete plugin headers"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:655
+#: src/Pierre/Security/SecurityAuditor.php:700
 msgid "Change default table prefix"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:656
+#: src/Pierre/Security/SecurityAuditor.php:701
 msgid "Create dedicated database user"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:657
+#: src/Pierre/Security/SecurityAuditor.php:702
 msgid "Use prepared statements"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:660
+#: src/Pierre/Security/SecurityAuditor.php:705
 msgid "Enable HTTPS/SSL"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:661
+#: src/Pierre/Security/SecurityAuditor.php:706
 msgid "Configure security headers"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:662
+#: src/Pierre/Security/SecurityAuditor.php:707
 msgid "Use secure cookies"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:666
+#: src/Pierre/Security/SecurityAuditor.php:711
 msgid "Review security configuration"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:693
+#: src/Pierre/Security/SecurityAuditor.php:738
 msgid "GDPR compliance check passed!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:707
+#: src/Pierre/Security/SecurityAuditor.php:752
 msgid "OWASP Top 10 compliance check passed!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityAuditor.php:721
+#: src/Pierre/Security/SecurityAuditor.php:766
 msgid "WordPress coding standards compliance passed!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:70
+#: src/Pierre/Security/SecurityManager.php:72
 msgid "Pierre says: Input cannot be empty!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:102
+#: src/Pierre/Security/SecurityManager.php:104
 msgid "Pierre says: Unknown validation type!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:111
+#: src/Pierre/Security/SecurityManager.php:113
 msgid "Pierre says: Validation error occurred!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:130
+#: src/Pierre/Security/SecurityManager.php:132
 msgid "Pierre says: Invalid email address!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:137
+#: src/Pierre/Security/SecurityManager.php:139
 msgid "Pierre says: Email is valid!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:155
+#: src/Pierre/Security/SecurityManager.php:157
 msgid "Pierre says: Invalid URL!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:167
+#: src/Pierre/Security/SecurityManager.php:169
 msgid "Pierre says: URL protocol not allowed!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:174
+#: src/Pierre/Security/SecurityManager.php:176
 msgid "Pierre says: URL is valid!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:193
+#: src/Pierre/Security/SecurityManager.php:195
 msgid "Pierre says: Invalid integer!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:202
+#. translators: %d is the minimum value required
+#: src/Pierre/Security/SecurityManager.php:205
 #, php-format
 msgid "Pierre says: Value must be at least %d!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:210
+#. translators: %d is the maximum value allowed
+#: src/Pierre/Security/SecurityManager.php:214
 #, php-format
 msgid "Pierre says: Value must be at most %d!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:217
+#: src/Pierre/Security/SecurityManager.php:221
 msgid "Pierre says: Integer is valid!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:238
+#. translators: %d is the maximum character length allowed
+#: src/Pierre/Security/SecurityManager.php:243
 #, php-format
 msgid "Pierre says: String too long! Maximum %d characters."
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:247
+#: src/Pierre/Security/SecurityManager.php:252
 msgid "Pierre says: String contains invalid characters!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:254
+#: src/Pierre/Security/SecurityManager.php:259
 msgid "Pierre says: String is valid!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:272
+#: src/Pierre/Security/SecurityManager.php:277
 msgid "Pierre says: Invalid key!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:279
+#: src/Pierre/Security/SecurityManager.php:284
 msgid "Pierre says: Key is valid!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:297
-msgid ""
-"Pierre says: Invalid slug! Only lowercase letters, numbers, hyphens, and "
-"underscores allowed."
+#: src/Pierre/Security/SecurityManager.php:302
+msgid "Pierre says: Invalid slug! Only lowercase letters, numbers, hyphens, and underscores allowed."
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:304
+#: src/Pierre/Security/SecurityManager.php:309
 msgid "Pierre says: Slug is valid!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:323
+#: src/Pierre/Security/SecurityManager.php:328
 msgid "Pierre says: Invalid locale code! Use format like \"fr\" or \"fr_FR\"."
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:330
+#: src/Pierre/Security/SecurityManager.php:335
 msgid "Pierre says: Locale is valid!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:349
+#. translators: %s is the list of allowed roles
+#: src/Pierre/Security/SecurityManager.php:355
 #, php-format
 msgid "Pierre says: Invalid role! Allowed roles: %s"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:356
+#: src/Pierre/Security/SecurityManager.php:362
 msgid "Pierre says: Role is valid!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:375
+#. translators: %s is the list of allowed project types
+#: src/Pierre/Security/SecurityManager.php:382
 #, php-format
 msgid "Pierre says: Invalid project type! Allowed types: %s"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:382
+#: src/Pierre/Security/SecurityManager.php:389
 msgid "Pierre says: Project type is valid!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:403
+#: src/Pierre/Security/SecurityManager.php:410
 msgid "Pierre says: Script tags not allowed!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:410
+#: src/Pierre/Security/SecurityManager.php:417
 msgid "Pierre says: HTML is valid!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:428
+#: src/Pierre/Security/SecurityManager.php:435
 msgid "Pierre says: Invalid JSON format!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:437
+#: src/Pierre/Security/SecurityManager.php:444
 msgid "Pierre says: JSON is valid!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:545
+#: src/Pierre/Security/SecurityManager.php:552
 msgid "WordPress is up to date!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:566
+#. translators: %s is the PHP version
+#: src/Pierre/Security/SecurityManager.php:575
 #, php-format
 msgid "PHP version %s is supported!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:567
+#. translators: %1$s is current PHP version, %2$s is required PHP version
+#: src/Pierre/Security/SecurityManager.php:577
 #, php-format
-msgid "PHP version %s is not supported! Required: %s"
+msgid "PHP version %1$s is not supported! Required: %2$s"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:588
+#: src/Pierre/Security/SecurityManager.php:598
 msgid "File permissions are secure!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:589
+#: src/Pierre/Security/SecurityManager.php:599
 msgid "File permissions are too permissive!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:609
+#: src/Pierre/Security/SecurityManager.php:619
 msgid "Database queries use prepared statements!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:610
+#: src/Pierre/Security/SecurityManager.php:620
 msgid "Database queries may not be secure!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:628
+#: src/Pierre/Security/SecurityManager.php:638
 msgid "Input validation is implemented!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:629
+#: src/Pierre/Security/SecurityManager.php:639
 msgid "Input validation needs improvement!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:647
+#: src/Pierre/Security/SecurityManager.php:657
 msgid "Output sanitization is implemented!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:648
+#: src/Pierre/Security/SecurityManager.php:658
 msgid "Output sanitization needs improvement!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:666
+#: src/Pierre/Security/SecurityManager.php:676
 msgid "CSRF protection is implemented!"
 msgstr ""
 
-#: src/Pierre/Security/SecurityManager.php:667
+#: src/Pierre/Security/SecurityManager.php:677
 msgid "CSRF protection needs improvement!"
 msgstr ""
 
-#: templates/admin/security.php:32
-msgid "Pierre Security Center"
+#: src/Pierre/Surveillance/CronManager.php:167
+msgid "Pierre 5 minutes"
 msgstr ""
 
-#: templates/admin/security.php:38
-msgid "Security Manager"
+#: src/Pierre/Surveillance/CronManager.php:168
+msgid "Pierre 15 minutes"
 msgstr ""
 
-#: templates/admin/security.php:43 templates/admin/security.php:56
-#: templates/admin/security.php:69
+#: src/Pierre/Surveillance/CronManager.php:169
+msgid "Pierre 30 minutes"
+msgstr ""
+
+#: src/Pierre/Surveillance/CronManager.php:170
+msgid "Pierre 60 minutes"
+msgstr ""
+
+#: src/Pierre/Surveillance/CronManager.php:171
+msgid "Pierre 120 minutes"
+msgstr ""
+
+#: src/Pierre/Surveillance/CronManager.php:176
+msgid "Pierre's Daily Cleanup"
+msgstr ""
+
+#: src/Pierre/Surveillance/CronManager.php:182
+msgid "Pierre's Weekly Tasks"
+msgstr ""
+
+#: src/Pierre/Surveillance/ProjectWatcher.php:678
+msgid "No watched projects yet. Add a locale and a project before testing."
+msgstr ""
+
+#: src/Pierre/Surveillance/ProjectWatcher.php:691
+msgid "Invalid watched project data. Please re-add the project."
+msgstr ""
+
+#. translators: 1: project slug, 2: project type
+#: src/Pierre/Surveillance/ProjectWatcher.php:703
+#, php-format
+msgid "Failed to scrape %1$s (%2$s). Check the locale code matches wordpress.org locales."
+msgstr ""
+
+#: src/Pierre/Surveillance/ProjectWatcher.php:717
+msgid "Slack webhook is not configured (neither global nor per-locale)."
+msgstr ""
+
+#: src/Pierre/Surveillance/ProjectWatcher.php:722
+msgid "Pierre dry run: notifications OK (locale)."
+msgstr ""
+
+#: src/Pierre/Surveillance/ProjectWatcher.php:723
+msgid "Pierre dry run: notifications OK."
+msgstr ""
+
+#: src/Pierre/Surveillance/ProjectWatcher.php:728
+msgid "Slack test failed. Verify webhook URL and Slack response."
+msgstr ""
+
+#: src/Pierre/Surveillance/ProjectWatcher.php:743
+msgid "Unexpected error during test surveillance."
+msgstr ""
+
+#: templates/admin/dashboard.php:18
+msgid "Pierre 🪨 Dashboard"
+msgstr ""
+
+#: templates/admin/dashboard.php:22
+msgid "Pierre's Statistics"
+msgstr ""
+
+#: templates/admin/dashboard.php:36
+#: templates/admin/projects.php:94
+msgid "Surveillance Status"
+msgstr ""
+
+#: templates/admin/dashboard.php:39
+#: templates/admin/dashboard.php:53
+#: templates/admin/projects.php:97
+#: templates/admin/settings-global-webhook.php:27
+msgid "Status:"
+msgstr ""
+
+#: templates/admin/dashboard.php:39
+#: templates/admin/locales.php:80
+#: templates/admin/projects.php:97
+#: templates/admin/projects.php:207
 msgid "Active"
 msgstr ""
 
-#: templates/admin/security.php:44 templates/admin/security.php:57
-#: templates/admin/security.php:70
+#: templates/admin/dashboard.php:39
+#: templates/admin/projects.php:97
 msgid "Inactive"
 msgstr ""
 
-#: templates/admin/security.php:51
-msgid "CSRF Protection"
+#: templates/admin/dashboard.php:40
+#: templates/admin/projects.php:98
+#: templates/admin/settings.php:317
+msgid "Message:"
 msgstr ""
 
-#: templates/admin/security.php:64
-msgid "Security Auditor"
+#: templates/admin/dashboard.php:40
+#: templates/admin/dashboard.php:53
+#: templates/admin/projects.php:98
+#: templates/admin/settings-global-webhook.php:27
+#: templates/admin/settings.php:203
+#: templates/admin/settings.php:317
+msgid "No status message"
 msgstr ""
 
-#: templates/admin/security.php:79
-msgid "Security Actions"
+#: templates/admin/dashboard.php:42
+#: templates/admin/settings.php:316
+msgid "Next Run:"
 msgstr ""
 
-#: templates/admin/security.php:83
-msgid "Run Security Audit"
+#: templates/admin/dashboard.php:49
+msgid "Notification System"
 msgstr ""
 
-#: templates/admin/security.php:87
-msgid "View Security Logs"
+#: templates/admin/dashboard.php:52
+#: templates/admin/settings-global-webhook.php:21
+msgid "Ready:"
 msgstr ""
 
-#: templates/admin/security.php:91
-msgid "Clear Security Logs"
+#: templates/admin/dashboard.php:52
+#: templates/admin/settings-global-webhook.php:22
+#: templates/admin/settings-global-webhook.php:143
+#: templates/admin/settings.php:191
+#: templates/admin/settings.php:315
+msgid "Yes"
 msgstr ""
 
-#: templates/admin/security.php:98
-msgid "Security Audit Results"
+#: templates/admin/dashboard.php:52
+#: templates/admin/settings-global-webhook.php:22
+#: templates/admin/settings-global-webhook.php:143
+#: templates/admin/settings.php:191
+#: templates/admin/settings.php:315
+msgid "No"
 msgstr ""
 
-#: templates/admin/security.php:104
-msgid "Security Logs"
+#: templates/admin/dashboard.php:59
+msgid "Your Assignments"
 msgstr ""
 
-#: templates/admin/security.php:110
-msgid "Recent Security Events"
+#: templates/admin/dashboard.php:64
+#: templates/admin/dashboard.php:90
+#: templates/admin/locale-view.php:97
+#: templates/admin/projects.php:160
+#: templates/admin/projects.php:246
+msgid "Project"
 msgstr ""
 
-#: templates/admin/security.php:113
-msgid "No recent security events."
+#: templates/admin/dashboard.php:65
+#: templates/admin/dashboard.php:91
+#: templates/admin/locales.php:52
+#: templates/admin/locales.php:104
+#: templates/admin/projects.php:161
+#: templates/admin/projects.php:247
+msgid "Locale"
 msgstr ""
 
-#: templates/admin/security.php:118 templates/admin/security.php:362
-msgid "Timestamp"
+#: templates/admin/dashboard.php:66
+#: templates/admin/locale-view.php:200
+#: templates/admin/teams.php:255
+msgid "Role"
 msgstr ""
 
-#: templates/admin/security.php:119 templates/admin/security.php:362
-msgid "Event Type"
+#: templates/admin/dashboard.php:72
+#: templates/admin/dashboard.php:97
+msgid "Unknown Project"
 msgstr ""
 
-#: templates/admin/security.php:120 templates/admin/security.php:362
-msgid "User ID"
+#: templates/admin/dashboard.php:73
+#: templates/admin/dashboard.php:98
+msgid "Unknown Locale"
 msgstr ""
 
-#: templates/admin/security.php:121 templates/admin/security.php:362
-msgid "IP Address"
+#: templates/admin/dashboard.php:74
+msgid "Unknown Role"
 msgstr ""
 
-#: templates/admin/security.php:122 templates/admin/security.php:362
-msgid "Details"
+#: templates/admin/dashboard.php:80
+msgid "Pierre says: You don't have any project assignments yet!"
 msgstr ""
 
-#: templates/admin/security.php:138 templates/admin/security.php:179
-#: templates/admin/security.php:370
-msgid "View Details"
+#: templates/admin/dashboard.php:85
+#: templates/admin/locale-view.php:92
+msgid "Watched Projects"
 msgstr ""
 
-#: templates/admin/security.php:151
-msgid "Audit History"
+#: templates/admin/dashboard.php:104
+msgid "Pierre says: No projects are being watched yet!"
 msgstr ""
 
-#: templates/admin/security.php:154
-msgid "No audit history available."
+#: templates/admin/locale-view.php:27
+msgid "← Back to Locales"
 msgstr ""
 
-#: templates/admin/security.php:159
-msgid "Date"
+#: templates/admin/locale-view.php:35
+#: templates/admin/locale-view.php:201
+#: templates/admin/locales.php:53
+#: templates/admin/locales.php:105
+#: templates/admin/projects.php:31
+#: templates/admin/teams.php:46
+msgid "Projects"
 msgstr ""
 
-#: templates/admin/security.php:160
-msgid "Overall Score"
+#: templates/admin/locale-view.php:38
+msgid "Notifications"
 msgstr ""
 
-#: templates/admin/security.php:161
-msgid "Critical Issues"
+#: templates/admin/locale-view.php:41
+#: templates/admin/settings-discovery.php:128
+msgid "Team"
 msgstr ""
 
-#: templates/admin/security.php:162
-msgid "Warnings"
+#: templates/admin/locale-view.php:47
+msgid "Statistics"
 msgstr ""
 
-#: templates/admin/security.php:163
+#: templates/admin/locale-view.php:50
+msgid "Projects Watched"
+msgstr ""
+
+#: templates/admin/locale-view.php:54
+#: templates/admin/locale-view.php:99
+#: templates/admin/locales.php:55
+#: templates/admin/locales.php:107
+#: templates/admin/projects.php:164
+#: templates/admin/projects.php:250
+msgid "Last Check"
+msgstr ""
+
+#: templates/admin/locale-view.php:61
+#: templates/public/project.php:108
+msgid "Quick Actions"
+msgstr ""
+
+#: templates/admin/locale-view.php:63
+#: templates/admin/projects.php:32
+msgid "Add Project"
+msgstr ""
+
+#: templates/admin/locale-view.php:64
+msgid "Configure Notifications"
+msgstr ""
+
+#: templates/admin/locale-view.php:65
+msgid "Manage Team"
+msgstr ""
+
+#: templates/admin/locale-view.php:71
+#: templates/admin/projects.php:52
+msgid "Add Project to Watch"
+msgstr ""
+
+#: templates/admin/locale-view.php:75
+#: templates/admin/projects.php:55
+#: templates/admin/teams.php:135
+msgid "Project Type:"
+msgstr ""
+
+#: templates/admin/locale-view.php:77
+#: templates/admin/projects.php:58
+#: templates/admin/projects.php:142
+#: templates/admin/teams.php:137
+msgid "Plugin"
+msgstr ""
+
+#: templates/admin/locale-view.php:78
+#: templates/admin/projects.php:59
+#: templates/admin/projects.php:143
+#: templates/admin/teams.php:138
+msgid "Theme"
+msgstr ""
+
+#: templates/admin/locale-view.php:79
+#: templates/admin/projects.php:57
+#: templates/admin/projects.php:144
+msgid "Core/Meta"
+msgstr ""
+
+#: templates/admin/locale-view.php:80
+#: templates/admin/projects.php:60
+#: templates/admin/projects.php:145
+#: templates/admin/teams.php:140
+msgid "App"
+msgstr ""
+
+#: templates/admin/locale-view.php:84
+#: templates/admin/projects.php:64
+#: templates/admin/teams.php:144
+msgid "Project Slug:"
+msgstr ""
+
+#: templates/admin/locale-view.php:87
+#: templates/admin/projects.php:85
+msgid "Add to Surveillance"
+msgstr ""
+
+#: templates/admin/locale-view.php:98
+#: templates/admin/projects.php:162
+#: templates/admin/projects.php:248
+#: templates/admin/settings-projects-discovery.php:24
+msgid "Type"
+msgstr ""
+
+#: templates/admin/locale-view.php:100
+#: templates/admin/projects.php:165
+#: templates/admin/projects.php:251
+msgid "Next Check"
+msgstr ""
+
+#: templates/admin/locale-view.php:101
+#: templates/admin/locale-view.php:202
+#: templates/admin/locales.php:56
+#: templates/admin/locales.php:108
+#: templates/admin/projects.php:166
+#: templates/admin/projects.php:252
+#: templates/admin/teams.php:47
 msgid "Actions"
 msgstr ""
 
-#: templates/admin/security.php:329
-msgid "Running Audit..."
+#: templates/admin/locale-view.php:110
+msgid "Unknown"
 msgstr ""
 
-#: templates/admin/security.php:333 templates/admin/security.php:358
-#: templates/admin/security.php:391
-msgid "pierre_ajax"
+#: templates/admin/locale-view.php:112
+#: templates/admin/projects.php:103
+#: templates/admin/projects.php:218
+#: templates/admin/settings.php:195
+#: templates/admin/settings.php:199
+#: templates/admin/settings.php:209
+#: templates/admin/settings.php:217
+msgid "N/A"
 msgstr ""
 
-#: templates/admin/security.php:388
-msgid "Pierre says: Are you sure you want to clear all security logs?"
+#: templates/admin/locale-view.php:117
+#: templates/admin/projects.php:193
+msgid "Remove"
+msgstr ""
+
+#: templates/admin/locale-view.php:125
+msgid "No projects are being watched for this locale yet."
+msgstr ""
+
+#: templates/admin/locale-view.php:131
+msgid "Locale Slack WebHook"
+msgstr ""
+
+#: templates/admin/locale-view.php:136
+msgid "Webhook URL (this locale)"
+msgstr ""
+
+#: templates/admin/locale-view.php:144
+msgid "Enable"
+msgstr ""
+
+#: templates/admin/locale-view.php:148
+#: templates/admin/settings-global-webhook.php:61
+msgid "Types"
+msgstr ""
+
+#: templates/admin/locale-view.php:155
+#: templates/admin/settings-global-webhook.php:70
+msgid "Thresholds & Digest"
+msgstr ""
+
+#: templates/admin/locale-view.php:156
+#: templates/admin/settings-global-webhook.php:71
+msgid "New strings threshold"
+msgstr ""
+
+#: templates/admin/locale-view.php:159
+#: templates/admin/settings-global-webhook.php:74
+msgid "Milestones (comma-separated)"
+msgstr ""
+
+#: templates/admin/locale-view.php:163
+#: templates/admin/settings-global-webhook.php:78
+msgid "Mode"
+msgstr ""
+
+#: templates/admin/locale-view.php:171
+#: templates/admin/settings-global-webhook.php:85
+msgid "Digest Type"
+msgstr ""
+
+#: templates/admin/locale-view.php:178
+#: templates/admin/settings-global-webhook.php:91
+msgid "Interval (minutes)"
+msgstr ""
+
+#: templates/admin/locale-view.php:181
+#: templates/admin/settings-global-webhook.php:94
+msgid "Fixed time (HH:MM)"
+msgstr ""
+
+#: templates/admin/locale-view.php:186
+msgid "Save Webhook"
+msgstr ""
+
+#: templates/admin/locale-view.php:189
+msgid "Leave empty values to inherit global defaults."
+msgstr ""
+
+#: templates/admin/locale-view.php:194
+#: templates/public/project.php:65
+msgid "Team Members"
+msgstr ""
+
+#: templates/admin/locale-view.php:195
+msgid "Team management for this locale. Locale Managers can assign users to this locale."
+msgstr ""
+
+#: templates/admin/locale-view.php:199
+msgid "User"
+msgstr ""
+
+#: templates/admin/locale-view.php:207
+msgid "No team members assigned yet."
+msgstr ""
+
+#: templates/admin/locale-view.php:212
+msgid "Assign Users from Teams"
+msgstr ""
+
+#: templates/admin/locale-view.php:218
+#: templates/admin/locale-view.php:243
+msgid "Locale Managers"
+msgstr ""
+
+#: templates/admin/locale-view.php:222
+msgid "Only site administrators can add or remove Locale Managers for this locale."
+msgstr ""
+
+#: templates/admin/locale-view.php:224
+msgid "Permissions model (summary): Admin only for managers; then Admin + Locale Manager manage GTE and below; Admin + Locale Manager + GTE manage PTE."
+msgstr ""
+
+#: templates/admin/locale-view.php:237
+msgid "Save Managers"
+msgstr ""
+
+#: templates/admin/locale-view.php:263
+msgid "No Locale Managers assigned yet."
+msgstr ""
+
+#: templates/admin/locale-view.php:266
+msgid "Permissions model: Locale Managers can help manage this locale (GTE/PTE flow). Contact a site administrator to modify managers."
+msgstr ""
+
+#: templates/admin/locale-view.php:283
+#: templates/admin/projects.php:330
+msgid "Adding..."
+msgstr ""
+
+#: templates/admin/locale-view.php:292
+#: templates/admin/projects.php:339
+msgid "Project added!"
+msgstr ""
+
+#: templates/admin/locale-view.php:292
+#: templates/admin/projects.php:339
+msgid "Failed to add project."
+msgstr ""
+
+#: templates/admin/locale-view.php:299
+#: templates/admin/locale-view.php:337
+#: templates/admin/locale-view.php:367
+#: templates/admin/locale-view.php:404
+#: templates/admin/locale-view.php:433
+#: templates/admin/locale-view.php:459
+#: templates/admin/projects.php:349
+#: templates/admin/projects.php:384
+#: templates/admin/settings-discovery.php:207
+#: templates/admin/settings-projects-discovery.php:262
+#: templates/admin/teams.php:237
+msgid "Network error."
+msgstr ""
+
+#: templates/admin/locale-view.php:312
+#: templates/admin/projects.php:363
+msgid "Remove this project from surveillance?"
+msgstr ""
+
+#: templates/admin/locale-view.php:323
+msgid "Removing..."
+msgstr ""
+
+#: templates/admin/locale-view.php:331
+#: templates/admin/projects.php:379
+msgid "Failed to remove project."
+msgstr ""
+
+#: templates/admin/locale-view.php:354
+#: templates/admin/locale-view.php:421
+#: templates/admin/locale-view.php:446
+#: templates/admin/settings-projects-discovery.php:43
+msgid "Saving..."
+msgstr ""
+
+#: templates/admin/locale-view.php:363
+#: templates/admin/locale-view.php:430
+#: templates/admin/locale-view.php:455
+msgid "Saved!"
+msgstr ""
+
+#: templates/admin/locale-view.php:363
+#: templates/admin/locale-view.php:430
+#: templates/admin/locale-view.php:455
+msgid "Failed to save."
+msgstr ""
+
+#: templates/admin/locale-view.php:381
+msgid "Testing..."
+msgstr ""
+
+#: templates/admin/locale-view.php:385
+msgid "Please enter a webhook URL first."
+msgstr ""
+
+#: templates/admin/locale-view.php:400
+msgid "Test succeeded!"
+msgstr ""
+
+#: templates/admin/locale-view.php:400
+msgid "Test failed."
+msgstr ""
+
+#: templates/admin/locales.php:22
+#: templates/admin/settings-global-webhook.php:103
+#: templates/admin/teams.php:45
+msgid "Locales"
+msgstr ""
+
+#: templates/admin/locales.php:23
+msgid "Discover from WP.org"
+msgstr ""
+
+#: templates/admin/locales.php:28
+#: templates/admin/projects.php:40
+msgid "No locales configured yet."
+msgstr ""
+
+#: templates/admin/locales.php:29
+msgid "Add locales from Settings > Locales Discovery. You can add projects after locales exist."
+msgstr ""
+
+#: templates/admin/locales.php:31
+#: templates/admin/projects.php:44
+msgid "Open Locales Discovery →"
+msgstr ""
+
+#: templates/admin/locales.php:38
+#: templates/admin/settings-discovery.php:72
+msgid "Search locales"
+msgstr ""
+
+#: templates/admin/locales.php:39
+msgid "Search locales..."
+msgstr ""
+
+#: templates/admin/locales.php:42
+#: templates/admin/locales.php:115
+msgid "active locale(s)"
+msgstr ""
+
+#: templates/admin/locales.php:54
+#: templates/admin/locales.php:106
+#: templates/admin/projects.php:163
+#: templates/admin/projects.php:249
+msgid "Status"
+msgstr ""
+
+#: templates/admin/locales.php:73
+#: templates/admin/locales.php:86
+msgid "Manage"
+msgstr ""
+
+#: templates/admin/locales.php:93
+msgid "No active locales found."
+msgstr ""
+
+#: templates/admin/locales.php:94
+msgid "Add your first locale from Settings"
+msgstr ""
+
+#: templates/admin/projects.php:41
+msgid "Add locales from Settings > Locales Discovery, then return here to add projects."
+msgstr ""
+
+#: templates/admin/projects.php:65
+msgid "e.g., wp, woocommerce"
+msgstr ""
+
+#: templates/admin/projects.php:68
+#: templates/admin/settings-projects-discovery.php:54
+#: templates/admin/teams.php:110
+msgid "Locale:"
+msgstr ""
+
+#: templates/admin/projects.php:70
+#: templates/admin/teams.php:112
+msgid "— Select locale —"
+msgstr ""
+
+#: templates/admin/projects.php:79
+msgid "No active locales. Add locales first."
+msgstr ""
+
+#: templates/admin/projects.php:87
+#: templates/admin/teams.php:153
+msgid "Cancel"
+msgstr ""
+
+#: templates/admin/projects.php:100
+msgid "Active locales"
+msgstr ""
+
+#: templates/admin/projects.php:101
+msgid "Watched projects"
+msgstr ""
+
+#: templates/admin/projects.php:103
+msgid "Next run"
+msgstr ""
+
+#: templates/admin/projects.php:105
+msgid "Notifications are managed per locale (see Locale → Notifications)."
+msgstr ""
+
+#: templates/admin/projects.php:105
+msgid "Manage locales"
+msgstr ""
+
+#: templates/admin/projects.php:112
+msgid "Stop Surveillance"
+msgstr ""
+
+#: templates/admin/projects.php:116
+msgid "Start Surveillance"
+msgstr ""
+
+#: templates/admin/projects.php:120
+msgid "Go to Locales to test per-locale"
+msgstr ""
+
+#: templates/admin/projects.php:130
+msgid "Filter by locale"
+msgstr ""
+
+#: templates/admin/projects.php:132
+msgid "All Locales"
+msgstr ""
+
+#: templates/admin/projects.php:139
+msgid "Filter by type"
+msgstr ""
+
+#: templates/admin/projects.php:141
+msgid "All Types"
+msgstr ""
+
+#: templates/admin/projects.php:149
+msgid "Search projects"
+msgstr ""
+
+#: templates/admin/projects.php:150
+msgid "Search projects..."
+msgstr ""
+
+#: templates/admin/projects.php:186
+msgid "View locale"
+msgstr ""
+
+#: templates/admin/projects.php:223
+msgid "Manage Locale"
+msgstr ""
+
+#: templates/admin/projects.php:231
+msgid "No projects are being watched yet."
+msgstr ""
+
+#: templates/admin/projects.php:233
+msgid "Add your first project"
+msgstr ""
+
+#: templates/admin/projects.php:235
+msgid "Add a locale first"
+msgstr ""
+
+#: templates/admin/projects.php:259
+msgid "project(s)"
+msgstr ""
+
+#: templates/admin/projects.php:376
+msgid "Project removed."
+msgstr ""
+
+#: templates/admin/reports.php:19
+msgid "Work in progress."
+msgstr ""
+
+#: templates/admin/settings-discovery.php:23
+msgid "Discover and add locales from wordpress.org. Only site administrators can add locales."
+msgstr ""
+
+#: templates/admin/settings-discovery.php:25
+msgid "This will fetch available locales from WordPress.org. You can then add them to monitoring."
+msgstr ""
+
+#: templates/admin/settings-discovery.php:26
+msgid "To manage active locales, go to the Locales page."
+msgstr ""
+
+#: templates/admin/settings-discovery.php:30
+msgid "Last refresh:"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:31
+msgid "never"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:32
+msgid "Force refresh"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:38
+#: templates/admin/teams.php:25
+msgid "Sources & Help"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:43
+msgid "translate.wordpress.org"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:48
+msgid "Available translations (reference gist)"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:53
+msgid "Polyglots Teams"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:57
+msgid "Local Slack Teams"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:69
+msgid "Discover Locales from WordPress.org"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:70
+msgid "Select locales to add to monitoring:"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:72
+msgid "Search locales (code or name)…"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:76
+#: templates/admin/settings-discovery.php:161
+msgid "Loading locales..."
+msgstr ""
+
+#: templates/admin/settings-discovery.php:80
+msgid "Add Selected Locales"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:121
+msgid "Click to copy"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:123
+msgid "Already added"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:126
+msgid "Translate"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:127
+#: templates/admin/settings.php:292
+msgid "Rosetta"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:130
+#: templates/admin/settings-discovery.php:131
+msgid "Slack"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:131
+msgid "Non renseigné"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:137
+#: templates/admin/settings-discovery.php:188
+msgid "total"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:157
+msgid "An error occurred while fetching locales."
+msgstr ""
+
+#: templates/admin/settings-discovery.php:159
+msgid "Retry"
+msgstr ""
+
+#: templates/admin/settings-discovery.php:165
+msgid "Error: Nonce not found. Please refresh the page."
+msgstr ""
+
+#: templates/admin/settings-discovery.php:193
+msgid "Network error. Check console for details."
+msgstr ""
+
+#: templates/admin/settings-discovery.php:206
+msgid "Failed."
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:17
+msgid "Global Slack Webhook (Admin/Dev)"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:24
+msgid "Test again"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:30
+msgid "Last test:"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:31
+msgid "success"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:31
+msgid "failed"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:38
+msgid "Webhook URL:"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:46
+msgid "Route notifications with optional scopes (locales/projects). Leave scopes empty for ALL."
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:56
+msgid "Enable Global Webhook"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:100
+msgid "Scopes (optional)"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:101
+msgid "Restrict global webhook to specific locales and/or projects. Leave empty for all."
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:111
+msgid "Projects (type,slug per line)"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:118
+msgid "Save Global Webhook"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:121
+msgid "Preview message"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:124
+msgid "Send test via Webhook"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:128
+#: templates/admin/settings-projects-discovery.php:236
+#: templates/admin/settings-projects-discovery.php:260
+msgid "Preview"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:137
+msgid "All locales"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:138
+msgid "Some projects"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:138
+msgid "All projects"
+msgstr ""
+
+#. translators: 1: whether active (Yes/No), 2: types list, 3: locales scope, 4: projects scope
+#: templates/admin/settings-global-webhook.php:142
+#, php-format
+msgid "Active: %1$s | Types: %2$s | Scope: %3$s / %4$s"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:150
+msgid "Help: Scopes"
+msgstr ""
+
+#: templates/admin/settings-global-webhook.php:151
+msgid "Leave empty to apply to all locales/projects. Otherwise, restrict to the listed values."
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:16
+msgid "List projects to use as a library for quick add per locale. One project per line: \"type,slug\". Examples:"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:35
+msgid "Slug"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:38
+msgid "Append line"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:43
+msgid "Save Library"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:49
+msgid "Bulk Add to Surveillance"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:50
+msgid "Select a locale and add selected library entries to surveillance."
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:56
+msgid "— Select —"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:62
+msgid "Add All From Library"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:121
+msgid "Summary"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:121
+msgid "valid"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:121
+#: templates/admin/settings-projects-discovery.php:213
+msgid "duplicate(s) ignored"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:121
+#: templates/admin/settings-projects-discovery.php:260
+msgid "invalid"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:124
+msgid "Invalid lines (first 5):"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:126
+msgid "Deduplicate & Normalize"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:126
+msgid "Removes duplicates and fixes type/core mapping to meta."
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:212
+msgid "saved"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:217
+msgid "View library"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:251
+msgid "Computing preview…"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:260
+msgid "to add"
+msgstr ""
+
+#: templates/admin/settings-projects-discovery.php:260
+msgid "already present"
+msgstr ""
+
+#: templates/admin/settings.php:24
+msgid "Surveillance Settings"
+msgstr ""
+
+#: templates/admin/settings.php:27
+msgid "Surveillance Interval (minutes):"
+msgstr ""
+
+#: templates/admin/settings.php:29
+msgid "5 minutes"
+msgstr ""
+
+#: templates/admin/settings.php:30
+msgid "15 minutes"
+msgstr ""
+
+#: templates/admin/settings.php:31
+msgid "30 minutes"
+msgstr ""
+
+#: templates/admin/settings.php:32
+msgid "1 hour"
+msgstr ""
+
+#: templates/admin/settings.php:33
+msgid "2 hours"
+msgstr ""
+
+#: templates/admin/settings.php:36
+msgid "How often Pierre checks for translation changes"
+msgstr ""
+
+#: templates/admin/settings.php:46
+msgid "Auto-start Surveillance"
+msgstr ""
+
+#: templates/admin/settings.php:49
+msgid "Automatically start surveillance when plugin is activated"
+msgstr ""
+
+#: templates/admin/settings.php:54
+msgid "Maximum Projects per Check:"
+msgstr ""
+
+#: templates/admin/settings.php:62
+msgid "Limit the number of projects checked in each surveillance cycle"
+msgstr ""
+
+#: templates/admin/settings.php:68
+#: templates/admin/settings.php:178
+msgid "Save Settings"
+msgstr ""
+
+#: templates/admin/settings.php:75
+msgid "Notification Settings"
+msgstr ""
+
+#: templates/admin/settings.php:83
+msgid "No Slack webhook configured (global or per-locale). Notifications will not be delivered."
+msgstr ""
+
+#: templates/admin/settings.php:88
+msgid "Defaults (Global)"
+msgstr ""
+
+#: templates/admin/settings.php:90
+msgid "New strings threshold (default):"
+msgstr ""
+
+#: templates/admin/settings.php:94
+msgid "Milestones (comma-separated):"
+msgstr ""
+
+#: templates/admin/settings.php:98
+msgid "Mode:"
+msgstr ""
+
+#: templates/admin/settings.php:106
+msgid "Digest Type:"
+msgstr ""
+
+#: templates/admin/settings.php:114
+msgid "Interval (minutes):"
+msgstr ""
+
+#: templates/admin/settings.php:118
+msgid "Fixed time (HH:MM):"
+msgstr ""
+
+#: templates/admin/settings.php:123
+msgid "Help: Digest mode"
+msgstr ""
+
+#: templates/admin/settings.php:124
+msgid "Digest mode groups notifications and sends them periodically (by interval or fixed time)."
+msgstr ""
+
+#: templates/admin/settings.php:127
+msgid "Notification Types:"
+msgstr ""
+
+#: templates/admin/settings.php:134
+msgid "New Strings Detected"
+msgstr ""
+
+#: templates/admin/settings.php:141
+msgid "Completion Updates"
+msgstr ""
+
+#: templates/admin/settings.php:148
+msgid "Needs Attention"
+msgstr ""
+
+#: templates/admin/settings.php:155
+msgid "Errors"
+msgstr ""
+
+#: templates/admin/settings.php:159
+msgid "Select which types of notifications to send"
+msgstr ""
+
+#: templates/admin/settings.php:164
+msgid "Completion Threshold (%):"
+msgstr ""
+
+#: templates/admin/settings.php:172
+msgid "Only send notifications when completion is above this threshold"
+msgstr ""
+
+#: templates/admin/settings.php:185
+msgid "Cron Status"
+msgstr ""
+
+#: templates/admin/settings.php:190
+msgid "Surveillance active"
+msgstr ""
+
+#: templates/admin/settings.php:194
+msgid "Next surveillance run"
+msgstr ""
+
+#: templates/admin/settings.php:198
+msgid "Next cleanup run"
+msgstr ""
+
+#: templates/admin/settings.php:202
+msgid "Message"
+msgstr ""
+
+#: templates/admin/settings.php:208
+msgid "Last surveillance run"
+msgstr ""
+
+#: templates/admin/settings.php:212
+msgid "Last surveillance duration (ms)"
+msgstr ""
+
+#: templates/admin/settings.php:216
+msgid "Last digest run"
+msgstr ""
+
+#: templates/admin/settings.php:220
+msgid "Last digest duration (ms)"
+msgstr ""
+
+#: templates/admin/settings.php:229
+#: templates/admin/settings.php:323
+msgid "Flush Cache"
+msgstr ""
+
+#: templates/admin/settings.php:232
+#: templates/admin/settings.php:326
+msgid "Reset to Defaults"
+msgstr ""
+
+#: templates/admin/settings.php:235
+#: templates/admin/settings.php:329
+msgid "Clear All Data"
+msgstr ""
+
+#: templates/admin/settings.php:237
+msgid "Run surveillance now"
+msgstr ""
+
+#: templates/admin/settings.php:239
+msgid "Export Locales (JSON)"
+msgstr ""
+
+#: templates/admin/settings.php:240
+msgid "Export Locales (CSV)"
+msgstr ""
+
+#: templates/admin/settings.php:246
+msgid "Locales Mapping Anomalies"
+msgstr ""
+
+#: templates/admin/settings.php:276
+msgid "Check all now"
+msgstr ""
+
+#. translators: %d is the number of anomalies
+#: templates/admin/settings.php:279
+#, php-format
+msgid "Anomalies logged: %d"
+msgstr ""
+
+#: templates/admin/settings.php:280
+msgid "Purge log"
+msgstr ""
+
+#: templates/admin/settings.php:281
+msgid "Export log (JSON)"
+msgstr ""
+
+#: templates/admin/settings.php:284
+msgid "No anomalies detected."
+msgstr ""
+
+#: templates/admin/settings.php:289
+msgid "Code"
+msgstr ""
+
+#: templates/admin/settings.php:290
+msgid "Label"
+msgstr ""
+
+#: templates/admin/settings.php:291
+msgid "Translate Slug"
+msgstr ""
+
+#: templates/admin/settings.php:293
+msgid "Issues"
+msgstr ""
+
+#: templates/admin/settings.php:302
+msgid "None"
+msgstr ""
+
+#: templates/admin/settings.php:303
+msgid "Check"
+msgstr ""
+
+#: templates/admin/settings.php:312
+msgid "System Status"
+msgstr ""
+
+#: templates/admin/settings.php:315
+msgid "Active:"
+msgstr ""
+
+#: templates/admin/settings.php:316
+msgid "Not scheduled"
+msgstr ""
+
+#: templates/admin/teams.php:18
+msgid "Pierre 🪨 Teams"
+msgstr ""
+
+#: templates/admin/teams.php:27
+msgid "Roles, responsibilities and current translation teams are documented in the Polyglots handbook:"
+msgstr ""
+
+#: templates/admin/teams.php:33
+msgid "Available Users"
+msgstr ""
+
+#: templates/admin/teams.php:36
+#: templates/admin/teams.php:98
+msgid "items"
+msgstr ""
+
+#: templates/admin/teams.php:42
+msgid "Name"
+msgstr ""
+
+#: templates/admin/teams.php:43
+msgid "Email"
+msgstr ""
+
+#: templates/admin/teams.php:44
+msgid "WP Role"
+msgstr ""
+
+#: templates/admin/teams.php:70
+msgid "Unknown User"
+msgstr ""
+
+#: templates/admin/teams.php:72
+msgid "View WP User"
+msgstr ""
+
+#: templates/admin/teams.php:75
+#: templates/admin/teams.php:76
+#: templates/admin/teams.php:77
+msgid "—"
+msgstr ""
+
+#: templates/admin/teams.php:76
+msgid "All"
+msgstr ""
+
+#: templates/admin/teams.php:81
+msgid "Assign to Locale/Project"
+msgstr ""
+
+#: templates/admin/teams.php:84
+msgid "No action needed"
+msgstr ""
+
+#: templates/admin/teams.php:91
+msgid "No users found."
+msgstr ""
+
+#: templates/admin/teams.php:105
+msgid "Assign User to Locale/Project"
+msgstr ""
+
+#: templates/admin/teams.php:106
+msgid "User:"
+msgstr ""
+
+#: templates/admin/teams.php:123
+msgid "Role:"
+msgstr ""
+
+#: templates/admin/teams.php:125
+msgid "— Select role —"
+msgstr ""
+
+#: templates/admin/teams.php:139
+msgid "Meta"
+msgstr ""
+
+#: templates/admin/teams.php:147
+msgid "Projects watched for selected locale:"
+msgstr ""
+
+#: templates/admin/teams.php:152
+msgid "Assign"
+msgstr ""
+
+#: templates/admin/teams.php:219
+msgid "Assigning..."
+msgstr ""
+
+#: templates/admin/teams.php:228
+msgid "Assignment successful!"
+msgstr ""
+
+#: templates/admin/teams.php:228
+msgid "Assignment failed."
+msgstr ""
+
+#: templates/admin/teams.php:248
+msgid "Roles & Capabilities"
+msgstr ""
+
+#: templates/admin/teams.php:251
+msgid "Pierre Roles"
+msgstr ""
+
+#: templates/admin/teams.php:256
+msgid "Description"
+msgstr ""
+
+#: templates/admin/teams.php:269
+msgid "No roles found."
+msgstr ""
+
+#: templates/admin/teams.php:276
+msgid "Pierre Capabilities"
+msgstr ""
+
+#: templates/admin/teams.php:280
+msgid "Capability"
+msgstr ""
+
+#: templates/admin/teams.php:292
+msgid "No capabilities found."
+msgstr ""
+
+#: templates/public/dashboard.php:22
+msgid "Pierre Dashboard - Translation Monitor"
+msgstr ""
+
+#: templates/public/dashboard.php:28
+#: templates/public/locale.php:42
+#: templates/public/project.php:39
+msgid "Pierre Dashboard"
+msgstr ""
+
+#: templates/public/dashboard.php:29
+msgid "WordPress Translation Monitor - Public Interface"
+msgstr ""
+
+#: templates/public/dashboard.php:50
+msgid "Your Translation Projects"
+msgstr ""
+
+#: templates/public/dashboard.php:88
+msgid "All Monitored Projects"
+msgstr ""
+
+#: templates/public/dashboard.php:127
+#: templates/public/locale.php:125
+#: templates/public/project.php:171
+msgid "Admin Dashboard"
+msgstr ""
+
+#: templates/public/dashboard.php:135
+#: templates/public/locale.php:133
+#: templates/public/project.php:179
+msgid "Back to Site"
+msgstr ""
+
+#. translators: %s is the locale name
+#: templates/public/locale.php:24
+#: templates/public/locale.php:33
+#, php-format
+msgid "Pierre Dashboard - %s"
+msgstr ""
+
+#. translators: %s is the locale name
+#: templates/public/locale.php:37
+#, php-format
+msgid "Translation Projects for %s"
+msgstr ""
+
+#. translators: %s is the locale name
+#: templates/public/locale.php:61
+#, php-format
+msgid "Here are all the translation projects for %s!"
+msgstr ""
+
+#. translators: %s is the locale name
+#: templates/public/locale.php:69
+#, php-format
+msgid "Projects for %s"
+msgstr ""
+
+#: templates/public/locale.php:118
+#: templates/public/project.php:167
+msgid "Back to Dashboard"
+msgstr ""
+
+#. translators: %1$s is project name, %2$s is locale
+#: templates/public/project.php:24
+#, php-format
+msgid "Pierre Dashboard - %1$s (%2$s)"
+msgstr ""
+
+#. translators: %s is the locale name
+#: templates/public/project.php:34
+#, php-format
+msgid "%s Translation Project"
+msgstr ""
+
+#: templates/public/project.php:90
+msgid "Project Information"
+msgstr ""
+
+#: templates/public/project.php:128
+msgid "Recent Activity"
+msgstr ""
+
+#. translators: %s is the locale name
+#: templates/public/project.php:163
+#, php-format
+msgid "Back to %s"
+msgstr ""
+
+#: wp-pierre.php:98
+msgid "Pierre est activé ! 🪨"
+msgstr ""
+
+#. translators: %s is a link to Pierre settings page
+#: wp-pierre.php:101
+#, php-format
+msgid "Vous pouvez commencer ou ajuster les réglages sur la <a href=\"%s\">page Réglages</a>."
+msgstr ""
+
+#: wp-pierre.php:111
+msgid "Astuce développeur: Composer autoload manquant. Exécutez \"composer dump-autoload\" dans le dossier du plugin pour de meilleures performances."
 msgstr ""

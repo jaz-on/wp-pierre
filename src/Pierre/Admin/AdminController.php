@@ -123,19 +123,32 @@ class AdminController {
      */
     public function init(): void {
         try {
-            // Pierre sets up his admin menu! 🪨
-            $this->setup_admin_menu();
+            // Menus are now registered early by Plugin::init_hooks()
             
             // Pierre sets up his admin hooks! 🪨
             $this->setup_admin_hooks();
             
             // Pierre sets up his AJAX handlers! 🪨
             $this->setup_admin_ajax_handlers();
+        // Register locales refresh action hook (for cron/manual)
+        $this->register_locales_refresh_hook();
             
-            error_log('Pierre initialized his admin interface! 🪨');
+            // Centralized AJAX tracing for all pierre_* admin-ajax actions (start/end), throttled by Plugin::handle_debug
+            if (function_exists('wp_doing_ajax') && wp_doing_ajax()) {
+                $act = isset($_REQUEST['action']) ? (string) $_REQUEST['action'] : '';
+                if (is_string($act) && strpos($act, 'pierre_') === 0) {
+                    do_action('wp_pierre_debug', 'ajax start', ['scope'=>'admin','action'=>$act]);
+                    register_shutdown_function(function() use ($act) {
+                        $code = function_exists('http_response_code') ? (int) http_response_code() : 200;
+                        do_action('wp_pierre_debug', 'ajax end', ['scope'=>'admin','action'=>$act,'code'=>$code]);
+                    });
+                }
+            }
+            
+            $this->log_debug('Pierre initialized his admin interface! 🪨');
             
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error initializing admin interface: ' . $e->getMessage() . ' 😢');
+            $this->log_debug('Pierre encountered an error initializing admin interface: ' . $e->getMessage() . ' 😢');
         }
     }
     
@@ -146,11 +159,7 @@ class AdminController {
      * @return void
      */
     private function setup_admin_menu(): void {
-        // Pierre adds his main menu! 🪨
-        add_action('admin_menu', [$this, 'add_admin_menu']);
-        
-        // Pierre adds his admin bar menu! 🪨
-        add_action('admin_bar_menu', [$this, 'add_admin_bar_menu'], 100);
+        // No-op (registered centrally by Plugin)
     }
     
     /**
@@ -160,11 +169,12 @@ class AdminController {
      * @return void
      */
     public function add_admin_menu(): void {
+        // Debug logs removed
         // Pierre's main menu page! 🪨
         add_menu_page(
             'Pierre Dashboard',
             'Pierre',
-            'manage_options',
+            'pierre_view_dashboard',
             'pierre-dashboard',
             [$this, 'render_dashboard_page'],
             'dashicons-translation',
@@ -176,7 +186,7 @@ class AdminController {
             'pierre-dashboard',
             'Pierre Dashboard',
             'Dashboard',
-            'manage_options',
+            'pierre_view_dashboard',
             'pierre-dashboard',
             [$this, 'render_dashboard_page']
         );
@@ -186,7 +196,7 @@ class AdminController {
             'pierre-dashboard',
             'Pierre Locales',
             'Locales',
-            'manage_options',
+            'pierre_view_dashboard',
             'pierre-locales',
             [$this, 'render_locales_page']
         );
@@ -196,7 +206,7 @@ class AdminController {
             'pierre-dashboard',
             'Pierre Locale',
             '',
-            'manage_options',
+            'pierre_view_dashboard',
             'pierre-locale-view',
             [$this, 'render_locale_view_page']
         );
@@ -208,7 +218,7 @@ class AdminController {
             'pierre-dashboard',
             'Pierre Projects',
             'Projects',
-            'manage_options',
+            'pierre_view_dashboard',
             'pierre-projects',
             [$this, 'render_projects_page']
         );
@@ -218,7 +228,7 @@ class AdminController {
             'pierre-dashboard',
             'Pierre Teams',
             'Teams',
-            'manage_options',
+            'pierre_view_dashboard',
             'pierre-teams',
             [$this, 'render_teams_page']
         );
@@ -228,7 +238,7 @@ class AdminController {
             'pierre-dashboard',
             'Pierre Reports',
             'Reports',
-            'manage_options',
+            'pierre_view_dashboard',
             'pierre-reports',
             [$this, 'render_reports_page']
         );
@@ -238,12 +248,13 @@ class AdminController {
             'pierre-dashboard',
             'Pierre Settings',
             'Settings',
-            'manage_options',
+            'pierre_manage_settings',
             'pierre-settings',
             [$this, 'render_settings_page']
         );
 
         // Settings are only under the Pierre menu for consistency
+        // End debug
     }
     
     /**
@@ -254,7 +265,7 @@ class AdminController {
      * @return void
      */
     public function add_admin_bar_menu(\WP_Admin_Bar $wp_admin_bar): void {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('pierre_view_dashboard')) {
             return;
         }
         
@@ -307,6 +318,58 @@ class AdminController {
         
         // Pierre enqueues his admin scripts! 🪨
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
+
+        // Pierre adds contextual help tabs on his screens! 🪨
+        add_action('current_screen', [$this, 'register_help_tabs']);
+    }
+
+    /**
+     * Whether verbose debug logging is enabled.
+     */
+    private function is_debug(): bool {
+        return defined('PIERRE_DEBUG') ? (bool) PIERRE_DEBUG : false;
+    }
+
+    /**
+     * Log a debug message if debug is enabled.
+     */
+    private function log_debug(string $message): void {
+        if ($this->is_debug()) {
+            do_action('wp_pierre_debug', $message, ['source' => 'AdminController']);
+        }
+    }
+
+    /**
+     * Pierre registers contextual help tabs for his admin pages! 🪨
+     *
+     * @since 1.0.0
+     * @return void
+     */
+    public function register_help_tabs(): void {
+        $screen = get_current_screen();
+        if (!$screen || !current_user_can('manage_options')) { return; }
+        $current_page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+        if (!in_array($current_page, ['pierre-dashboard','pierre-locales','pierre-locale-view','pierre-projects','pierre-teams','pierre-reports','pierre-settings'], true)) {
+            return;
+        }
+        // Overview help
+        $screen->add_help_tab([
+            'id'      => 'pierre_overview',
+            'title'   => __('Overview', 'wp-pierre'),
+            'content' => '<p>' . esc_html__("Pierre monitors locales/projects and notifies via Slack. Use Settings for global rules and Locale view for overrides.", 'wp-pierre') . '</p>',
+        ]);
+        // Best practices help
+        $screen->add_help_tab([
+            'id'      => 'pierre_best_practices',
+            'title'   => __('Best practices', 'wp-pierre'),
+            'content' => '<ul><li>' . esc_html__("Start by adding locales, then add projects.", 'wp-pierre') . '</li><li>' . esc_html__("Prefer digest mode to reduce noise.", 'wp-pierre') . '</li></ul>',
+        ]);
+        // Sidebar resources
+        $screen->set_help_sidebar(
+            '<p><strong>' . esc_html__('Resources', 'wp-pierre') . '</strong></p>' .
+            '<p><a href="' . esc_url(admin_url('admin.php?page=pierre-settings')) . '">' . esc_html__('Settings', 'wp-pierre') . '</a></p>' .
+            '<p><a href="https://translate.wordpress.org/" target="_blank" rel="noopener">translate.wordpress.org</a></p>'
+        );
     }
     
     /**
@@ -317,7 +380,7 @@ class AdminController {
      */
     public function enqueue_admin_scripts(): void {
         $screen = get_current_screen();
-        $current_page = isset($_GET['page']) ? $_GET['page'] : '';
+        $current_page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
         $is_pierre_page = (
             ($screen && strpos($screen->id ?? '', 'pierre') !== false)
             || in_array($current_page, [
@@ -363,18 +426,24 @@ class AdminController {
         add_action('wp_ajax_pierre_admin_remove_user', [$this, 'ajax_remove_user']);
         add_action('wp_ajax_pierre_admin_test_notification', [$this, 'ajax_test_notification']);
         add_action('wp_ajax_pierre_admin_save_settings', [$this, 'ajax_save_settings']);
+        add_action('wp_ajax_pierre_run_surveillance_now', [$this, 'ajax_run_surveillance_now']);
+        add_action('wp_ajax_pierre_save_locale_overrides', [$this, 'ajax_save_locale_overrides']);
         
         // Pierre handles project management AJAX! 🪨
         add_action('wp_ajax_pierre_start_surveillance', [$this, 'ajax_start_surveillance']);
         add_action('wp_ajax_pierre_stop_surveillance', [$this, 'ajax_stop_surveillance']);
         add_action('wp_ajax_pierre_test_surveillance', [$this, 'ajax_test_surveillance']);
-		add_action('wp_ajax_pierre_add_project', [$this, 'ajax_add_project']);
-		add_action('wp_ajax_pierre_save_locale_slack', [$this, 'ajax_save_locale_slack']);
+        add_action('wp_ajax_pierre_add_project', [$this, 'ajax_add_project']);
+        add_action('wp_ajax_pierre_save_locale_slack', [$this, 'ajax_save_locale_slack']);
+        add_action('wp_ajax_pierre_save_locale_webhook', [$this, 'ajax_save_locale_webhook']);
         add_action('wp_ajax_pierre_remove_project', [$this, 'ajax_remove_project']);
         
         // Pierre handles locales AJAX! 🪨
         add_action('wp_ajax_pierre_add_locales', [$this, 'ajax_add_locales']);
         add_action('wp_ajax_pierre_fetch_locales', [$this, 'ajax_fetch_locales']);
+        add_action('wp_ajax_pierre_save_projects_discovery', [$this, 'ajax_save_projects_discovery']);
+        add_action('wp_ajax_pierre_bulk_add_from_discovery', [$this, 'ajax_bulk_add_from_discovery']);
+        add_action('wp_ajax_pierre_bulk_preview_from_discovery', [$this, 'ajax_bulk_preview_from_discovery']);
         
         // Pierre handles settings AJAX! 🪨
         add_action('wp_ajax_pierre_flush_cache', [$this, 'ajax_flush_cache']);
@@ -385,14 +454,96 @@ class AdminController {
         add_action('wp_ajax_pierre_export_report', [$this, 'ajax_export_report']);
         add_action('wp_ajax_pierre_export_all_reports', [$this, 'ajax_export_all_reports']);
         add_action('wp_ajax_pierre_schedule_reports', [$this, 'ajax_schedule_reports']);
+        // Run now actions
+        add_action('wp_ajax_pierre_run_surveillance_now', [$this, 'ajax_run_surveillance_now']);
+        add_action('wp_ajax_pierre_run_cleanup_now', [$this, 'ajax_run_cleanup_now']);
+        // Locales cache exports
+        add_action('wp_ajax_pierre_export_locales_json', [$this, 'ajax_export_locales_json']);
+        add_action('wp_ajax_pierre_export_locales_csv', [$this, 'ajax_export_locales_csv']);
+        add_action('wp_ajax_pierre_check_locale_status', [$this, 'ajax_check_locale_status']);
+        add_action('wp_ajax_pierre_clear_locale_log', [$this, 'ajax_clear_locale_log']);
+        add_action('wp_ajax_pierre_export_locale_log', [$this, 'ajax_export_locale_log']);
+        add_action('wp_ajax_pierre_abort_run', [$this, 'ajax_abort_run']);
+        add_action('wp_ajax_pierre_get_progress', [$this, 'ajax_get_progress']);
+        // Progress + abort controls
+        add_action('wp_ajax_pierre_abort_surveillance_run', [$this, 'ajax_abort_surveillance_run']);
         
-        // Pierre handles security AJAX! 🪨
-        add_action('wp_ajax_pierre_security_audit', [$this, 'ajax_security_audit']);
-        add_action('wp_ajax_pierre_security_logs', [$this, 'ajax_security_logs']);
-        add_action('wp_ajax_pierre_clear_security_logs', [$this, 'ajax_clear_security_logs']);
 
         // Pierre handles locale managers (admin-only) 🪨
         add_action('wp_ajax_pierre_save_locale_managers', [$this, 'ajax_save_locale_managers']);
+    }
+
+    /**
+     * Uniform JSON error response for AJAX handlers
+     */
+    private function respond_error(string $code, string $message, int $status = 403, $details = null): void {
+        // Map all admin errors to centralized debug logger (throttled at handler level)
+        do_action('wp_pierre_debug', 'admin error', ['scope'=>'admin','action'=>$code,'code'=>$status]);
+        $data = ['code' => $code, 'message' => $message];
+        if ($details !== null) { $data['details'] = $details; }
+        wp_send_json_error($data, $status);
+    }
+
+    /** Abort current run (flag checked by cron/tasks) */
+    public function ajax_abort_run(): void {
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) { $this->respond_error('invalid_nonce', __('Invalid nonce.', 'wp-pierre')); }
+        if (!current_user_can('pierre_manage_projects')) { $this->respond_error('forbidden', __('Permission denied.', 'wp-pierre')); }
+        update_option('pierre_abort_run', time(), false);
+        do_action('wp_pierre_debug', 'abort requested', ['scope'=>'cron','action'=>'abort']);
+        wp_send_json_success(['message' => __('Abort requested. Ongoing run will stop shortly.', 'wp-pierre')]);
+    }
+
+    /** Get current progress of surveillance (processed/total) */
+    public function ajax_get_progress(): void {
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) { $this->respond_error('invalid_nonce', __('Invalid nonce.', 'wp-pierre')); }
+        if (!current_user_can('pierre_manage_projects')) { $this->respond_error('forbidden', __('Permission denied.', 'wp-pierre')); }
+        $progress = get_transient('pierre_surv_progress');
+        $abort = (int) get_option('pierre_abort_run', 0) ? true : false;
+        if (!is_array($progress)) { $progress = ['processed'=>0,'total'=>0,'ts'=>0]; }
+        $dur = (int) get_option('pierre_last_surv_duration_ms', 0);
+        wp_send_json_success(['progress'=>$progress,'aborting'=>$abort,'duration_ms'=>$dur]);
+    }
+
+    /** Abort current surveillance run */
+    public function ajax_abort_surveillance_run(): void {
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) { $this->respond_error('invalid_nonce', __('Invalid nonce', 'wp-pierre'), 403); }
+        if (!current_user_can('pierre_manage_settings')) { $this->respond_error('forbidden', __('Permission denied.', 'wp-pierre'), 403); }
+        set_transient('pierre_surv_abort', 1, 5 * MINUTE_IN_SECONDS);
+        wp_send_json_success(['message' => __('Abort signal set.', 'wp-pierre')]);
+    }
+
+    
+
+    /** Export locales cache as JSON */
+    public function ajax_export_locales_json(): void {
+        if (!current_user_can('pierre_manage_reports')) { $this->respond_error('forbidden', __('Permission denied', 'wp-pierre'), 403); }
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) { $this->respond_error('invalid_nonce', __('Invalid nonce', 'wp-pierre'), 403); }
+        $cache = get_option('pierre_locales_cache');
+        nocache_headers();
+        header('Content-Type: application/json; charset=utf-8');
+        header('Content-Disposition: attachment; filename="pierre_locales_cache.json"');
+        echo wp_json_encode($cache, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
+    /** Export locales cache as CSV */
+    public function ajax_export_locales_csv(): void {
+        if (!current_user_can('pierre_manage_reports')) { $this->respond_error('forbidden', __('Permission denied', 'wp-pierre'), 403); }
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) { $this->respond_error('invalid_nonce', __('Invalid nonce', 'wp-pierre'), 403); }
+        $cache = get_option('pierre_locales_cache');
+        $rows = is_array($cache) && !empty($cache['data']) ? (array)$cache['data'] : [];
+        nocache_headers();
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="pierre_locales_cache.csv"');
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['code','label','slug','translate_slug','team_locale','rosetta','slack_url']);
+        foreach ($rows as $r) {
+            fputcsv($out, [
+                (string)($r['code']??''),(string)($r['label']??''),(string)($r['slug']??''),(string)($r['translate_slug']??''),(string)($r['team_locale']??''),(string)($r['rosetta']??''),(string)($r['slack_url']??'')
+            ]);
+        }
+        fclose($out);
+        exit;
     }
     
     /**
@@ -403,7 +554,7 @@ class AdminController {
      */
     public function render_dashboard_page(): void {
         // Pierre checks permissions! 🪨
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('pierre_view_dashboard')) {
             wp_die(esc_html__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
@@ -422,7 +573,7 @@ class AdminController {
      */
     public function render_teams_page(): void {
         // Pierre checks permissions! 🪨
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('pierre_view_dashboard')) {
             wp_die(esc_html__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
@@ -441,7 +592,7 @@ class AdminController {
      */
     public function render_locales_page(): void {
         // Pierre checks permissions! 🪨
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('pierre_view_dashboard')) {
             wp_die(esc_html__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
@@ -460,7 +611,7 @@ class AdminController {
      */
     public function render_locale_view_page(): void {
         // Pierre checks permissions! 🪨
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('pierre_view_dashboard')) {
             wp_die(esc_html__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
@@ -485,7 +636,7 @@ class AdminController {
      */
     public function render_projects_page(): void {
         // Pierre checks permissions! 🪨
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('pierre_view_dashboard')) {
             wp_die(esc_html__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
@@ -504,7 +655,7 @@ class AdminController {
      */
     public function render_settings_page(): void {
         // Pierre checks permissions! 🪨
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('pierre_manage_settings')) {
             wp_die(esc_html__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
@@ -517,6 +668,10 @@ class AdminController {
         $settings_html = ob_get_clean();
 
         ob_start();
+        $this->render_admin_template('settings-global-webhook', $settings_data);
+        $global_webhook_html = ob_get_clean();
+
+        ob_start();
         $this->render_admin_template('settings-discovery', $settings_data);
         $discovery_html = ob_get_clean();
 
@@ -524,23 +679,19 @@ class AdminController {
         $this->render_admin_template('settings-projects-discovery', $settings_data);
         $projects_discovery_html = ob_get_clean();
 
-        ob_start();
-        $this->render_admin_template('security', []);
-        $security_html = ob_get_clean();
-
         // Output simple admin tabs (native look)
-        echo '<div class="wrap">';
+        echo '<div class="wrap pierre-settings">';
         echo '<h1>Pierre 🪨 Settings</h1>';
         echo '<h2 class="nav-tab-wrapper">'
             . '<a href="#general" class="nav-tab nav-tab-active">' . esc_html__('General', 'wp-pierre') . '</a>'
             . '<a href="#discovery" class="nav-tab">' . esc_html__('Locales Discovery', 'wp-pierre') . '</a>'
             . '<a href="#projects-discovery" class="nav-tab">' . esc_html__('Projects Discovery', 'wp-pierre') . '</a>'
-            . '<a href="#security" class="nav-tab">' . esc_html__('Security', 'wp-pierre') . '</a>'
+            . '<a href="#global-webhook" class="nav-tab">' . esc_html__('Global Webhook', 'wp-pierre') . '</a>'
             . '</h2>';
         echo '<div id="pierre-tab-general" class="pierre-tab-section">' . $settings_html . '</div>';
         echo '<div id="pierre-tab-discovery" class="pierre-tab-section" style="display:none;">' . $discovery_html . '</div>';
         echo '<div id="pierre-tab-projects-discovery" class="pierre-tab-section" style="display:none;">' . $projects_discovery_html . '</div>';
-        echo '<div id="pierre-tab-security" class="pierre-tab-section" style="display:none;">' . $security_html . '</div>';
+        echo '<div id="pierre-tab-global-webhook" class="pierre-tab-section" style="display:none;">' . $global_webhook_html . '</div>';
         echo '</div>';
 
         ?>
@@ -549,9 +700,9 @@ class AdminController {
             const tabs = document.querySelectorAll('.nav-tab-wrapper .nav-tab');
             const sections = {
                 '#general': document.getElementById('pierre-tab-general'),
+                '#global-webhook': document.getElementById('pierre-tab-global-webhook'),
                 '#discovery': document.getElementById('pierre-tab-discovery'),
-                '#projects-discovery': document.getElementById('pierre-tab-projects-discovery'),
-                '#security': document.getElementById('pierre-tab-security')
+                '#projects-discovery': document.getElementById('pierre-tab-projects-discovery')
             };
             function activate(hash){
                 tabs.forEach(t=>t.classList.remove('nav-tab-active'));
@@ -578,7 +729,7 @@ class AdminController {
      */
     public function render_reports_page(): void {
         // Pierre checks permissions! 🪨
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('pierre_view_dashboard')) {
             wp_die(esc_html__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
@@ -597,7 +748,7 @@ class AdminController {
      */
     public function render_security_page(): void {
         // Pierre checks permissions! 🪨
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('pierre_view_dashboard')) {
             wp_die(esc_html__('Pierre says: You don\'t have permission to view this page!', 'wp-pierre') . ' 😢');
         }
         
@@ -898,7 +1049,22 @@ class AdminController {
         
         // Get locale-specific Slack webhook
         $settings = get_option('pierre_settings', []);
+        // Migrate legacy global webhook to unified model once
+        if (!empty($settings['slack_webhook_url']) && empty($settings['global_webhook'])) {
+            $settings['global_webhook'] = [
+                'enabled' => true,
+                'webhook_url' => $settings['slack_webhook_url'],
+                'types' => $settings['notification_types'] ?? ['new_strings','completion_update','needs_attention','milestone'],
+                'threshold' => (int)($settings['notification_defaults']['new_strings_threshold'] ?? 20),
+                'milestones' => (array)($settings['notification_defaults']['milestones'] ?? [50,80,100]),
+                'mode' => (string)($settings['notification_defaults']['mode'] ?? 'immediate'),
+                'digest' => (array)($settings['notification_defaults']['digest'] ?? ['type'=>'interval','interval_minutes'=>60,'fixed_time'=>'09:00']),
+                'scopes' => [ 'locales' => [], 'projects' => [] ],
+            ];
+            update_option('pierre_settings', $settings);
+        }
         $locale_slack = $settings['locales_slack'][$locale_code] ?? '';
+        $locale_webhook = (array) ($settings['locales'][$locale_code]['webhook'] ?? []);
         
         // Get all users and current locale managers (admin manages this list)
         $all_users = get_users(['number' => 200]);
@@ -910,6 +1076,7 @@ class AdminController {
             'locale_label' => $locale_label,
             'projects' => $locale_projects,
             'slack_webhook' => $locale_slack,
+            'locale_webhook' => $locale_webhook,
             'all_users' => $all_users,
             'locale_managers' => $locale_managers,
             'stats' => [
@@ -926,7 +1093,8 @@ class AdminController {
      * @return void
      */
     public function ajax_save_locale_managers(): void {
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) {
+            do_action('wp_pierre_debug', 'fetch_locales: invalid nonce', ['source' => 'AdminController']);
             wp_send_json_error(['message' => __('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢']);
             return;
         }
@@ -991,18 +1159,18 @@ class AdminController {
 	 * @return void
 	 */
 	public function ajax_add_locales(): void {
-		if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
-			wp_send_json_error(['message' => __('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢']);
+		if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) {
+			$this->respond_error('invalid_nonce', __('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
 			return;
 		}
 		if (!current_user_can('manage_options')) {
-			wp_send_json_error(['message' => __('Pierre says: You don\'t have permission! Only site administrators can add locales.', 'wp-pierre') . ' 😢']);
+			$this->respond_error('forbidden', __('Pierre says: You don\'t have permission! Only site administrators can add locales.', 'wp-pierre') . ' 😢');
 			return;
 		}
 		
 		$locales = wp_unslash($_POST['locales'] ?? []);
 		if (!is_array($locales) || empty($locales)) {
-			wp_send_json_error(['message' => __('No locales selected.', 'wp-pierre') . ' 😢']);
+			$this->respond_error('invalid_payload', __('No locales selected.', 'wp-pierre') . ' 😢', 400);
 			return;
 		}
 		
@@ -1010,24 +1178,46 @@ class AdminController {
 		$errors = [];
 		
 		foreach ($locales as $locale_code) {
-			$locale_code = sanitize_key($locale_code);
-			if (empty($locale_code) || !preg_match('/^[a-z]{2}(_[A-Z]{2})?$/', $locale_code)) {
-				$errors[] = sprintf(__('Invalid locale code: %s', 'wp-pierre'), $locale_code);
+			// Ne pas utiliser sanitize_key() (qui force en minuscules et casse fr_FR).
+			$raw = (string) wp_unslash($locale_code);
+			$raw = trim($raw);
+			// Validation tolérante: langue en minuscule, région insensible à la casse
+			if ($raw === '' || !preg_match('/^[a-z]{2}(?:_[a-zA-Z]{2})?$/', $raw)) {
+				// translators: %s is the invalid locale code
+				$errors[] = sprintf(__('Invalid locale code: %s', 'wp-pierre'), $raw);
 				continue;
 			}
+			// Normaliser en forme canonique WP (ex: fr_FR, pt_BR, en_US, ou fr)
+			$locale_code = preg_replace_callback(
+				'/^([a-z]{2})(?:_([a-zA-Z]{2}))?$/',
+				static function ($m) {
+					return isset($m[2]) ? strtolower($m[1]) . '_' . strtoupper($m[2]) : strtolower($m[1]);
+				},
+				$raw
+			);
 			
-			// Validate locale exists in WP.org translations
-			$translations = function_exists('wp_get_available_translations') ? wp_get_available_translations() : [];
-			$locale_exists = false;
-			foreach ($translations as $t) {
-				if (($t['language'] ?? '') === $locale_code) {
-					$locale_exists = true;
-					break;
+			// Validate locale exists using cached list or fallback fetch (works even if
+			// wp_get_available_translations() is not loaded in admin-ajax context)
+			$cache = get_option('pierre_locales_cache');
+			$known = [];
+			if (is_array($cache) && !empty($cache['data'])) {
+				foreach ($cache['data'] as $row) {
+					$code = isset($row['code']) ? (string) $row['code'] : '';
+					if ($code !== '') { $known[$code] = true; }
+				}
+			} else {
+				// Fall back to building a fresh list via helper (includes API fallback)
+				$base_list = $this->fetch_base_locales_list();
+				foreach ($base_list as $row) {
+					$code = isset($row['code']) ? (string) $row['code'] : '';
+					if ($code !== '') { $known[$code] = true; }
 				}
 			}
+			$locale_exists = isset($known[$locale_code]);
 			
 			if (!$locale_exists) {
-				$errors[] = sprintf(__('Locale %s not found in WordPress.org translations.', 'wp-pierre'), $locale_code);
+                // translators: %s is the locale code
+                $errors[] = sprintf(__('Locale %s not found in WordPress.org translations.', 'wp-pierre'), $locale_code);
 				continue;
 			}
 			
@@ -1052,16 +1242,12 @@ class AdminController {
 		}
 		
 		if (!empty($errors)) {
-			wp_send_json_error([
-				'message' => __('Some locales could not be added.', 'wp-pierre'),
-				'errors' => $errors,
-				'added' => $added,
-			]);
+			$this->respond_error('partial_failure', __('Some locales could not be added.', 'wp-pierre'), 400, ['errors' => $errors, 'added' => $added]);
 			return;
 		}
 		
-        if (empty($added)) {
-			wp_send_json_error(['message' => __('No new locales to add (they may already be active).', 'wp-pierre')]);
+		if (empty($added)) {
+			$this->respond_error('no_changes', __('No new locales to add (they may already be active).', 'wp-pierre'), 400);
 			return;
 		}
 		
@@ -1072,7 +1258,8 @@ class AdminController {
         update_option('pierre_selected_locales', $selected);
 
         wp_send_json_success([
-			'message' => sprintf(__('Locales added: %s', 'wp-pierre'), implode(', ', $added)),
+            // translators: %s is a comma-separated list of locales
+            'message' => sprintf(__('Locales added: %s', 'wp-pierre'), implode(', ', $added)),
 			'added' => $added,
 		]);
 	}
@@ -1084,18 +1271,18 @@ class AdminController {
 	 * @return void
 	 */
 	public function ajax_save_locale_slack(): void {
-		if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
-			wp_send_json_error(['message' => __('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢']);
+		if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) {
+			$this->respond_error('invalid_nonce', __('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
 			return;
 		}
 		if (!current_user_can('manage_options')) {
-			wp_send_json_error(['message' => __('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢']);
+			$this->respond_error('forbidden', __('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
 			return;
 		}
 		$locale_code = sanitize_key(wp_unslash($_POST['locale_code'] ?? ''));
 		$webhook = trim((string) wp_unslash($_POST['slack_webhook_url'] ?? ''));
 		if (empty($locale_code)) {
-			wp_send_json_error(['message' => __('Locale code is required.', 'wp-pierre') . ' 😢']);
+			$this->respond_error('missing_locale', __('Locale code is required.', 'wp-pierre') . ' 😢', 400);
 			return;
 		}
 		$settings = get_option('pierre_settings', []);
@@ -1104,7 +1291,7 @@ class AdminController {
 			unset($map[$locale_code]);
 		} else {
 			if (!filter_var($webhook, FILTER_VALIDATE_URL) || strpos($webhook, 'hooks.slack.com') === false) {
-				wp_send_json_error(['message' => __('Invalid Slack webhook URL.', 'wp-pierre') . ' 😢']);
+				$this->respond_error('invalid_webhook', __('Invalid Slack webhook URL.', 'wp-pierre') . ' 😢', 400);
 				return;
 			}
 			$map[$locale_code] = esc_url_raw($webhook);
@@ -1122,6 +1309,7 @@ class AdminController {
      */
     private function get_admin_settings_data(): array {
         $settings = get_option('pierre_settings', []);
+        $projects_discovery = get_option('pierre_projects_discovery', []);
         
         // Get active or selected locales for Discovery
         $watched = $this->project_watcher->get_watched_projects();
@@ -1147,7 +1335,146 @@ class AdminController {
             'notifier_status' => $this->slack_notifier->get_status(),
             'cron_status' => pierre()->get_cron_manager()->get_surveillance_status(),
             'active_locales' => $active_locales,
+            'projects_discovery' => $projects_discovery,
         ];
+    }
+
+    /**
+     * Save unified locale webhook configuration
+     */
+    public function ajax_save_locale_webhook(): void {
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) {
+            $this->respond_error('invalid_nonce', __('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
+        }
+        $user_id = get_current_user_id();
+        if (!$this->role_manager->user_can_manage_locale_settings($user_id, sanitize_key(wp_unslash($_POST['locale_code'] ?? '')))) {
+            $this->respond_error('forbidden', __('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
+        }
+        $locale = sanitize_key(wp_unslash($_POST['locale_code'] ?? ''));
+        if ($locale === '') {
+            $this->respond_error('missing_locale', __('Locale code is required.', 'wp-pierre') . ' 😢', 400);
+        }
+        $settings = get_option('pierre_settings', []);
+        if (!is_array($settings)) { $settings = []; }
+        if (!isset($settings['locales']) || !is_array($settings['locales'])) { $settings['locales'] = []; }
+
+        $lw = (array)($settings['locales'][$locale]['webhook'] ?? []);
+        $lw['enabled'] = !empty(wp_unslash($_POST['locale_webhook_enabled'] ?? ($lw['enabled'] ?? false)));
+        $lw['webhook_url'] = sanitize_url(wp_unslash($_POST['locale_webhook_url'] ?? ($lw['webhook_url'] ?? '')));
+        $lw['types'] = isset($_POST['locale_webhook_types']) && is_array($_POST['locale_webhook_types'])
+            ? array_values(array_intersect(array_map('sanitize_key', wp_unslash($_POST['locale_webhook_types'])), ['new_strings','completion_update','needs_attention','milestone']))
+            : (array)($lw['types'] ?? ['new_strings','completion_update','needs_attention','milestone']);
+        $th = wp_unslash($_POST['locale_webhook_threshold'] ?? '');
+        if ($th !== '') { $lw['threshold'] = absint($th); } else { unset($lw['threshold']); }
+        $mil_raw = (string) wp_unslash($_POST['locale_webhook_milestones'] ?? '');
+        if ($mil_raw !== '') {
+            $lw['milestones'] = array_values(array_filter(array_map('intval', array_map('trim', explode(',', $mil_raw)))));
+            sort($lw['milestones']);
+        } else { unset($lw['milestones']); }
+        $mode = sanitize_key(wp_unslash($_POST['locale_webhook_mode'] ?? ''));
+        if (in_array($mode, ['immediate','digest'], true)) { $lw['mode'] = $mode; } else { unset($lw['mode']); }
+        $lw['digest'] = $lw['digest'] ?? [];
+        $dt = sanitize_key(wp_unslash($_POST['locale_webhook_digest_type'] ?? ''));
+        if (in_array($dt, ['interval','fixed_time'], true)) { $lw['digest']['type'] = $dt; } else { unset($lw['digest']['type']); }
+        $di = wp_unslash($_POST['locale_webhook_digest_interval_minutes'] ?? '');
+        if ($di !== '') { $lw['digest']['interval_minutes'] = max(15, absint($di)); } else { unset($lw['digest']['interval_minutes']); }
+        $df = (string) wp_unslash($_POST['locale_webhook_digest_fixed_time'] ?? '');
+        if ($df !== '') { $lw['digest']['fixed_time'] = preg_replace('/[^0-9:]/', '', $df); } else { unset($lw['digest']['fixed_time']); }
+
+        $settings['locales'][$locale]['webhook'] = $lw;
+        update_option('pierre_settings', $settings);
+        wp_send_json_success(['message' => __('Locale webhook saved.', 'wp-pierre') . ' 🪨']);
+    }
+
+    /** Save projects discovery library */
+    public function ajax_save_projects_discovery(): void {
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) {
+            $this->respond_error('invalid_nonce', __('Pierre says: Invalid nonce!', 'wp-pierre'));
+        }
+        if (!current_user_can('manage_options')) {
+            $this->respond_error('forbidden', __('Pierre says: You don\'t have permission!', 'wp-pierre'));
+        }
+        $raw = (string) wp_unslash($_POST['projects_discovery'] ?? '');
+        $lines = array_filter(array_map('trim', preg_split('/\r?\n/', $raw)));
+        $out = [];
+        $seen = [];
+        $duplicates = 0;
+        foreach ($lines as $line) {
+            $parts = array_map('trim', explode(',', $line));
+            if (count($parts) < 2) { continue; }
+            $type = sanitize_key($parts[0]);
+            $slug = sanitize_key($parts[1]);
+            if ($type === '' || $slug === '') { continue; }
+            if (!in_array($type, ['plugin','theme','meta','app','core'], true)) { continue; }
+            $key = ($type === 'core' ? 'meta' : $type) . ':' . $slug;
+            if (isset($seen[$key])) { $duplicates++; continue; }
+            $seen[$key] = true;
+            $out[] = ['type' => $type === 'core' ? 'meta' : $type, 'slug' => $slug];
+        }
+        update_option('pierre_projects_discovery', $out);
+        wp_send_json_success(['message' => __('Projects discovery library saved.', 'wp-pierre') . ' 🪨', 'count' => count($out), 'duplicates' => $duplicates]);
+    }
+
+    /** Bulk add discovery entries to a locale */
+    public function ajax_bulk_add_from_discovery(): void {
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) {
+            $this->respond_error('invalid_nonce', __('Pierre says: Invalid nonce!', 'wp-pierre'));
+        }
+        if (!current_user_can('pierre_manage_projects')) {
+            $this->respond_error('forbidden', __('Pierre says: You don\'t have permission!', 'wp-pierre'));
+        }
+        $locale = sanitize_key(wp_unslash($_POST['locale_code'] ?? ''));
+        if ($locale === '') {
+            $this->respond_error('missing_locale', __('Locale code is required.', 'wp-pierre'), 400);
+        }
+        $lib = get_option('pierre_projects_discovery', []);
+        if (!is_array($lib) || empty($lib)) {
+            $this->respond_error('empty_library', __('Library is empty.', 'wp-pierre'), 400);
+        }
+        $added = 0; $errors = 0;
+        foreach ($lib as $item) {
+            $type = sanitize_key($item['type'] ?? 'meta');
+            $slug = sanitize_key($item['slug'] ?? '');
+            if ($slug === '') { $errors++; continue; }
+            $ok = $this->project_watcher->watch_project($slug, $locale);
+            if ($ok) {
+                // set type into watched option
+                $opt = get_option('pierre_watched_projects', []);
+                $key = $slug . '_' . $locale;
+                if (isset($opt[$key])) { $opt[$key]['type'] = $type; update_option('pierre_watched_projects', $opt); }
+                $added++;
+            } else { $errors++; }
+        }
+        // translators: 1: number of projects added, 2: number of errors
+        wp_send_json_success(['message' => sprintf(__('Added %1$d project(s), %2$d error(s).', 'wp-pierre'), $added, $errors)]);
+    }
+
+    /** Preview bulk add: counts what will be added vs already present */
+    public function ajax_bulk_preview_from_discovery(): void {
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) {
+            $this->respond_error('invalid_nonce', __('Pierre says: Invalid nonce!', 'wp-pierre'));
+        }
+        if (!current_user_can('pierre_manage_projects')) {
+            $this->respond_error('forbidden', __('Pierre says: You don\'t have permission!', 'wp-pierre'));
+        }
+        $locale = sanitize_key(wp_unslash($_POST['locale_code'] ?? ''));
+        if ($locale === '') {
+            $this->respond_error('missing_locale', __('Locale code is required.', 'wp-pierre'), 400);
+        }
+        $lib = get_option('pierre_projects_discovery', []);
+        if (!is_array($lib) || empty($lib)) {
+            $this->respond_error('empty_library', __('Library is empty.', 'wp-pierre'), 400);
+        }
+        $watched = get_option('pierre_watched_projects', []);
+        $already = 0; $to_add = 0; $invalid = 0;
+        foreach ($lib as $item) {
+            $type = sanitize_key($item['type'] ?? 'meta');
+            $slug = sanitize_key($item['slug'] ?? '');
+            if ($slug === '') { $invalid++; continue; }
+            $key = $slug . '_' . $locale;
+            if (isset($watched[$key])) { $already++; } else { $to_add++; }
+        }
+        wp_send_json_success(['already' => $already, 'to_add' => $to_add, 'invalid' => $invalid]);
     }
 
     /**
@@ -1157,12 +1484,21 @@ class AdminController {
      * @return void
      */
     public function ajax_fetch_locales(): void {
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
-            wp_send_json_error(['message' => __('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢']);
+        $t0 = microtime(true);
+        // Mark as running (15 min TTL)
+        set_transient('pierre_locales_fetch_running', time(), 15 * MINUTE_IN_SECONDS);
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) {
+            delete_transient('pierre_locales_fetch_running');
+            update_option('pierre_locales_fetch_error', 'invalid_nonce:' . time());
+            $this->respond_error('invalid_nonce', __('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
             return;
         }
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => __('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢']);
+        $user_id = get_current_user_id();
+        if (!$this->role_manager->user_can_manage_locale_settings($user_id, '')) {
+            do_action('wp_pierre_debug', 'fetch_locales: permission denied', ['source' => 'AdminController', 'user' => (int) $user_id]);
+            delete_transient('pierre_locales_fetch_running');
+            update_option('pierre_locales_fetch_error', 'forbidden:' . time());
+            $this->respond_error('forbidden', __('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
             return;
         }
         // Optional force refresh
@@ -1170,11 +1506,13 @@ class AdminController {
         if ($force) {
             delete_transient('pierre_available_locales');
         }
-        // Cache to avoid repeated remote calls
-        $cached = get_transient('pierre_available_locales');
-		if (is_array($cached) && !empty($cached)) {
-			wp_send_json_success(['locales' => $cached]);
-		}
+        // Prefer persistent cache option with hash/last_fetched
+        $cache = get_option('pierre_locales_cache');
+        if (!$force && is_array($cache) && !empty($cache['data'])) {
+            delete_transient('pierre_locales_fetch_running');
+            delete_option('pierre_locales_fetch_error');
+            wp_send_json_success(['locales' => $cache['data']]);
+        }
 
 		$list = [];
 		$translations = function_exists('wp_get_available_translations') ? wp_get_available_translations() : [];
@@ -1197,8 +1535,9 @@ class AdminController {
 				'timeout' => 10,
 				'user-agent' => 'wp-pierre/' . (defined('PIERRE_VERSION') ? PIERRE_VERSION : '1.0.0') . '; ' . home_url('/'),
 			];
-			$response = wp_remote_get(add_query_arg(['version' => $wp_version], $url), $args);
-			if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+            $response = wp_safe_remote_get(add_query_arg(['version' => $wp_version], $url), $args);
+            $resp_code = is_wp_error($response) ? $response->get_error_code() : wp_remote_retrieve_response_code($response);
+            if (!is_wp_error($response) && $resp_code === 200) {
 				$body = json_decode(wp_remote_retrieve_body($response), true);
 				if (is_array($body) && !empty($body['translations'])) {
 					foreach ($body['translations'] as $t) {
@@ -1210,15 +1549,94 @@ class AdminController {
 						}
 					}
 				}
+            } else {
+                do_action('wp_pierre_debug', 'fetch_locales: WP.org API error', ['source' => 'AdminController', 'code' => (int) $resp_code]);
 			}
 		}
 
-		if (empty($list)) {
-			wp_send_json_error(['message' => __('Pierre says: No locales found from WordPress.org. Please check outgoing HTTP.', 'wp-pierre') . ' 😢']);
+        if (empty($list)) {
+            do_action('wp_pierre_debug', 'fetch_locales: empty list after attempts', ['source' => 'AdminController']);
+            delete_transient('pierre_locales_fetch_running');
+            update_option('pierre_locales_fetch_error', 'upstream_empty:' . time());
+            $this->respond_error('upstream_empty', __('Pierre says: No locales found from WordPress.org. Please check outgoing HTTP.', 'wp-pierre') . ' 😢', 502);
 		}
 
-        // Enrich with slug/rosetta and best-effort slack_url
-        $enriched = [];
+        // Build and persist normalized cache (lightweight; defer heavy enrich to per-locale checks)
+        $enriched = $this->build_locales_cache_from_list($list, false);
+        $this->persist_locales_cache($enriched);
+        delete_transient('pierre_locales_fetch_running');
+        delete_option('pierre_locales_fetch_error');
+        do_action('wp_pierre_debug', 'locales cache refreshed', ['scope'=>'locales','action'=>'refresh']);
+        wp_send_json_success(['locales' => $enriched]);
+    }
+
+    /** Persist locales cache with hash and timestamp */
+    private function persist_locales_cache(array $data): void {
+        $payload = [
+            'data' => $data,
+            'hash' => hash('sha256', wp_json_encode($data)),
+            'last_fetched' => time(),
+        ];
+        update_option('pierre_locales_cache', $payload, false);
+    }
+
+    /** Public hook to refresh locales cache (cron/manual) */
+    public function register_locales_refresh_hook(): void {
+        add_action('pierre_refresh_locales_cache', function () {
+            try {
+                $list = $this->fetch_base_locales_list();
+                // Strong enrich on scheduled refresh (translate_slug + rosetta)
+                $data = $this->build_locales_cache_from_list($list, true);
+                $existing = get_option('pierre_locales_cache');
+                $new_hash = hash('sha256', wp_json_encode($data));
+                $old_hash = is_array($existing) ? ($existing['hash'] ?? '') : '';
+                if ($new_hash !== $old_hash) {
+                    $this->persist_locales_cache($data);
+                }
+            } catch (\Exception $e) {
+                do_action('wp_pierre_debug', 'locales refresh failed: ' . $e->getMessage(), ['source' => 'AdminController']);
+            }
+        });
+    }
+
+    /** Fetch base locales list using WP functions / API */
+    private function fetch_base_locales_list(): array {
+        $list = [];
+        $translations = function_exists('wp_get_available_translations') ? wp_get_available_translations() : [];
+        if (is_array($translations) && !empty($translations)) {
+            foreach ($translations as $t) {
+                if (!empty($t['language'])) {
+                    $list[] = [
+                        'code' => $t['language'],
+                        'label' => trim(($t['native_name'] ?? ($t['english_name'] ?? $t['language'])) . ' (' . $t['language'] . ')'),
+                    ];
+                }
+            }
+        }
+        if (empty($list)) {
+            global $wp_version;
+            $url = 'https://api.wordpress.org/translations/core/1.0/';
+            $resp = wp_remote_get(add_query_arg(['version'=>$wp_version], $url), [ 'timeout'=>10, 'user-agent'=>'wp-pierre/' . (defined('PIERRE_VERSION') ? PIERRE_VERSION : '1.0.0') . '; ' . home_url('/') ]);
+            if (!is_wp_error($resp) && wp_remote_retrieve_response_code($resp) === 200) {
+                $body = json_decode(wp_remote_retrieve_body($resp), true);
+                if (is_array($body) && !empty($body['translations'])) {
+                    foreach ($body['translations'] as $t) {
+                        if (!empty($t['language'])) {
+                            $list[] = [
+                                'code' => $t['language'],
+                                'label' => trim((($t['native_name'] ?? '') ?: ($t['english_name'] ?? $t['language'])) . ' (' . $t['language'] . ')'),
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+        return $list;
+    }
+
+    /** Build normalized locales with translate_slug/team_locale/rosetta and optional enrich (translate slug, rosetta check, slack) */
+    private function build_locales_cache_from_list(array $list, bool $resolve_translate_slug = false): array {
+        $data = [];
         foreach ($list as $item) {
             $code = (string)($item['code'] ?? '');
             if ($code === '') { continue; }
@@ -1227,28 +1645,198 @@ class AdminController {
             $slug = is_string($slug_source) ? strtolower($slug_source) : '';
             if ($slug === '') { $slug = strtolower($code); }
             $rosetta = $slug !== '' ? ($slug . '.wordpress.org') : '';
-            $enriched[] = [
+            $translate_slug = $slug;
+            $slack = '';
+            if ($resolve_translate_slug) {
+                $ts = $this->detect_translate_slug_from_team_page($code);
+                if (is_string($ts) && $ts !== '') { $translate_slug = $ts; }
+                // Resolve Rosetta host from candidates (robust across fr vs fr-fr)
+                $candidates = $this->find_rosetta_host_candidates($code);
+                $picked = $this->pick_active_rosetta($candidates);
+                $rosetta = $picked ?: '';
+                $slack = $this->detect_slack_from_team_page($code);
+            }
+            $data[] = [
                 'code' => $code,
                 'label' => $label,
                 'slug' => $slug,
+                'translate_slug' => $translate_slug,
+                'team_locale' => $code,
                 'rosetta' => $rosetta,
+                'slack_url' => $slack ?: null,
             ];
         }
+        return $data;
+    }
 
-        // Try map to local slack workspaces
-        $slacks = $this->get_local_slack_workspaces();
-        if (!empty($slacks)) {
-            foreach ($enriched as &$i) {
-                $lang = substr($i['code'], 0, 2);
-                $host = $this->find_best_slack_for_slug($i['slug'], $lang, $slacks);
-                if ($host) { $i['slack_url'] = 'https://' . $host; }
-            }
-            unset($i);
+    /** Try to extract translate.wordpress.org slug from the team page */
+    private function detect_translate_slug_from_team_page(string $code): string {
+        $url = 'https://make.wordpress.org/polyglots/teams/?locale=' . rawurlencode($code);
+        $cache_key = 'pierre_team_page_' . strtolower($code);
+        $html = get_transient($cache_key);
+        if (!is_string($html)) {
+            $resp = $this->http_get_with_retries($url, 2, 12);
+            if (is_wp_error($resp) || wp_remote_retrieve_response_code($resp) !== 200) { return ''; }
+            $html = wp_remote_retrieve_body($resp);
+            if (is_string($html) && $html !== '') { set_transient($cache_key, $html, DAY_IN_SECONDS); }
         }
+        if (!is_string($html) || $html === '') { return ''; }
+        if (preg_match('#translate\.wordpress\.org/locale/([a-z0-9\-]+)/?#i', $html, $m)) {
+            return strtolower($m[1]);
+        }
+        return '';
+    }
 
-        // Cache for 12 hours
-        set_transient('pierre_available_locales', $enriched, 12 * HOUR_IN_SECONDS);
-        wp_send_json_success(['locales' => $enriched]);
+    /** Check if a rosetta host responds with non-404 */
+    private function is_rosetta_host_active(string $host): bool {
+        $url = 'https://' . ltrim($host, '/');
+        $resp = $this->http_head_with_retries($url, 2, 8);
+        if (!is_wp_error($resp)) {
+            $code = wp_remote_retrieve_response_code($resp);
+            if ($code && $code !== 404) { return true; }
+        }
+        $resp = $this->http_get_with_retries($url, 1, 8);
+        if (is_wp_error($resp)) { return false; }
+        $code = wp_remote_retrieve_response_code($resp);
+        return (int)$code !== 404 && (int)$code !== 0;
+    }
+
+    /** Build Rosetta host candidates for a given locale code */
+    private function find_rosetta_host_candidates(string $code): array {
+        $norm = strtolower(str_replace('_','-',$code));
+        $lang = substr($norm, 0, 2);
+        $c = [];
+        if ($lang) { $c[] = $lang . '.wordpress.org'; }
+        if ($norm) { $c[] = $norm . '.wordpress.org'; }
+        if ($lang && strpos($norm, '-') !== false) { $c[] = $lang . '.wordpress.org'; }
+        return array_values(array_unique($c));
+    }
+
+    /** Pick first active Rosetta among candidates */
+    private function pick_active_rosetta(array $hosts): string {
+        foreach ($hosts as $h) {
+            if (!is_string($h) || $h === '') { continue; }
+            $url = 'https://' . ltrim($h, '/');
+            $resp = $this->http_head_with_retries($url, 2, 6);
+            $code = is_wp_error($resp) ? 0 : (int) wp_remote_retrieve_response_code($resp);
+            if ($code && $code !== 404) { return $h; }
+            $resp = $this->http_get_with_retries($url, 1, 6);
+            $code = is_wp_error($resp) ? 0 : (int) wp_remote_retrieve_response_code($resp);
+            if ($code && $code !== 404) { return $h; }
+        }
+        return '';
+    }
+
+    /** Extract Slack URL from the locale team page if present */
+    private function detect_slack_from_team_page(string $code): string {
+        $url = 'https://make.wordpress.org/polyglots/teams/?locale=' . rawurlencode($code);
+        $cache_key = 'pierre_team_page_' . strtolower($code);
+        $html = get_transient($cache_key);
+        if (!is_string($html)) {
+            $resp = $this->http_get_with_retries($url, 2, 12);
+            if (is_wp_error($resp) || wp_remote_retrieve_response_code($resp) !== 200) { return ''; }
+            $html = wp_remote_retrieve_body($resp);
+            if (is_string($html) && $html !== '') { set_transient($cache_key, $html, DAY_IN_SECONDS); }
+        }
+        if (!is_string($html) || $html === '') { return ''; }
+        if (preg_match('#https?://([a-z0-9\-]+\.slack\.com)(?:/[\w\-\./%]*)?#i', $html, $m)) {
+            return 'https://' . strtolower($m[1]);
+        }
+        return '';
+    }
+
+    private function http_get_with_retries(string $url, int $retries, int $timeout) {
+        $defaults = \Pierre\Plugin::get_http_defaults();
+        $args = [
+            'timeout' => $timeout > 0 ? $timeout : ($defaults['timeout'] ?? 30),
+            'redirection' => $defaults['redirection'] ?? 3,
+            'user-agent' => $defaults['user-agent'] ?? 'wp-pierre/1.0.0; ' . home_url('/'),
+        ];
+        $resp = wp_remote_get($url, $args);
+        for ($i=0; $i<$retries && (is_wp_error($resp) || wp_remote_retrieve_response_code($resp) >= 500); $i++) {
+            usleep(500000);
+            $resp = wp_remote_get($url, $args);
+        }
+        return $resp;
+    }
+    private function http_head_with_retries(string $url, int $retries, int $timeout) {
+        $defaults = \Pierre\Plugin::get_http_defaults();
+        $args = [
+            'timeout' => $timeout > 0 ? $timeout : ($defaults['timeout'] ?? 30),
+            'redirection' => $defaults['redirection'] ?? 3,
+            'user-agent' => $defaults['user-agent'] ?? 'wp-pierre/1.0.0; ' . home_url('/'),
+        ];
+        $resp = wp_remote_head($url, $args);
+        for ($i=0; $i<$retries && (is_wp_error($resp) || wp_remote_retrieve_response_code($resp) >= 500); $i++) {
+            usleep(500000);
+            $resp = wp_remote_head($url, $args);
+        }
+        return $resp;
+    }
+
+    public function ajax_check_locale_status(): void {
+        if (!current_user_can('manage_options')) { $this->respond_error('forbidden','denied'); }
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) { $this->respond_error('invalid_nonce','bad_nonce'); }
+        $code = sanitize_key(wp_unslash($_POST['code'] ?? ''));
+        if ($code === '') { $this->respond_error('invalid_payload','missing code',400); }
+        $cache = get_option('pierre_locales_cache');
+        $rows = is_array($cache) && !empty($cache['data']) ? (array)$cache['data'] : [];
+        $updated = false; $result = [];
+        foreach ($rows as &$r) {
+            if (($r['code'] ?? '') !== $code) { continue; }
+            $slug = (string)($r['slug'] ?? '');
+            $translate_slug = (string)($r['translate_slug'] ?? $slug);
+            $ts = $this->detect_translate_slug_from_team_page($code);
+            if (is_string($ts) && $ts !== '') { $translate_slug = $ts; }
+            $rosetta = (string)($r['rosetta'] ?? '');
+            if ($rosetta === '' && $slug) {
+                $candidates = $this->find_rosetta_host_candidates($code);
+                $rosetta = $this->pick_active_rosetta($candidates) ?: '';
+            }
+            $rosetta_ok = $rosetta !== '' ? $this->is_rosetta_host_active($rosetta) : false;
+            $issues = [];
+            if (strtolower(str_replace('_','-',$code)) !== strtolower($translate_slug)) { $issues[] = 'translate_slug≠code'; }
+            if (!$rosetta_ok) { $issues[] = 'rosetta_inactive_or_missing'; $rosetta = ''; }
+            $r['translate_slug'] = $translate_slug;
+            $r['rosetta'] = $rosetta;
+            $r['checked_at'] = time();
+            $updated = true;
+            $result = [ 'translate_slug' => $translate_slug, 'rosetta' => $rosetta, 'issues' => $issues ];
+            if (!empty($issues)) { $this->append_locale_log($code, $issues); }
+            break;
+        }
+        unset($r);
+        if ($updated) { $cache['data'] = $rows; $this->persist_locales_cache($rows); }
+        wp_send_json_success([ 'code' => $code, 'status' => $result ]);
+    }
+
+    private function append_locale_log(string $code, array $issues): void {
+        $log = get_option('pierre_locales_log');
+        if (!is_array($log)) { $log = []; }
+        $log[] = [ 'code'=>$code, 'issues'=>$issues, 'time'=>time() ];
+        if (count($log) > 500) { $log = array_slice($log, -500); }
+        update_option('pierre_locales_log', $log, false);
+    }
+
+    /** Clear anomalies log */
+    public function ajax_clear_locale_log(): void {
+        if (!current_user_can('manage_options')) { $this->respond_error('forbidden','denied'); }
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) { $this->respond_error('invalid_nonce','bad_nonce'); }
+        update_option('pierre_locales_log', [], false);
+        wp_send_json_success(['message'=>__('Anomalies log cleared.', 'wp-pierre')]);
+    }
+
+    /** Export anomalies log JSON */
+    public function ajax_export_locale_log(): void {
+        if (!current_user_can('manage_options')) { wp_die(__('Permission denied', 'wp-pierre')); }
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) { wp_die(__('Invalid nonce', 'wp-pierre')); }
+        $log = get_option('pierre_locales_log');
+        if (!is_array($log)) { $log = []; }
+        nocache_headers();
+        header('Content-Type: application/json; charset=utf-8');
+        header('Content-Disposition: attachment; filename="pierre_locales_anomalies_log.json"');
+        echo wp_json_encode($log, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+        exit;
     }
 
     /**
@@ -1259,7 +1847,7 @@ class AdminController {
         $cached = get_transient('pierre_slack_workspaces');
         if (is_array($cached)) { return $cached; }
         $url = 'https://make.wordpress.org/polyglots/handbook/translating/teams/local-slacks/';
-        $resp = wp_remote_get($url, [ 'timeout' => 12, 'user-agent' => 'wp-pierre/' . (defined('PIERRE_VERSION') ? PIERRE_VERSION : '1.0.0') ]);
+        $resp = wp_safe_remote_get($url, [ 'timeout' => 12, 'user-agent' => 'wp-pierre/' . (defined('PIERRE_VERSION') ? PIERRE_VERSION : '1.0.0') ]);
         $hosts = [];
         if (!is_wp_error($resp) && wp_remote_retrieve_response_code($resp) === 200) {
             $html = wp_remote_retrieve_body($resp);
@@ -1393,7 +1981,7 @@ class AdminController {
      */
     public function ajax_get_admin_stats(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1414,7 +2002,7 @@ class AdminController {
      */
     public function ajax_assign_user(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1452,7 +2040,7 @@ class AdminController {
      */
     public function ajax_remove_user(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1483,8 +2071,8 @@ class AdminController {
      * @return void
      */
     public function ajax_test_notification(): void {
-        // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
+        // Pierre checks nonce! 🪨 (accept admin or generic nonce)
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false) && !check_ajax_referer('pierre_ajax', 'nonce', false)) {
             wp_send_json_error(['message' => __('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢']);
             return;
         }
@@ -1495,23 +2083,58 @@ class AdminController {
             return;
         }
         
-        // Pierre gets webhook URL from form if provided! 🪨
+        // Pierre gets webhook URL from form if provided! 🪨 (accept both legacy and global field names)
         $webhook_url = sanitize_url(wp_unslash($_POST['slack_webhook_url'] ?? ''));
+        if (empty($webhook_url)) {
+            $webhook_url = sanitize_url(wp_unslash($_POST['global_webhook_url'] ?? ''));
+        }
         if (!empty($webhook_url)) {
             $this->slack_notifier->set_webhook_url($webhook_url);
         }
         
         $result = $this->slack_notifier->test_notification();
+        // Persist last test outcome/time
+        update_option('pierre_last_global_webhook_test', [
+            'time' => current_time('timestamp'),
+            'success' => (bool) $result,
+        ]);
+        do_action('wp_pierre_debug', 'webhook test completed', ['scope'=>'webhook','action'=>'test','code'=>$result?'ok':'fail']);
         if ($result) {
             wp_send_json_success([
                 'message' => __('Slack webhook test succeeded! Check your Slack channel.', 'wp-pierre') . ' 🪨',
                 'test_result' => $result
             ]);
         } else {
-            wp_send_json_error([
-                'message' => __('Slack webhook test failed. Verify the webhook URL is correct.', 'wp-pierre') . ' 😢'
-            ]);
+            $detail = method_exists($this->slack_notifier, 'get_last_error') ? (string) ($this->slack_notifier->get_last_error() ?? '') : '';
+            $this->respond_error('slack_test_failed', __('Slack webhook test failed. Verify the webhook URL is correct.', 'wp-pierre') . ' 😢', 400, ['error' => $detail]);
         }
+    }
+
+    /** Run surveillance now with cooldown */
+    public function ajax_run_surveillance_now(): void {
+        $t0 = microtime(true);
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) { $this->respond_error('invalid_nonce', __('Invalid nonce.', 'wp-pierre')); }
+        if (!current_user_can('pierre_manage_projects')) { $this->respond_error('forbidden', __('Permission denied.', 'wp-pierre')); }
+        $last = (int) get_option('pierre_last_run_now_surveillance', 0);
+        if ($last && (time() - $last) < 60) { $this->respond_error('cooldown', __('Please wait before running again (cooldown 60s).', 'wp-pierre'), 429); }
+        update_option('pierre_last_run_now_surveillance', time());
+        // Force run bypasses the global enabled switch
+        pierre()->get_cron_manager()->run_surveillance_check(true);
+        do_action('wp_pierre_debug', 'surveillance run triggered', ['scope'=>'cron','action'=>'run_now']);
+        wp_send_json_success(['message' => __('Surveillance run triggered.', 'wp-pierre')]);
+    }
+
+    /** Run cleanup now with cooldown */
+    public function ajax_run_cleanup_now(): void {
+        $t0 = microtime(true);
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) { $this->respond_error('invalid_nonce', __('Invalid nonce.', 'wp-pierre')); }
+        if (!current_user_can('pierre_manage_projects')) { $this->respond_error('forbidden', __('Permission denied.', 'wp-pierre')); }
+        $last = (int) get_option('pierre_last_run_now_cleanup', 0);
+        if ($last && (time() - $last) < 60) { $this->respond_error('cooldown', __('Please wait before running again (cooldown 60s).', 'wp-pierre'), 429); }
+        update_option('pierre_last_run_now_cleanup', time());
+        pierre()->get_cron_manager()->run_cleanup_task();
+        do_action('wp_pierre_debug', 'cleanup run triggered', ['scope'=>'cron','action'=>'cleanup_now']);
+        wp_send_json_success(['message' => __('Cleanup run triggered.', 'wp-pierre')]);
     }
     
     /**
@@ -1522,14 +2145,14 @@ class AdminController {
      */
     public function ajax_save_settings(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_admin_ajax')) {
-            wp_send_json_error(['message' => __('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢']);
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) {
+            $this->respond_error('invalid_nonce', __('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
             return;
         }
         
-        // Pierre checks permissions! 🪨 (fallback to manage_options until custom caps are wired)
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => __('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢']);
+        // Pierre checks permissions! 🪨
+        if (!current_user_can('pierre_manage_settings')) {
+            $this->respond_error('forbidden', __('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
             return;
         }
         
@@ -1547,26 +2170,155 @@ class AdminController {
             $notification_types = $existing_settings['notification_types'] ?? ['new_strings', 'completion_update'];
         }
         
+        // Notification defaults (global)
+        $defaults_new_strings = absint(wp_unslash($_POST['new_strings_threshold'] ?? ($existing_settings['notification_defaults']['new_strings_threshold'] ?? 20)));
+        $defaults_milestones_raw = (string) wp_unslash($_POST['milestones'] ?? '');
+        $defaults_milestones = [];
+        if ($defaults_milestones_raw !== '') {
+            foreach (explode(',', $defaults_milestones_raw) as $p) {
+                $p = trim($p);
+                if ($p === '') { continue; }
+                $defaults_milestones[] = (int) $p;
+            }
+        } else {
+            $defaults_milestones = $existing_settings['notification_defaults']['milestones'] ?? [50,80,100];
+        }
+        sort($defaults_milestones);
+        $defaults_mode = sanitize_key(wp_unslash($_POST['mode'] ?? ($existing_settings['notification_defaults']['mode'] ?? 'immediate')));
+        if (!in_array($defaults_mode, ['immediate','digest'], true)) { $defaults_mode = 'immediate'; }
+        $defaults_digest_type = sanitize_key(wp_unslash($_POST['digest_type'] ?? ($existing_settings['notification_defaults']['digest']['type'] ?? 'interval')));
+        if (!in_array($defaults_digest_type, ['interval','fixed_time'], true)) { $defaults_digest_type = 'interval'; }
+        $defaults_digest_interval = max(15, absint(wp_unslash($_POST['digest_interval_minutes'] ?? ($existing_settings['notification_defaults']['digest']['interval_minutes'] ?? 60))));
+        $defaults_digest_fixed = preg_replace('/[^0-9:]/', '', (string) wp_unslash($_POST['digest_fixed_time'] ?? ($existing_settings['notification_defaults']['digest']['fixed_time'] ?? '09:00')));
+
         $settings = array_merge($existing_settings, [
             'slack_webhook_url' => sanitize_url(wp_unslash($_POST['slack_webhook_url'] ?? $existing_settings['slack_webhook_url'] ?? '')),
             'surveillance_interval' => absint(wp_unslash($_POST['surveillance_interval'] ?? $existing_settings['surveillance_interval'] ?? 15)),
             'notifications_enabled' => !empty(wp_unslash($_POST['notifications_enabled'] ?? $existing_settings['notifications_enabled'] ?? false)),
             'auto_start_surveillance' => !empty(wp_unslash($_POST['auto_start_surveillance'] ?? $existing_settings['auto_start_surveillance'] ?? false)),
             'max_projects_per_check' => absint(wp_unslash($_POST['max_projects_per_check'] ?? $existing_settings['max_projects_per_check'] ?? 10)),
+            'request_timeout' => max(3, absint(wp_unslash($_POST['request_timeout'] ?? ($existing_settings['request_timeout'] ?? 30)))),
             'notification_types' => $notification_types,
             'notification_threshold' => absint(wp_unslash($_POST['notification_threshold'] ?? $existing_settings['notification_threshold'] ?? 80)),
+            'notification_defaults' => [
+                'new_strings_threshold' => $defaults_new_strings,
+                'milestones' => $defaults_milestones,
+                'mode' => $defaults_mode,
+                'digest' => [
+                    'type' => $defaults_digest_type,
+                    'interval_minutes' => $defaults_digest_interval,
+                    'fixed_time' => $defaults_digest_fixed,
+                ],
+            ],
         ]);
+
+        // Global webhook unified model (optional fields)
+        $gw = $settings['global_webhook'] ?? [];
+        $gw['enabled'] = !empty(wp_unslash($_POST['global_webhook_enabled'] ?? ($gw['enabled'] ?? false)));
+        $gw['webhook_url'] = sanitize_url(wp_unslash($_POST['global_webhook_url'] ?? ($gw['webhook_url'] ?? '')));
+        $gw['types'] = isset($_POST['global_webhook_types']) && is_array($_POST['global_webhook_types'])
+            ? array_values(array_intersect(array_map('sanitize_key', wp_unslash($_POST['global_webhook_types'])), ['new_strings','completion_update','needs_attention','milestone']))
+            : (array)($gw['types'] ?? ['new_strings','completion_update']);
+        $gw['threshold'] = absint(wp_unslash($_POST['global_webhook_threshold'] ?? ($gw['threshold'] ?? $defaults_new_strings)));
+        $mil_raw = (string) wp_unslash($_POST['global_webhook_milestones'] ?? '');
+        if ($mil_raw !== '') {
+            $gw['milestones'] = array_values(array_filter(array_map('intval', array_map('trim', explode(',', $mil_raw)))));
+            sort($gw['milestones']);
+        } else { $gw['milestones'] = (array)($gw['milestones'] ?? $defaults_milestones); }
+        $gw['mode'] = in_array(($m= sanitize_key(wp_unslash($_POST['global_webhook_mode'] ?? ($gw['mode'] ?? $defaults_mode)))), ['immediate','digest'], true) ? $m : 'immediate';
+        $gw['digest'] = $gw['digest'] ?? [];
+        $gw['digest']['type'] = in_array(($dt = sanitize_key(wp_unslash($_POST['global_webhook_digest_type'] ?? ($gw['digest']['type'] ?? $defaults_digest_type)))), ['interval','fixed_time'], true) ? $dt : 'interval';
+        $gw['digest']['interval_minutes'] = max(15, absint(wp_unslash($_POST['global_webhook_digest_interval_minutes'] ?? ($gw['digest']['interval_minutes'] ?? $defaults_digest_interval))));
+        $gw['digest']['fixed_time'] = preg_replace('/[^0-9:]/', '', (string) wp_unslash($_POST['global_webhook_digest_fixed_time'] ?? ($gw['digest']['fixed_time'] ?? $defaults_digest_fixed)));
+        // scopes
+        $gw['scopes'] = $gw['scopes'] ?? ['locales'=>[],'projects'=>[]];
+        $gw['scopes']['locales'] = isset($_POST['global_webhook_scopes_locales']) && is_array($_POST['global_webhook_scopes_locales'])
+            ? array_values(array_map('sanitize_key', wp_unslash($_POST['global_webhook_scopes_locales']))) : (array)($gw['scopes']['locales'] ?? []);
+        $proj_raw = (string) wp_unslash($_POST['global_webhook_scopes_projects'] ?? '');
+        if ($proj_raw !== '') {
+            $gw['scopes']['projects'] = [];
+            foreach (array_filter(array_map('trim', preg_split('/\r?\n/', $proj_raw))) as $line) {
+                $parts = array_map('trim', explode(',', $line));
+                if (count($parts) >= 2) { $gw['scopes']['projects'][] = ['type'=>sanitize_key($parts[0]), 'slug'=>sanitize_key($parts[1])]; }
+            }
+        }
+        $settings['global_webhook'] = $gw;
+        // Global surveillance enable/disable
+        $settings['surveillance_enabled'] = !empty(wp_unslash($_POST['surveillance_enabled'] ?? ($existing_settings['surveillance_enabled'] ?? false)));
         
+        $old_interval = (int)($existing_settings['surveillance_interval'] ?? 15);
         update_option('pierre_settings', $settings);
         
-        // Pierre updates his webhook URL! 🪨
-        if (!empty($settings['slack_webhook_url'])) {
+        // Pierre updates his webhook URL! 🪨 Prefer the new Global Webhook URL if present
+        $gw_url = trim((string)($settings['global_webhook']['webhook_url'] ?? ''));
+        if ($gw_url !== '') {
+            $this->slack_notifier->set_webhook_url($gw_url);
+        } elseif (!empty($settings['slack_webhook_url'])) {
             $this->slack_notifier->set_webhook_url($settings['slack_webhook_url']);
         }
+
+        // If surveillance interval changed, reschedule cron
+        $new_interval = (int)($settings['surveillance_interval'] ?? 15);
+        if ($new_interval !== $old_interval) {
+            try {
+                pierre()->get_cron_manager()->reschedule_surveillance();
+            } catch (\Exception $e) {
+                do_action('wp_pierre_debug', 'failed to reschedule surveillance: ' . $e->getMessage(), ['source' => 'AdminController']);
+            }
+        }
         
+        do_action('wp_pierre_debug', 'settings saved', ['scope'=>'admin','action'=>'save_settings']);
         wp_send_json_success([
             'message' => __('Settings saved successfully!', 'wp-pierre') . ' 🪨'
         ]);
+    }
+
+    /**
+     * Save per-locale overrides for notifications
+     */
+    public function ajax_save_locale_overrides(): void {
+        if (!check_ajax_referer('pierre_admin_ajax', 'nonce', false)) {
+            wp_send_json_error(['message' => __('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢']);
+            return;
+        }
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢']);
+            return;
+        }
+        $locale = sanitize_key(wp_unslash($_POST['locale_code'] ?? ''));
+        if ($locale === '') {
+            wp_send_json_error(['message' => __('Locale code is required.', 'wp-pierre') . ' 😢']);
+            return;
+        }
+        $settings = get_option('pierre_settings', []);
+        if (!is_array($settings)) { $settings = []; }
+        if (!isset($settings['locales']) || !is_array($settings['locales'])) { $settings['locales'] = []; }
+
+        $new_strings = wp_unslash($_POST['new_strings_threshold'] ?? '');
+        $milestones_raw = (string) wp_unslash($_POST['milestones'] ?? '');
+        $mode = sanitize_key(wp_unslash($_POST['mode'] ?? ''));
+        $digest_type = sanitize_key(wp_unslash($_POST['digest_type'] ?? ''));
+        $digest_interval = wp_unslash($_POST['digest_interval_minutes'] ?? '');
+        $digest_fixed = (string) wp_unslash($_POST['digest_fixed_time'] ?? '');
+
+        $over = $settings['locales'][$locale] ?? [];
+        if ($new_strings !== '') { $over['new_strings_threshold'] = absint($new_strings); }
+        if ($milestones_raw !== '') {
+            $ms = [];
+            foreach (explode(',', $milestones_raw) as $p) { $p = trim($p); if ($p === '') continue; $ms[] = (int) $p; }
+            sort($ms);
+            $over['milestones'] = $ms;
+        }
+        if (in_array($mode, ['immediate','digest'], true)) { $over['mode'] = $mode; }
+        if (!isset($over['digest']) || !is_array($over['digest'])) { $over['digest'] = []; }
+        if (in_array($digest_type, ['interval','fixed_time'], true)) { $over['digest']['type'] = $digest_type; }
+        if ($digest_interval !== '') { $over['digest']['interval_minutes'] = max(15, absint($digest_interval)); }
+        if ($digest_fixed !== '') { $over['digest']['fixed_time'] = preg_replace('/[^0-9:]/', '', $digest_fixed); }
+        $over['override'] = true;
+
+        $settings['locales'][$locale] = $over;
+        update_option('pierre_settings', $settings);
+        wp_send_json_success(['message' => __('Locale overrides saved.', 'wp-pierre') . ' 🪨']);
     }
     
     /**
@@ -1577,7 +2329,7 @@ class AdminController {
      */
     public function ajax_start_surveillance(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1586,6 +2338,31 @@ class AdminController {
             wp_die(__('Pierre says: You don\'t have permission!', 'wp-pierre') . ' 😢');
         }
         
+        // Optional per-entity cooldown (locale/project) with fallback to global (2 minutes)
+        $locale = sanitize_key(wp_unslash($_POST['locale_code'] ?? ''));
+        $project = sanitize_key(wp_unslash($_POST['project_slug'] ?? ''));
+        if ($locale && $project) {
+            $key = 'pierre_last_forced_scan_' . $locale . '_' . $project;
+            $last = (int) get_option($key, 0);
+            if ($last && (time() - $last) < 120) {
+                wp_send_json_error(['message' => __('Please wait before forcing another scan for this project/locale (cooldown 2 min).', 'wp-pierre') . ' 😢']);
+            }
+            update_option($key, time());
+        } elseif ($locale) {
+            $key = 'pierre_last_forced_scan_' . $locale;
+            $last = (int) get_option($key, 0);
+            if ($last && (time() - $last) < 120) {
+                wp_send_json_error(['message' => __('Please wait before forcing another scan for this locale (cooldown 2 min).', 'wp-pierre') . ' 😢']);
+            }
+            update_option($key, time());
+        } else {
+            $last = (int) get_option('pierre_last_forced_scan_global', 0);
+            if ($last && (time() - $last) < 120) {
+                wp_send_json_error(['message' => __('Please wait before forcing another scan (cooldown 2 min).', 'wp-pierre') . ' 😢']);
+            }
+            update_option('pierre_last_forced_scan_global', time());
+        }
+
         $result = $this->project_watcher->start_surveillance();
         wp_send_json_success(['message' => 'Pierre started surveillance! 🪨', 'result' => $result]);
     }
@@ -1598,7 +2375,7 @@ class AdminController {
      */
     public function ajax_stop_surveillance(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1619,7 +2396,7 @@ class AdminController {
      */
     public function ajax_test_surveillance(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
             wp_send_json_error(['message' => __('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢']);
         }
         
@@ -1643,7 +2420,7 @@ class AdminController {
      */
     public function ajax_add_project(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1678,11 +2455,12 @@ class AdminController {
         }
         
         if (!$locale_valid) {
+            // translators: %s is the locale code
             wp_send_json_error(['message' => sprintf(__('Locale %s is not valid or not found in WordPress.org translations.', 'wp-pierre'), $locale_code) . ' 😢']);
             return;
         }
         
-        $result = $this->project_watcher->watch_project($project_slug, $locale_code);
+        $result = $this->project_watcher->watch_project($project_slug, $locale_code, $project_type);
         
         // Store project type if watch_project succeeded
         if ($result) {
@@ -1696,7 +2474,8 @@ class AdminController {
                     update_option('pierre_watched_projects', $watched_projects_option);
                 }
             }
-            wp_send_json_success(['message' => sprintf(__('Project %s (%s) added to surveillance for locale %s!', 'wp-pierre'), $project_slug, $project_type, $locale_code) . ' 🪨']);
+            // translators: 1: project slug, 2: project type, 3: locale code
+            wp_send_json_success(['message' => sprintf(__('Project %1$s (%2$s) added to surveillance for locale %3$s!', 'wp-pierre'), $project_slug, $project_type, $locale_code) . ' 🪨']);
         } else {
             wp_send_json_error(['message' => __('Pierre says: Failed to add project! Check the project slug and locale code.', 'wp-pierre') . ' 😢']);
         }
@@ -1710,7 +2489,7 @@ class AdminController {
      */
     public function ajax_remove_project(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1744,7 +2523,7 @@ class AdminController {
      */
     public function ajax_flush_cache(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1767,7 +2546,7 @@ class AdminController {
      */
     public function ajax_reset_settings(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1790,7 +2569,7 @@ class AdminController {
      */
     public function ajax_clear_data(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1814,7 +2593,7 @@ class AdminController {
      */
     public function ajax_export_report(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1852,7 +2631,7 @@ class AdminController {
      */
     public function ajax_export_all_reports(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1890,7 +2669,7 @@ class AdminController {
      */
     public function ajax_schedule_reports(): void {
         // Pierre checks nonce! 🪨
-        if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+        if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
             wp_die(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
         }
         
@@ -1938,7 +2717,7 @@ class AdminController {
                     return false;
             }
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error generating report: ' . $e->getMessage() . ' 😢');
+            do_action('wp_pierre_debug', 'error generating report: ' . $e->getMessage(), ['source' => 'AdminController']);
             return false;
         }
     }
@@ -2061,7 +2840,7 @@ class AdminController {
             
             return $schedule_data;
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error scheduling reports: ' . $e->getMessage() . ' 😢');
+            do_action('wp_pierre_debug', 'error scheduling reports: ' . $e->getMessage(), ['source' => 'AdminController']);
             return false;
         }
     }
@@ -2095,7 +2874,7 @@ class AdminController {
     public function ajax_security_audit(): void {
         try {
             // Pierre validates nonce! 🪨
-            if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+            if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
                 wp_send_json_error(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
                 return;
             }
@@ -2115,7 +2894,7 @@ class AdminController {
             ]);
             
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error during security audit: ' . $e->getMessage() . ' 😢');
+            do_action('wp_pierre_debug', 'security audit error: ' . $e->getMessage(), ['source' => 'AdminController']);
             wp_send_json_error(__('Pierre says: Security audit failed!', 'wp-pierre') . ' 😢');
         }
     }
@@ -2129,7 +2908,7 @@ class AdminController {
     public function ajax_security_logs(): void {
         try {
             // Pierre validates nonce! 🪨
-            if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+            if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
                 wp_send_json_error(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
                 return;
             }
@@ -2152,7 +2931,7 @@ class AdminController {
             ]);
             
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error retrieving security logs: ' . $e->getMessage() . ' 😢');
+            do_action('wp_pierre_debug', 'retrieve security logs error: ' . $e->getMessage(), ['source' => 'AdminController']);
             wp_send_json_error(__('Pierre says: Failed to retrieve security logs!', 'wp-pierre') . ' 😢');
         }
     }
@@ -2166,7 +2945,7 @@ class AdminController {
     public function ajax_clear_security_logs(): void {
         try {
             // Pierre validates nonce! 🪨
-            if (!wp_verify_nonce(wp_unslash($_POST['nonce'] ?? ''), 'pierre_ajax')) {
+            if (!check_ajax_referer('pierre_ajax', 'nonce', false)) {
                 wp_send_json_error(__('Pierre says: Invalid nonce!', 'wp-pierre') . ' 😢');
                 return;
             }
@@ -2190,7 +2969,7 @@ class AdminController {
             }
             
         } catch (\Exception $e) {
-            error_log('Pierre encountered an error clearing security logs: ' . $e->getMessage() . ' 😢');
+            do_action('wp_pierre_debug', 'clear security logs error: ' . $e->getMessage(), ['source' => 'AdminController']);
             wp_send_json_error(__('Pierre says: Failed to clear security logs!', 'wp-pierre') . ' 😢');
         }
     }

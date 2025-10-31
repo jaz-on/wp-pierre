@@ -40,6 +40,12 @@ class UserProjectLink {
      * @var ProjectWatcher
      */
     private ProjectWatcher $project_watcher;
+
+	/**
+	 * In-memory cache for user assignments during a single request
+	 * @var array<int,array>
+	 */
+	private array $user_assignments_cache = [];
     
     /**
      * Pierre's constructor - he prepares his assignment system! 🪨
@@ -110,6 +116,9 @@ class UserProjectLink {
             
             // Pierre adds the project to his surveillance! 🪨
             $this->project_watcher->watch_project($project_slug, $locale_code);
+
+			// Invalidate cache for this user
+			unset($this->user_assignments_cache[$user_id]);
             
             // Pierre gets user and project info for the response! 🪨
             $user = get_user_by('id', $user_id);
@@ -179,6 +188,9 @@ class UserProjectLink {
             // Pierre gets user and project info for the response! 🪨
             $user = get_user_by('id', $user_id);
             $project_name = $this->get_project_display_name($project_slug, $locale_code);
+
+			// Invalidate cache for this user
+			unset($this->user_assignments_cache[$user_id]);
             
             return [
                 'success' => true,
@@ -302,7 +314,33 @@ class UserProjectLink {
      * @return array
      */
     public function get_user_assignments_with_details(int $user_id): array {
-        return [];
+        // Return from in-memory cache if available for this request
+        if (isset($this->user_assignments_cache[$user_id])) {
+            return $this->user_assignments_cache[$user_id];
+        }
+
+        $rows = $this->team_repository->get_user_assignments($user_id);
+        if (!is_array($rows) || empty($rows)) { return []; }
+
+        $watched = get_option('pierre_watched_projects', []);
+        $details = [];
+        foreach ($rows as $r) {
+            $key = ($r['project_slug'] ?? '') . '_' . ($r['locale_code'] ?? '');
+            $watched_item = is_array($watched) && isset($watched[$key]) ? $watched[$key] : null;
+            $details[] = [
+                'user_id'      => (int) ($r['user_id'] ?? 0),
+                'project_type' => (string) ($r['project_type'] ?? ''),
+                'project_slug' => (string) ($r['project_slug'] ?? ''),
+                'locale_code'  => (string) ($r['locale_code'] ?? ''),
+                'role'         => (string) ($r['role'] ?? ''),
+                'assigned_at'  => (string) ($r['assigned_at'] ?? ''),
+                'is_active'    => (int) ($r['is_active'] ?? 0),
+                'watched'      => $watched_item,
+            ];
+        }
+        // Store in in-memory cache for this request
+        $this->user_assignments_cache[$user_id] = $details;
+        return $details;
     }
 
     /**
@@ -313,7 +351,24 @@ class UserProjectLink {
      * @return array
      */
     public function get_project_assignments_with_details(string $project_slug, string $locale_code): array {
-        return [];
+        $rows = $this->team_repository->get_project_assignments($project_slug, $locale_code);
+        if (!is_array($rows) || empty($rows)) { return []; }
+
+        $details = [];
+        foreach ($rows as $r) {
+            $user = get_user_by('id', (int) ($r['user_id'] ?? 0));
+            $details[] = [
+                'user_id'      => (int) ($r['user_id'] ?? 0),
+                'user_name'    => $user ? $user->display_name : '',
+                'project_type' => (string) ($r['project_type'] ?? ''),
+                'project_slug' => (string) ($r['project_slug'] ?? ''),
+                'locale_code'  => (string) ($r['locale_code'] ?? ''),
+                'role'         => (string) ($r['role'] ?? ''),
+                'assigned_at'  => (string) ($r['assigned_at'] ?? ''),
+                'is_active'    => (int) ($r['is_active'] ?? 0),
+            ];
+        }
+        return $details;
     }
 
     /**
@@ -322,7 +377,7 @@ class UserProjectLink {
      * @return array
      */
     public function get_all_assignments(): array {
-        return [];
+        return $this->team_repository->get_all_assignments();
     }
 
     /**
@@ -331,6 +386,6 @@ class UserProjectLink {
      * @return void
      */
     public function clear_all_data(): void {
-        // no-op stub for now
+        $this->team_repository->clear_all();
     }
 }

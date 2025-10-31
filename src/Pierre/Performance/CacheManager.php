@@ -23,14 +23,14 @@ class CacheManager {
      * 
      * @var string
      */
-    private const CACHE_GROUP = 'pierre';
+    private const CACHE_GROUP = 'wp_pierre';
     
     /**
      * Pierre's default cache timeout! 🪨
      * 
      * @var int
      */
-    private const DEFAULT_TIMEOUT = HOUR_IN_SECONDS;
+    private const DEFAULT_TIMEOUT = 600; // 10 minutes per plan
     
     /**
      * Pierre's cache version for invalidation! 🪨
@@ -58,13 +58,15 @@ class CacheManager {
      */
     public function get(string $key, string $group = self::CACHE_GROUP): mixed {
         $cache_key = $this->build_cache_key($key, $group);
-        $cached_data = get_transient($cache_key);
-        
-        if ($cached_data !== false) {
-            error_log("Pierre found cached data for {$cache_key}! 🪨");
+        if (function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache()) {
+            $cached_data = wp_cache_get($cache_key, $group);
+        } else {
+            $cached_data = get_transient($group . '_' . $cache_key);
+        }
+        if ($cached_data !== false && $cached_data !== null) {
+            do_action('wp_pierre_debug', 'Cache hit: ' . $cache_key, ['source' => 'CacheManager']);
             return $cached_data;
         }
-        
         return false;
     }
     
@@ -80,15 +82,17 @@ class CacheManager {
      */
     public function set(string $key, mixed $data, int $timeout = self::DEFAULT_TIMEOUT, string $group = self::CACHE_GROUP): bool {
         $cache_key = $this->build_cache_key($key, $group);
-        $result = set_transient($cache_key, $data, $timeout);
-        
-        if ($result) {
-            error_log("Pierre cached data for {$cache_key}! 🪨");
+        if (function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache()) {
+            $result = wp_cache_set($cache_key, $data, $group, $timeout);
         } else {
-            error_log("Pierre failed to cache data for {$cache_key}! 😢");
+            $result = set_transient($group . '_' . $cache_key, $data, $timeout);
         }
-        
-        return $result;
+        if ($result) {
+            do_action('wp_pierre_debug', 'Cache set: ' . $cache_key, ['source' => 'CacheManager']);
+        } else {
+            do_action('wp_pierre_debug', 'Cache set failed: ' . $cache_key, ['source' => 'CacheManager']);
+        }
+        return (bool) $result;
     }
     
     /**
@@ -101,13 +105,15 @@ class CacheManager {
      */
     public function delete(string $key, string $group = self::CACHE_GROUP): bool {
         $cache_key = $this->build_cache_key($key, $group);
-        $result = delete_transient($cache_key);
-        
-        if ($result) {
-            error_log("Pierre deleted cached data for {$cache_key}! 🪨");
+        if (function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache()) {
+            $result = wp_cache_delete($cache_key, $group);
+        } else {
+            $result = delete_transient($group . '_' . $cache_key);
         }
-        
-        return $result;
+        if ($result) {
+            do_action('wp_pierre_debug', 'Cache delete: ' . $cache_key, ['source' => 'CacheManager']);
+        }
+        return (bool) $result;
     }
     
     /**
@@ -118,10 +124,24 @@ class CacheManager {
      * @return int Number of cache entries flushed
      */
     public function flush_group(string $group = self::CACHE_GROUP): int {
+        if (function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache()) {
+            if (function_exists('wp_cache_flush_group')) {
+                wp_cache_flush_group($group);
+                do_action('wp_pierre_debug', 'Flushed object cache group: ' . $group, ['source' => 'CacheManager']);
+                return 1;
+            }
+            // Fallback: flush entire cache if group-specific flush not available
+            if (function_exists('wp_cache_flush')) {
+                wp_cache_flush();
+                do_action('wp_pierre_debug', 'Flushed entire object cache (fallback)', ['source' => 'CacheManager']);
+                return 1;
+            }
+            return 0;
+        }
+        // Transient-based fallback
         global $wpdb;
-        
         try {
-            $pattern = "_transient_{$group}_%";
+            $pattern = $wpdb->esc_like('_transient_' . $group . '_') . '%';
             $cache_entries = $wpdb->get_results(
                 $wpdb->prepare(
                     "SELECT option_name FROM {$wpdb->options} 
@@ -129,21 +149,17 @@ class CacheManager {
                     $pattern
                 )
             );
-            
             $flushed_count = 0;
-            
             foreach ($cache_entries as $entry) {
                 $cache_key = str_replace('_transient_', '', $entry->option_name);
                 if (delete_transient($cache_key)) {
                     $flushed_count++;
                 }
             }
-            
-            error_log("Pierre flushed {$flushed_count} cache entries from group {$group}! 🪨");
+            do_action('wp_pierre_debug', 'Flushed transient cache entries', ['source' => 'CacheManager', 'group' => $group, 'count' => $flushed_count]);
             return $flushed_count;
-            
         } catch (\Exception $e) {
-            error_log("Pierre encountered an error flushing cache group: " . $e->getMessage() . " 😢");
+            do_action('wp_pierre_debug', 'Error flushing cache group: ' . $e->getMessage(), ['source' => 'CacheManager']);
             return 0;
         }
     }
@@ -170,17 +186,13 @@ class CacheManager {
      */
     public function remember(string $key, callable $callback, int $timeout = self::DEFAULT_TIMEOUT, string $group = self::CACHE_GROUP): mixed {
         $cached_data = $this->get($key, $group);
-        
         if ($cached_data !== false) {
             return $cached_data;
         }
-        
         $fresh_data = $callback();
-        
         if ($fresh_data !== null) {
             $this->set($key, $fresh_data, $timeout, $group);
         }
-        
         return $fresh_data;
     }
     
@@ -244,11 +256,11 @@ class CacheManager {
                 }
             }
             
-            error_log("Pierre invalidated {$invalidated_count} cache entries matching {$pattern}! 🪨");
+            do_action('wp_pierre_debug', 'Invalidated cache entries by pattern', ['source' => 'CacheManager', 'pattern' => $pattern, 'count' => $invalidated_count]);
             return $invalidated_count;
             
         } catch (\Exception $e) {
-            error_log("Pierre encountered an error invalidating cache: " . $e->getMessage() . " 😢");
+            do_action('wp_pierre_debug', 'Error invalidating cache: ' . $e->getMessage(), ['source' => 'CacheManager']);
             return 0;
         }
     }
@@ -264,7 +276,7 @@ class CacheManager {
         update_option('pierre_cache_version', $new_version);
         $this->cache_version = $new_version;
         
-        error_log("Pierre incremented cache version to {$new_version}! 🪨");
+        do_action('wp_pierre_debug', 'Incremented cache version', ['source' => 'CacheManager', 'version' => $new_version]);
         return $new_version;
     }
     
@@ -317,7 +329,7 @@ class CacheManager {
             ];
             
         } catch (\Exception $e) {
-            error_log("Pierre encountered an error getting cache stats: " . $e->getMessage() . " 😢");
+            do_action('wp_pierre_debug', 'Error getting cache stats: ' . $e->getMessage(), ['source' => 'CacheManager']);
             return [
                 'total_entries' => 0,
                 'expired_entries' => 0,

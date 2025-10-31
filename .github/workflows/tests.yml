@@ -1,0 +1,85 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: xdebug
+
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --prefer-dist
+
+      - name: Run PHPUnit with coverage
+        run: |
+          mkdir -p build/logs
+          vendor/bin/phpunit -c phpunit.xml --coverage-clover build/logs/clover.xml
+
+      - name: Compute coverage percent
+        id: cov
+        run: |
+          php -r '
+            $f="build/logs/clover.xml";
+            $xml = new SimpleXMLElement(file_get_contents($f));
+            $m = $xml->xpath("/coverage/project/metrics")[0];
+            $covered = (int)$m["coveredstatements"]; $total = (int)$m["statements"]; $pct = $total>0 ? round($covered*100/$total) : 0;
+            file_put_contents("build/coverage_pct.txt", (string)$pct);
+            echo "pct=$pct\n";
+          ' >> $GITHUB_OUTPUT
+
+      - name: Generate badge SVG
+        run: |
+          PCT=${{ steps.cov.outputs.pct }}
+          COLOR=red
+          if [ "$PCT" -ge 90 ]; then COLOR=brightgreen;
+          elif [ "$PCT" -ge 80 ]; then COLOR=green;
+          elif [ "$PCT" -ge 70 ]; then COLOR=yellowgreen;
+          elif [ "$PCT" -ge 60 ]; then COLOR=yellow;
+          elif [ "$PCT" -ge 50 ]; then COLOR=orange; fi
+
+          mkdir -p assets/badges
+          cat > assets/badges/coverage.svg <<'SVG'
+          <svg xmlns="http://www.w3.org/2000/svg" width="140" height="20" role="img" aria-label="coverage">
+            <linearGradient id="s" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient>
+            <mask id="m"><rect width="140" height="20" rx="3" fill="#fff"/></mask>
+            <g mask="url(#m)">
+              <rect width="70" height="20" fill="#555"/>
+              <rect x="70" width="70" height="20" fill="{{COLOR}}"/>
+              <rect width="140" height="20" fill="url(#s)"/>
+            </g>
+            <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+              <text x="35" y="14">coverage</text>
+              <text x="105" y="14">{{PCT}}%</text>
+            </g>
+          </svg>
+          SVG
+          sed -i "s/{{PCT}}/$PCT/g" assets/badges/coverage.svg
+          sed -i "s/{{COLOR}}/$COLOR/g" assets/badges/coverage.svg
+
+      - name: Prepare gh-badges branch (no push by default)
+        env:
+          PUSH_BADGE: ${{ vars.PUSH_BADGE || 'false' }}
+        run: |
+          git fetch --depth=1 origin gh-badges || true
+          git checkout -B gh-badges || git checkout gh-badges
+          mkdir -p assets/badges
+          mv -f assets/badges/coverage.svg assets/badges/coverage.svg
+          git add assets/badges/coverage.svg
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git commit -m "chore(ci): update coverage badge" || echo "No changes"
+          if [ "$PUSH_BADGE" = "true" ]; then git push origin gh-badges; else echo "Skipping push (PUSH_BADGE=false)"; fi

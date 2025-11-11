@@ -11,12 +11,16 @@
 
 namespace Pierre\Notifications;
 
+use Pierre\Traits\StatusTrait;
+use Pierre\Logging\Logger;
+
 /**
  * Message Builder class - Pierre's message crafting system! 🪨
  * 
  * @since 1.0.0
  */
 class MessageBuilder {
+    use StatusTrait;
     
     /**
      * Pierre's message templates - he has different styles! 🪨
@@ -34,6 +38,54 @@ class MessageBuilder {
     ];
     
     /**
+     * Extract common project data for message building.
+     * 
+     * @since 1.0.0
+     * @param array $project_data The project data
+     * @return array Extracted project data
+     */
+    private function extract_project_data(array $project_data): array {
+        return [
+            'project_type' => (string)($project_data['project_type'] ?? 'meta'),
+            'project_slug' => (string)($project_data['project_slug'] ?? ''),
+            'locale_code' => (string)($project_data['locale_code'] ?? ''),
+            'project_name' => $project_data['project_name'] ?? 'Unknown Project',
+            'locale_name' => $project_data['locale_name'] ?? 'Unknown Locale',
+            'completion' => $project_data['stats']['completion_percentage'] ?? 0,
+            'translated' => $project_data['stats']['translated'] ?? 0,
+            'total' => $project_data['stats']['total'] ?? 0,
+            'waiting' => $project_data['stats']['waiting'] ?? 0,
+            'fuzzy' => $project_data['stats']['fuzzy'] ?? 0,
+        ];
+    }
+    
+    /**
+     * Build message with translate link.
+     * 
+     * @since 1.0.0
+     * @param string $template_name Template name
+     * @param array $variables Template variables (link will be added automatically)
+     * @param array $project_data Project data for link building
+     * @param string $color Message color
+     * @return array Formatted Slack message
+     */
+    private function build_message_with_link(string $template_name, array $variables, array $project_data, string $color = 'good'): array {
+        $extracted = $this->extract_project_data($project_data);
+        $link = $this->build_translate_link(
+            $extracted['project_type'],
+            $extracted['project_slug'],
+            $extracted['locale_code']
+        );
+        
+        $variables['link'] = $link;
+        $variables['project_name'] = $variables['project_name'] ?? $extracted['project_name'];
+        $variables['locale_name'] = $variables['locale_name'] ?? $extracted['locale_name'];
+        
+        $message = $this->format_template($template_name, $variables);
+        return $this->build_slack_message($message, $color);
+    }
+    
+    /**
      * Pierre builds a new strings notification! 🪨
      * 
      * @since 1.0.0
@@ -42,20 +94,11 @@ class MessageBuilder {
      * @return array Formatted message for Slack
      */
     public function build_new_strings_message(array $project_data, int $new_strings_count): array {
-        $link = $this->build_translate_link(
-            (string)($project_data['project_type'] ?? 'meta'),
-            (string)($project_data['project_slug'] ?? ''),
-            (string)($project_data['locale_code'] ?? '')
-        );
-        $message = $this->format_template('new_strings', [
-            'project_name' => $project_data['project_name'] ?? 'Unknown Project',
-            'locale_name' => $project_data['locale_name'] ?? 'Unknown Locale',
+        $extracted = $this->extract_project_data($project_data);
+        return $this->build_message_with_link('new_strings', [
             'count' => $new_strings_count,
-            'completion' => $project_data['stats']['completion_percentage'] ?? 0,
-            'link' => $link
-        ]);
-        
-        return $this->build_slack_message($message, 'good');
+            'completion' => $extracted['completion'],
+        ], $project_data, 'good');
     }
     
     /**
@@ -67,27 +110,18 @@ class MessageBuilder {
      * @return array Formatted message for Slack
      */
     public function build_completion_update_message(array $project_data, array $previous_data): array {
-        $current_completion = $project_data['stats']['completion_percentage'] ?? 0;
+        $extracted = $this->extract_project_data($project_data);
         $previous_completion = $previous_data['stats']['completion_percentage'] ?? 0;
-        $completion_change = $current_completion - $previous_completion;
-        
-        $link = $this->build_translate_link(
-            (string)($project_data['project_type'] ?? 'meta'),
-            (string)($project_data['project_slug'] ?? ''),
-            (string)($project_data['locale_code'] ?? '')
-        );
-        $message = $this->format_template('completion_update', [
-            'project_name' => $project_data['project_name'] ?? 'Unknown Project',
-            'locale_name' => $project_data['locale_name'] ?? 'Unknown Locale',
-            'completion' => $current_completion,
-            'translated' => $project_data['stats']['translated'] ?? 0,
-            'total' => $project_data['stats']['total'] ?? 0,
-            'change' => $completion_change,
-            'link' => $link
-        ]);
+        $completion_change = $extracted['completion'] - $previous_completion;
         
         $color = $completion_change > 0 ? 'good' : ($completion_change < 0 ? 'warning' : 'info');
-        return $this->build_slack_message($message, $color);
+        
+        return $this->build_message_with_link('completion_update', [
+            'completion' => $extracted['completion'],
+            'translated' => $extracted['translated'],
+            'total' => $extracted['total'],
+            'change' => $completion_change,
+        ], $project_data, $color);
     }
     
     /**
@@ -98,21 +132,12 @@ class MessageBuilder {
      * @return array Formatted message for Slack
      */
     public function build_needs_attention_message(array $project_data): array {
-        $link = $this->build_translate_link(
-            (string)($project_data['project_type'] ?? 'meta'),
-            (string)($project_data['project_slug'] ?? ''),
-            (string)($project_data['locale_code'] ?? '')
-        );
-        $message = $this->format_template('needs_attention', [
-            'project_name' => $project_data['project_name'] ?? 'Unknown Project',
-            'locale_name' => $project_data['locale_name'] ?? 'Unknown Locale',
-            'waiting' => $project_data['stats']['waiting'] ?? 0,
-            'fuzzy' => $project_data['stats']['fuzzy'] ?? 0,
-            'completion' => $project_data['stats']['completion_percentage'] ?? 0,
-            'link' => $link
-        ]);
-        
-        return $this->build_slack_message($message, 'warning');
+        $extracted = $this->extract_project_data($project_data);
+        return $this->build_message_with_link('needs_attention', [
+            'waiting' => $extracted['waiting'],
+            'fuzzy' => $extracted['fuzzy'],
+            'completion' => $extracted['completion'],
+        ], $project_data, 'warning');
     }
     
     /**
@@ -151,33 +176,16 @@ class MessageBuilder {
     }
 
     public function build_approval_message(array $project_data, int $approved_count): array {
-        $link = $this->build_translate_link(
-            (string)($project_data['project_type'] ?? 'meta'),
-            (string)($project_data['project_slug'] ?? ''),
-            (string)($project_data['locale_code'] ?? '')
-        );
-        $message = $this->format_template('approval', [
-            'project_name' => $project_data['project_name'] ?? 'Unknown Project',
-            'locale_name' => $project_data['locale_name'] ?? 'Unknown Locale',
+        return $this->build_message_with_link('approval', [
             'approved' => $approved_count,
-            'link' => $link
-        ]);
-        return $this->build_slack_message($message, 'good');
+        ], $project_data, 'good');
     }
 
     public function build_milestone_message(array $project_data, int $milestone): array {
-        $link = $this->build_translate_link(
-            (string)($project_data['project_type'] ?? 'meta'),
-            (string)($project_data['project_slug'] ?? ''),
-            (string)($project_data['locale_code'] ?? '')
-        );
-        $message = $this->format_template('milestone', [
-            'project_name' => $project_data['project_name'] ?? 'Unknown Project',
-            'locale_name' => $project_data['locale_name'] ?? 'Unknown Locale',
-            'completion' => $project_data['stats']['completion_percentage'] ?? 0,
-            'link' => $link
-        ]);
-        return $this->build_slack_message($message, 'good');
+        $extracted = $this->extract_project_data($project_data);
+        return $this->build_message_with_link('milestone', [
+            'completion' => $extracted['completion'],
+        ], $project_data, 'good');
     }
     
     /**
@@ -300,7 +308,7 @@ class MessageBuilder {
      */
     public function add_template(string $name, string $template): void {
         $this->templates[$name] = $template;
-        error_log("Pierre added custom template: {$name} 🪨");
+        Logger::static_debug("Pierre added custom template: {$name} 🪨", ['source' => 'MessageBuilder']);
     }
     
     /**
@@ -314,16 +322,25 @@ class MessageBuilder {
     }
     
     /**
-     * Pierre gets his message builder status! 🪨
-     * 
+     * Get status message.
+     *
      * @since 1.0.0
-     * @return array Message builder status
+     * @return string Status message
      */
-    public function get_status(): array {
+    protected function get_status_message(): string {
+        return 'Pierre\'s message builder is ready! 🪨';
+    }
+
+    /**
+     * Get status details.
+     *
+     * @since 1.0.0
+     * @return array Status details
+     */
+    protected function get_status_details(): array {
         return [
             'templates_count' => count($this->templates),
             'available_templates' => array_keys($this->templates),
-            'message' => 'Pierre\'s message builder is ready! 🪨'
         ];
     }
 }

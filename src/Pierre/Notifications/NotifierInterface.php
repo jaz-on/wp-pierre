@@ -25,9 +25,9 @@ interface NotifierInterface {
      * @param string $message The message to send
      * @param array $recipients Array of recipient information
      * @param array $options Additional options for the notification
-     * @return bool True if notification was sent successfully, false otherwise
+     * @return bool|\WP_Error True if notification was sent successfully, WP_Error on failure
      */
-    public function send_notification(string $message, array $recipients, array $options = []): bool;
+    public function send_notification(string $message, array $recipients, array $options = []): bool|\WP_Error;
     
     /**
      * Pierre sends a bulk notification! 🪨
@@ -45,9 +45,9 @@ interface NotifierInterface {
      * 
      * @since 1.0.0
      * @param string $test_message The test message to send
-     * @return bool True if test notification was sent successfully, false otherwise
+     * @return bool|\WP_Error True if test notification was sent successfully, WP_Error on failure
      */
-    public function test_notification(string $test_message = 'Pierre is testing his notification system! 🪨'): bool;
+    public function test_notification(string $test_message = 'Pierre is testing his notification system! 🪨'): bool|\WP_Error;
     
     /**
      * Pierre checks if his notification system is ready! 🪨

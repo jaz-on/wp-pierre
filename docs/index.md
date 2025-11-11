@@ -8,16 +8,20 @@ Bienvenue dans la documentation de Pierre. Cette documentation est la source de 
 
 ## Quick Links
 
-- **Getting Started**: getting-started/
-- **Admin Interface**: admin/
-- **Surveillance System**: surveillance/
-- **Notifications**: notifications/
-- **Team Management**: team-management/
-- **Projects Catalog**: catalog/ (à venir)
-- **API Reference**: api/
-- **Architecture**: architecture/
-- **Troubleshooting**: troubleshooting/
-- **Development**: development/
+- **Getting Started**: [getting-started/](getting-started/) - Guide d'installation et configuration
+- **Admin Interface**: [admin/](admin/) - [Templates](admin/templates.md) | [UI Components](admin/ui-components.md)
+- **Surveillance System**: [surveillance/](surveillance/) - [Surveillance & Cron](surveillance/cron)
+- **Notifications**: [notifications/](notifications/) - [Slack Notifications](notifications/slack)
+- **Team Management**: [team-management/](team-management/) - [Capabilities & Permissions](team-management/capabilities)
+- **API Reference**: [api/](api/) - [API Integration](api/integration) | [Hooks](api/hooks.md) | [AJAX Endpoints](api/ajax-endpoints/)
+- **Architecture**: [architecture/](architecture/) - [Overview](architecture/overview) | [Database](architecture/database) | [Constants](architecture/constants.md) | [Interfaces & Traits](architecture/interfaces-traits.md) | [Helpers](architecture/helpers.md)
+- **Workflows**: [workflows/](workflows/) - Workflows complets
+- **Use Cases**: [getting-started/use-cases.md](getting-started/use-cases.md) - Cas d'usage principaux
+- **Assets**: [development/assets.md](development/assets.md) - Documentation CSS/JS
+- **Customization**: [customization/](customization/) - Guide de personnalisation
+- **FAQ**: [troubleshooting/faq.md](troubleshooting/faq.md) - Questions fréquentes
+- **Development**: [development/](development/) - [Guidelines](development/guidelines) | [Sanitization](development/sanitization.md)
+- **Troubleshooting**: [troubleshooting/](troubleshooting/) - [Common Issues](troubleshooting/common-issues)
 
 ## À propos de Pierre
 
@@ -39,8 +43,12 @@ Pierre est un plugin WordPress qui surveille les traductions Polyglots et notifi
 ## Gouvernance de la doc
 
 - Les changements sont proposés via PR sur `docs/**`.
-- Le Wiki est un miroir automatique. N’éditez pas le Wiki directement.
-- Page d’accueil du Wiki = copie de `index.md` en `Home.md` via CI.
+- Le Wiki est un miroir automatique. N'éditez pas le Wiki directement.
+- Page d'accueil du Wiki = copie de `index.md` en `Home.md` via CI.
+
+## Changelog
+
+Pour voir l'historique des versions et changements, consultez le [CHANGELOG.md](../CHANGELOG.md).
 
 ---
 

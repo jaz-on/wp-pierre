@@ -36,7 +36,11 @@ $settings = $data['settings'] ?? [];
             <div class="pierre-form-wide">
                 <div class="pierre-form-group">
                     <label for="global_webhook_url"><?php echo esc_html__('Webhook URL', 'wp-pierre'); ?></label>
-                    <input type="url" class="regular-text" id="global_webhook_url" name="global_webhook_url" value="<?php echo esc_attr($settings['global_webhook']['webhook_url'] ?? ($settings['slack_webhook_url'] ?? '')); ?>" placeholder="https://hooks.slack.com/services/..." required>
+                    <?php 
+                    $raw_gw_webhook = $settings['global_webhook']['webhook_url'] ?? ($settings['slack_webhook_url'] ?? '');
+                    $decrypted_gw_webhook = !empty($raw_gw_webhook) ? pierre_decrypt_webhook($raw_gw_webhook) : '';
+                    ?>
+                    <input type="url" class="regular-text" id="global_webhook_url" name="global_webhook_url" value="<?php echo esc_attr($decrypted_gw_webhook); ?>" placeholder="https://hooks.slack.com/services/..." required>
                     <div class="pierre-help"><?php echo esc_html__('Destination URL. Optionally restrict by scopes below (leave empty for ALL).', 'wp-pierre'); ?></div>
                 </div>
 
@@ -117,7 +121,8 @@ $settings = $data['settings'] ?? [];
                 <div class="pierre-form-actions">
                     <button type="submit" class="button button-primary"><?php echo esc_html__('Save settings and scope', 'wp-pierre'); ?></button>
                     <button type="button" class="button" id="pierre-preview-slack"><?php echo esc_html__('Preview message', 'wp-pierre'); ?></button>
-                    <button type="button" class="button" id="pierre-test-slack" <?php echo empty($settings['global_webhook']['webhook_url'] ?? ($settings['slack_webhook_url'] ?? '')) ? 'disabled' : ''; ?>><?php echo esc_html__('Send test via Webhook', 'wp-pierre'); ?></button>
+                    <?php $has_webhook = !empty($decrypted_gw_webhook); ?>
+                    <button type="button" class="button" id="pierre-test-slack" <?php echo !$has_webhook ? 'disabled' : ''; ?>><?php echo esc_html__('Send test via Webhook', 'wp-pierre'); ?></button>
                 </div>
                 <p class="description pierre-mt-16">
                     <?php

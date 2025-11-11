@@ -12,6 +12,8 @@
 
 namespace Pierre\Security;
 
+use Pierre\Traits\StatusTrait;
+
 // Pierre imports WordPress functions! 🪨
 use function __;
 use function _e;
@@ -58,6 +60,7 @@ use const ABSPATH;
  * @since 1.0.0
  */
 class SecurityAuditor {
+    use StatusTrait;
     
     /**
      * Pierre's security audit results! 🪨
@@ -801,7 +804,7 @@ class SecurityAuditor {
         $latest_version = get_transient('pierre_wp_latest_version');
         
         if (!$latest_version) {
-            $response = wp_remote_get('https://api.wordpress.org/core/version-check/1.7/');
+            $response = wp_safe_remote_get('https://api.wordpress.org/core/version-check/1.7/');
             if (!is_wp_error($response)) {
                 $body = wp_remote_retrieve_body($response);
                 $data = json_decode($body, true);
@@ -834,18 +837,27 @@ class SecurityAuditor {
     }
     
     /**
-     * Pierre gets his security auditor status! 🪨
-     * 
+     * Get status message.
+     *
      * @since 1.0.0
-     * @return array Security auditor status
+     * @return string Status message
      */
-    public function get_status(): array {
+    protected function get_status_message(): string {
+        return 'Pierre\'s security auditor is active! 🪨';
+    }
+
+    /**
+     * Get status details.
+     *
+     * @since 1.0.0
+     * @return array Status details
+     */
+    protected function get_status_details(): array {
         return [
             'security_auditor_enabled' => true,
             'comprehensive_audit_available' => true,
             'compliance_checking_active' => true,
             'audit_history_available' => true,
-            'message' => 'Pierre\'s security auditor is active! 🪨'
         ];
     }
 }

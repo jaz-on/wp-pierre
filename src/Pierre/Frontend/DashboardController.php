@@ -11,6 +11,9 @@
 
 namespace Pierre\Frontend;
 
+use Pierre\Traits\StatusTrait;
+use Pierre\Logging\Logger;
+
 use Pierre\Teams\UserProjectLink;
 use Pierre\Surveillance\ProjectWatcher;
 use Pierre\Notifications\SlackNotifier;
@@ -21,9 +24,7 @@ use Pierre\Notifications\SlackNotifier;
  * @since 1.0.0
  */
 class DashboardController {
-    /** Debug helper */
-    private function is_debug(): bool { return defined('PIERRE_DEBUG') ? (bool) PIERRE_DEBUG : false; }
-    private function log_debug(string $m): void { if ($this->is_debug()) { error_log('[wp-pierre] ' . $m); } }
+    use StatusTrait;
     
     /**
      * Pierre's user project link - he manages assignments! 🪨
@@ -73,7 +74,7 @@ class DashboardController {
             // Reduce log noise: do not log routine init every request
             
         } catch (\Exception $e) {
-            $this->log_debug('Pierre encountered an error initializing public interface: ' . $e->getMessage() . ' 😢');
+            Logger::static_debug('Pierre encountered an error initializing public interface: ' . $e->getMessage() . ' 😢', ['source' => 'DashboardController']);
         }
     }
     
@@ -201,12 +202,12 @@ class DashboardController {
                 break;
                 
             case 'locale':
-                $locale = sanitize_key(get_query_var('pierre_locale'));
+                $locale = \Pierre\Helpers\OptionHelper::sanitize_locale_code(get_query_var('pierre_locale'));
                 $this->render_locale_dashboard($locale);
                 break;
                 
             case 'project':
-                $locale = sanitize_key(get_query_var('pierre_locale'));
+                $locale = \Pierre\Helpers\OptionHelper::sanitize_locale_code(get_query_var('pierre_locale'));
                 $project = sanitize_key(get_query_var('pierre_project'));
                 $this->render_project_dashboard($locale, $project);
                 break;
@@ -572,8 +573,7 @@ class DashboardController {
      * @return array Projects for the locale
      */
     private function get_projects_for_locale(string $locale): array {
-        $watched = get_option('pierre_watched_projects', []);
-        if (!is_array($watched)) { return []; }
+        $watched = \Pierre\Helpers\OptionHelper::get_option_array('pierre_watched_projects', []);
         $list = [];
         foreach ($watched as $p) {
             $lc = $p['locale'] ?? ($p['locale_code'] ?? '');
@@ -651,16 +651,25 @@ class DashboardController {
     }
     
     /**
-     * Pierre gets his dashboard controller status! 🪨
-     * 
+     * Get status message.
+     *
      * @since 1.0.0
-     * @return array Dashboard controller status
+     * @return string Status message
      */
-    public function get_status(): array {
+    protected function get_status_message(): string {
+        return 'Pierre\'s dashboard controller is ready! 🪨';
+    }
+
+    /**
+     * Get status details.
+     *
+     * @since 1.0.0
+     * @return array Status details
+     */
+    protected function get_status_details(): array {
         return [
             'routing_setup' => true,
             'ajax_handlers_setup' => true,
-            'message' => 'Pierre\'s dashboard controller is ready! 🪨'
         ];
     }
 }

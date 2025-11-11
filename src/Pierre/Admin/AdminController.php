@@ -222,7 +222,7 @@ class AdminController {
 
 			// Centralized AJAX tracing for all pierre_* admin-ajax actions (start/end), throttled by Plugin::handle_debug
 			if ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) {
-				$act = isset( $_REQUEST['action'] ) ? (string) $_REQUEST['action'] : '';
+				$act = isset( $_REQUEST['action'] ) ? (string) wp_unslash( $_REQUEST['action'] ) : '';
 				if ( is_string( $act ) && strpos( $act, 'pierre_' ) === 0 ) {
 					do_action(
 						'wp_pierre_debug',
@@ -733,12 +733,12 @@ class AdminController {
 		if ( ! current_user_can( 'pierre_manage_catalog' ) && ! current_user_can( 'manage_options' ) ) {
 			wp_die( __( 'Permission denied.', 'wp-pierre' ) ); }
 		$args  = array(
-			'type'     => isset( $_POST['type'] ) ? (array) $_POST['type'] : array( 'plugin' ),
-			'search'   => (string) ( $_POST['search'] ?? '' ),
-			'page'     => (int) ( $_POST['page'] ?? 1 ),
-			'per_page' => (int) ( $_POST['per_page'] ?? 100 ),
-			'sort'     => (string) ( $_POST['sort'] ?? '' ),
-			'source'   => (string) ( $_POST['source'] ?? 'popular' ),
+			'type'     => isset( $_POST['type'] ) ? (array) wp_unslash( $_POST['type'] ) : array( 'plugin' ),
+			'search'   => (string) ( wp_unslash( $_POST['search'] ?? '' ) ),
+			'page'     => (int) ( wp_unslash( $_POST['page'] ?? 1 ) ),
+			'per_page' => (int) ( wp_unslash( $_POST['per_page'] ?? 100 ) ),
+			'sort'     => (string) ( wp_unslash( $_POST['sort'] ?? '' ) ),
+			'source'   => (string) ( wp_unslash( $_POST['source'] ?? 'popular' ) ),
 		);
 		$svc   = new \Pierre\Discovery\ProjectsCatalog();
 		$out   = $svc->fetch( $args );
@@ -759,12 +759,12 @@ class AdminController {
 		if ( ! current_user_can( 'pierre_manage_catalog' ) && ! current_user_can( 'manage_options' ) ) {
 			wp_die( __( 'Permission denied.', 'wp-pierre' ) ); }
 		$args  = array(
-			'type'     => isset( $_POST['type'] ) ? (array) $_POST['type'] : array( 'plugin' ),
-			'search'   => (string) ( $_POST['search'] ?? '' ),
-			'page'     => (int) ( $_POST['page'] ?? 1 ),
-			'per_page' => (int) ( $_POST['per_page'] ?? 100 ),
-			'sort'     => (string) ( $_POST['sort'] ?? '' ),
-			'source'   => (string) ( $_POST['source'] ?? 'popular' ),
+			'type'     => isset( $_POST['type'] ) ? (array) wp_unslash( $_POST['type'] ) : array( 'plugin' ),
+			'search'   => (string) ( wp_unslash( $_POST['search'] ?? '' ) ),
+			'page'     => (int) ( wp_unslash( $_POST['page'] ?? 1 ) ),
+			'per_page' => (int) ( wp_unslash( $_POST['per_page'] ?? 100 ) ),
+			'sort'     => (string) ( wp_unslash( $_POST['sort'] ?? '' ) ),
+			'source'   => (string) ( wp_unslash( $_POST['source'] ?? 'popular' ) ),
 		);
 		$svc   = new \Pierre\Discovery\ProjectsCatalog();
 		$out   = $svc->fetch( $args );
@@ -793,9 +793,9 @@ class AdminController {
 			$this->respond_error( 'forbidden', __( 'Permission denied.', 'wp-pierre' ) ); }
 		$this->rate_limit( 'purge_catalog', 10 );
 		global $wpdb;
-		$type   = sanitize_key( $_POST['type'] ?? '' );
-		$source = sanitize_key( $_POST['source'] ?? '' );
-		$page   = (int) ( $_POST['page'] ?? 0 );
+		$type   = sanitize_key( wp_unslash( $_POST['type'] ?? '' ) );
+		$source = sanitize_key( wp_unslash( $_POST['source'] ?? '' ) );
+		$page   = (int) ( wp_unslash( $_POST['page'] ?? 0 ) );
 		if ( $type === '' && $source === '' && $page === 0 ) {
 			$this->respond_error( 'invalid', __( 'Specify at least one selector.', 'wp-pierre' ), 400 ); }
 		$like = 'pierre_projects_catalog_';
@@ -892,7 +892,7 @@ class AdminController {
 		$locale = sanitize_key( wp_unslash( $_POST['locale_code'] ?? '' ) );
 		if ( $locale === '' ) {
 			$this->respond_error( 'missing_locale', __( 'Locale code is required.', 'wp-pierre' ), 400 ); }
-		$items = isset( $_POST['items'] ) ? (array) $_POST['items'] : array();
+		$items = isset( $_POST['items'] ) ? (array) wp_unslash( $_POST['items'] ) : array();
 		if ( empty( $items ) ) {
 			$this->respond_error( 'empty_selection', __( 'No items selected.', 'wp-pierre' ), 400 ); }
 		$ok  = 0;
@@ -926,13 +926,13 @@ class AdminController {
 			$this->respond_error( 'forbidden', __( 'Permission denied.', 'wp-pierre' ) ); }
 		$this->rate_limit( 'catalog_fetch', 60 );
 		$args             = array(
-			'type'     => isset( $_POST['type'] ) ? (array) $_POST['type'] : array(),
-			'tags'     => isset( $_POST['tags'] ) ? (array) $_POST['tags'] : array(),
-			'search'   => (string) ( $_POST['search'] ?? '' ),
-			'page'     => (int) ( $_POST['page'] ?? 1 ),
-			'per_page' => (int) ( $_POST['per_page'] ?? 24 ),
-			'sort'     => (string) ( $_POST['sort'] ?? '' ),
-			'source'   => (string) ( $_POST['source'] ?? 'popular' ),
+			'type'     => isset( $_POST['type'] ) ? (array) wp_unslash( $_POST['type'] ) : array(),
+			'tags'     => isset( $_POST['tags'] ) ? (array) wp_unslash( $_POST['tags'] ) : array(),
+			'search'   => (string) ( wp_unslash( $_POST['search'] ?? '' ) ),
+			'page'     => (int) ( wp_unslash( $_POST['page'] ?? 1 ) ),
+			'per_page' => (int) ( wp_unslash( $_POST['per_page'] ?? 24 ) ),
+			'sort'     => (string) ( wp_unslash( $_POST['sort'] ?? '' ) ),
+			'source'   => (string) ( wp_unslash( $_POST['source'] ?? 'popular' ) ),
 		);
 		$args['type']     = array_values( array_intersect( array_map( 'sanitize_key', (array) $args['type'] ), array( 'core', 'plugin', 'theme', 'meta', 'app' ) ) );
 		$args['tags']     = array_values( array_map( 'sanitize_key', (array) $args['tags'] ) );
@@ -969,12 +969,12 @@ class AdminController {
 			$this->respond_error( 'invalid_nonce', __( 'Invalid nonce.', 'wp-pierre' ) ); }
 		if ( ! current_user_can( 'pierre_manage_catalog' ) && ! current_user_can( 'manage_options' ) ) {
 			$this->respond_error( 'forbidden', __( 'Permission denied.', 'wp-pierre' ) ); }
-		$interval         = max( 60, (int) ( $_POST['interval_minutes'] ?? 1440 ) );
-		$max_per_run      = max( 10, min( 500, (int) ( $_POST['max_per_run'] ?? 200 ) ) );
-		$plugins_popular  = ! empty( $_POST['plugins_popular'] ) ? 1 : 0;
-		$plugins_featured = ! empty( $_POST['plugins_featured'] ) ? 1 : 0;
-		$themes_popular   = ! empty( $_POST['themes_popular'] ) ? 1 : 0;
-		$themes_featured  = ! empty( $_POST['themes_featured'] ) ? 1 : 0;
+		$interval         = max( 60, (int) ( wp_unslash( $_POST['interval_minutes'] ?? 1440 ) ) );
+		$max_per_run      = max( 10, min( 500, (int) ( wp_unslash( $_POST['max_per_run'] ?? 200 ) ) ) );
+		$plugins_popular  = ! empty( wp_unslash( $_POST['plugins_popular'] ?? '' ) ) ? 1 : 0;
+		$plugins_featured = ! empty( wp_unslash( $_POST['plugins_featured'] ?? '' ) ) ? 1 : 0;
+		$themes_popular   = ! empty( wp_unslash( $_POST['themes_popular'] ?? '' ) ) ? 1 : 0;
+		$themes_featured  = ! empty( wp_unslash( $_POST['themes_featured'] ?? '' ) ) ? 1 : 0;
 		$meta             = get_option( 'pierre_projects_catalog_meta', array() );
 		if ( ! is_array( $meta ) ) {
 			$meta = array(); }
@@ -1238,7 +1238,7 @@ class AdminController {
 
 		// Get filters from POST if provided
 		$filters = isset( $_POST['filter_type'] ) || isset( $_POST['filter_slug'] ) || isset( $_POST['filter_locale'] ) || isset( $_POST['filter_code_min'] ) || isset( $_POST['filter_code_max'] ) || isset( $_POST['filter_hours'] )
-			? $this->parse_error_filters( $_POST )
+			? $this->parse_error_filters( wp_unslash( $_POST ) )
 			: array( 'hours_max' => 24 );
 
 		$errors = $this->get_filtered_errors( $filters );
@@ -1272,7 +1272,7 @@ class AdminController {
 		}
 
 		// Get filters from POST
-		$filters = $this->parse_error_filters( $_POST );
+		$filters = $this->parse_error_filters( wp_unslash( $_POST ) );
 		$errors  = $this->get_filtered_errors( $filters );
 
 		// Format for export
@@ -1315,7 +1315,7 @@ class AdminController {
 		}
 
 		// Get filters from POST
-		$filters = $this->parse_error_filters( $_POST );
+		$filters = $this->parse_error_filters( wp_unslash( $_POST ) );
 		$errors  = $this->get_filtered_errors( $filters );
 
 		nocache_headers();
@@ -1482,12 +1482,12 @@ class AdminController {
 	 */
 	private function parse_error_filters( array $post_data ): array {
 		return array(
-			'project_type'  => sanitize_key( $post_data['filter_type'] ?? '' ),
-			'project_slug'  => sanitize_text_field( $post_data['filter_slug'] ?? '' ),
-			'locale'        => sanitize_key( $post_data['filter_locale'] ?? '' ),
-			'http_code_min' => isset( $post_data['filter_code_min'] ) && $post_data['filter_code_min'] !== '' ? absint( $post_data['filter_code_min'] ) : null,
-			'http_code_max' => isset( $post_data['filter_code_max'] ) && $post_data['filter_code_max'] !== '' ? absint( $post_data['filter_code_max'] ) : null,
-			'hours_max'     => isset( $post_data['filter_hours'] ) && $post_data['filter_hours'] !== '' ? absint( $post_data['filter_hours'] ) : 24,
+			'project_type'  => sanitize_key( wp_unslash( $post_data['filter_type'] ?? '' ) ),
+			'project_slug'  => sanitize_text_field( wp_unslash( $post_data['filter_slug'] ?? '' ) ),
+			'locale'        => sanitize_key( wp_unslash( $post_data['filter_locale'] ?? '' ) ),
+			'http_code_min' => isset( $post_data['filter_code_min'] ) && $post_data['filter_code_min'] !== '' ? absint( wp_unslash( $post_data['filter_code_min'] ) ) : null,
+			'http_code_max' => isset( $post_data['filter_code_max'] ) && $post_data['filter_code_max'] !== '' ? absint( wp_unslash( $post_data['filter_code_max'] ) ) : null,
+			'hours_max'     => isset( $post_data['filter_hours'] ) && $post_data['filter_hours'] !== '' ? absint( wp_unslash( $post_data['filter_hours'] ) ) : 24,
 		);
 	}
 

@@ -14,6 +14,9 @@ namespace Pierre\Surveillance;
 use Pierre\Notifications\SlackNotifier;
 use Pierre\Performance\CacheManager;
 use Pierre\Performance\PerformanceOptimizer;
+use Pierre\Security\Encryption;
+use Pierre\Settings\Settings;
+use Pierre\Logging\Logger;
 
 /**
  * Project Watcher class - Pierre's surveillance system! 🪨
@@ -21,8 +24,21 @@ use Pierre\Performance\PerformanceOptimizer;
  * @since 1.0.0
  */
 class ProjectWatcher implements WatcherInterface {
-    /** Debug helper */
+    /**
+     * Check if debug mode is enabled.
+     *
+     * @since 1.0.0
+     * @return bool True if PIERRE_DEBUG constant is defined and truthy, false otherwise.
+     */
     private function is_debug(): bool { return defined('PIERRE_DEBUG') ? (bool) PIERRE_DEBUG : false; }
+
+    /**
+     * Log a debug message if debug is enabled.
+     *
+     * @since 1.0.0
+     * @param string $m Debug message to log.
+     * @return void
+     */
     private function log_debug(string $m): void { if ($this->is_debug()) { do_action('wp_pierre_debug', $m, ['source' => 'ProjectWatcher']); } }
     
     /**
@@ -89,11 +105,11 @@ class ProjectWatcher implements WatcherInterface {
     public function start_surveillance(): bool {
         try {
             if ($this->surveillance_active) {
-                $this->log_debug('Pierre is already watching! 🪨');
+                Logger::static_debug('Pierre is already watching! 🪨', ['source' => 'ProjectWatcher']);
                 return true;
             }
             
-            $this->log_debug('Pierre is starting his surveillance... 🪨');
+            Logger::static_debug('Pierre is starting his surveillance... 🪨', ['source' => 'ProjectWatcher']);
             
             // Pierre gets his watched projects! 🪨
             $projects = $this->get_watched_projects();
@@ -112,7 +128,7 @@ class ProjectWatcher implements WatcherInterface {
             }));
 
             if (empty($projects_to_watch)) {
-                $this->log_debug('Pierre has no projects to watch! 😢');
+                Logger::static_debug('Pierre has no projects to watch! 😢', ['source' => 'ProjectWatcher']);
                 return false;
             }
 
@@ -120,7 +136,7 @@ class ProjectWatcher implements WatcherInterface {
             shuffle($projects_to_watch);
 
             // Max per check (from settings, default 10); acts as pagination window
-            $settings = get_option('pierre_settings', []);
+            $settings = Settings::all();
             $max = (int) ($settings['max_projects_per_check'] ?? 50);
             if ($max > 0) {
                 $projects_to_watch = array_slice($projects_to_watch, 0, $max);
@@ -130,7 +146,7 @@ class ProjectWatcher implements WatcherInterface {
             $scraped_data = $this->scraper->scrape_multiple_projects($projects_to_watch);
             
             if (empty($scraped_data)) {
-                $this->log_debug('Pierre failed to scrape any project data! 😢');
+                Logger::static_debug('Pierre failed to scrape any project data! 😢', ['source' => 'ProjectWatcher']);
                 return false;
             }
             
@@ -138,12 +154,12 @@ class ProjectWatcher implements WatcherInterface {
             $this->analyze_and_notify($scraped_data);
             
             $this->surveillance_active = true;
-            $this->log_debug('Pierre started his surveillance successfully! 🪨');
+            Logger::static_debug('Pierre started his surveillance successfully! 🪨', ['source' => 'ProjectWatcher']);
             
             return true;
             
         } catch (\Exception $e) {
-            $this->log_debug('Pierre encountered an error starting surveillance: ' . $e->getMessage() . ' 😢');
+            Logger::static_debug('Pierre encountered an error starting surveillance: ' . $e->getMessage() . ' 😢', ['source' => 'ProjectWatcher']);
             return false;
         }
     }
@@ -157,17 +173,17 @@ class ProjectWatcher implements WatcherInterface {
     public function stop_surveillance(): bool {
         try {
             if (!$this->surveillance_active) {
-                $this->log_debug('Pierre is not currently watching! 🪨');
+                Logger::static_debug('Pierre is not currently watching! 🪨', ['source' => 'ProjectWatcher']);
                 return true;
             }
             
             $this->surveillance_active = false;
-            $this->log_debug('Pierre stopped his surveillance! 🪨');
+            Logger::static_debug('Pierre stopped his surveillance! 🪨', ['source' => 'ProjectWatcher']);
             
             return true;
             
         } catch (\Exception $e) {
-            $this->log_debug('Pierre encountered an error stopping surveillance: ' . $e->getMessage() . ' 😢');
+            Logger::static_debug('Pierre encountered an error stopping surveillance: ' . $e->getMessage() . ' 😢', ['source' => 'ProjectWatcher']);
             return false;
         }
     }
@@ -183,14 +199,22 @@ class ProjectWatcher implements WatcherInterface {
     }
 
     /**
-     * Flush caches and runtime data related to surveillance
+     * Flush caches and runtime data related to surveillance.
+     *
+     * @since 1.0.0
+     * @return void
      */
     public function flush_cache(): void {
-        // Invalidate internal cache manager groups commonly used by the watcher
-        try { $this->cache_manager->flush_group('surveillance'); } catch (\Exception $e) {}
-        try { $this->cache_manager->flush_group('api'); } catch (\Exception $e) {}
-        try { $this->cache_manager->flush_group('database'); } catch (\Exception $e) {}
-        try { $this->cache_manager->flush_all(); } catch (\Exception $e) {}
+        // Invalidate all plugin cache groups at once
+        try {
+            $this->cache_manager->flush_all_plugin_groups();
+        } catch (\Exception $e) {
+            // Fallback: invalidate groups individually
+            try { $this->cache_manager->flush_group('pierre'); } catch (\Exception $e2) {}
+            try { $this->cache_manager->flush_group('surveillance'); } catch (\Exception $e2) {}
+            try { $this->cache_manager->flush_group('api'); } catch (\Exception $e2) {}
+            try { $this->cache_manager->flush_group('database'); } catch (\Exception $e2) {}
+        }
 
         // Clear options used for discovery cache/logs so the next run rebuilds
         delete_option('pierre_locales_cache');
@@ -199,7 +223,10 @@ class ProjectWatcher implements WatcherInterface {
     }
 
     /**
-     * Clear all persisted surveillance data (keeps settings)
+     * Clear all persisted surveillance data (keeps settings).
+     *
+     * @since 1.0.0
+     * @return void
      */
     public function clear_all_data(): void {
         // Reset watched projects store
@@ -248,21 +275,19 @@ class ProjectWatcher implements WatcherInterface {
         try {
             // Pierre sanitizes his inputs! 🪨
             $project_slug = sanitize_key($project_slug);
-            // Normaliser le code locale (ex: fr_FR)
-            $locale_code = preg_replace_callback(
-                '/^([a-z]{2})(?:_([a-zA-Z]{2}))?$/',
-                static function ($m) {
-                    return isset($m[2]) ? strtolower($m[1]) . '_' . strtoupper($m[2]) : strtolower($m[1]);
-                },
-                trim((string) $locale_code)
-            );
+            // Normaliser le code locale (ex: fr_FR) using helper
+            $locale_code = \Pierre\Helpers\OptionHelper::sanitize_locale_code(trim((string) $locale_code));
+            if (empty($locale_code)) {
+                Logger::static_warning("Invalid locale code provided for project {$project_slug}", ['source' => 'ProjectWatcher']);
+                return false;
+            }
             
             $project_key = "{$project_slug}_{$locale_code}";
             $project_type = sanitize_key($project_type ?: 'meta');
             
             // Pierre checks if he's already watching this project! 🪨
             if (isset($this->watched_projects[$project_key])) {
-                $this->log_debug("Pierre is already watching {$project_slug} ({$locale_code})! 🪨");
+                Logger::static_debug("Pierre is already watching {$project_slug} ({$locale_code})! 🪨", ['source' => 'ProjectWatcher']);
                 return true;
             }
             
@@ -270,7 +295,7 @@ class ProjectWatcher implements WatcherInterface {
             $test_data = $this->scraper->test_scraping($project_slug, $locale_code);
             
             if (!$test_data['success']) {
-                $this->log_debug("Pierre cannot watch {$project_slug} ({$locale_code}) - scraping failed! 😢");
+                Logger::static_debug("Pierre cannot watch {$project_slug} ({$locale_code}) - scraping failed! 😢", ['source' => 'ProjectWatcher']);
                 return false;
             }
             
@@ -292,11 +317,11 @@ class ProjectWatcher implements WatcherInterface {
             // Pierre invalidates his cache! 🪨
             $this->cache_manager->delete('watched_projects', 'surveillance');
             
-            $this->log_debug("Pierre is now watching {$project_slug} ({$locale_code})! 🪨");
+            Logger::static_debug("Pierre is now watching {$project_slug} ({$locale_code})! 🪨", ['source' => 'ProjectWatcher']);
             return true;
             
         } catch (\Exception $e) {
-            $this->log_debug("Pierre encountered an error watching {$project_slug} ({$locale_code}): " . $e->getMessage() . ' 😢');
+            Logger::static_debug("Pierre encountered an error watching {$project_slug} ({$locale_code}): " . $e->getMessage() . ' 😢', ['source' => 'ProjectWatcher']);
             return false;
         }
     }
@@ -326,7 +351,7 @@ class ProjectWatcher implements WatcherInterface {
             
             // Pierre checks if he's watching this project! 🪨
             if (!isset($this->watched_projects[$project_key])) {
-                $this->log_debug("Pierre is not watching {$project_slug} ({$locale_code})! 🪨");
+                Logger::static_debug("Pierre is not watching {$project_slug} ({$locale_code})! 🪨", ['source' => 'ProjectWatcher']);
                 return true;
             }
             
@@ -336,11 +361,11 @@ class ProjectWatcher implements WatcherInterface {
             // Pierre saves his watch list! 🪨
             $this->save_watched_projects();
             
-            $this->log_debug("Pierre stopped watching {$project_slug} ({$locale_code})! 🪨");
+            Logger::static_debug("Pierre stopped watching {$project_slug} ({$locale_code})! 🪨", ['source' => 'ProjectWatcher']);
             return true;
             
         } catch (\Exception $e) {
-            $this->log_debug("Pierre encountered an error unwatching {$project_slug} ({$locale_code}): " . $e->getMessage() . ' 😢');
+            Logger::static_debug("Pierre encountered an error unwatching {$project_slug} ({$locale_code}): " . $e->getMessage() . ' 😢', ['source' => 'ProjectWatcher']);
             return false;
         }
     }
@@ -397,8 +422,8 @@ class ProjectWatcher implements WatcherInterface {
         // Pierre saves his updated data! 🪨
         $this->save_watched_projects();
         
-        if ($notifications_sent > 0) { $this->log_debug("Pierre sent {$notifications_sent} notifications! 🪨"); }
-        else { $this->log_debug('Pierre found no changes to report! 🪨'); }
+        if ($notifications_sent > 0) { Logger::static_debug("Pierre sent {$notifications_sent} notifications! 🪨", ['source' => 'ProjectWatcher']); }
+        else { Logger::static_debug('Pierre found no changes to report! 🪨', ['source' => 'ProjectWatcher']); }
     }
     
     /**
@@ -601,15 +626,28 @@ class ProjectWatcher implements WatcherInterface {
         }
     }
 
-    /** Unified global webhook config */
+    /**
+     * Get unified global webhook configuration.
+     *
+     * @since 1.0.0
+     * @return array Global webhook configuration array with keys: enabled, webhook_url, types, threshold, milestones, mode, digest, scopes.
+     */
     private function get_global_webhook_config(): array {
-        $settings = get_option('pierre_settings', []);
+        $settings = Settings::all();
         $gw = (array)($settings['global_webhook'] ?? []);
+        // Decrypt webhook URL if present
+        if (!empty($gw['webhook_url'])) {
+            $decrypted = Encryption::decrypt($gw['webhook_url']);
+            $gw['webhook_url'] = ($decrypted !== false) ? $decrypted : $gw['webhook_url'];
+        }
         // Back-compat: map legacy if needed
         if (empty($gw) && !empty($settings['slack_webhook_url'])) {
+            $raw_legacy = $settings['slack_webhook_url'];
+            $decrypted_legacy = Encryption::decrypt($raw_legacy);
+            $legacy_url = ($decrypted_legacy !== false) ? $decrypted_legacy : $raw_legacy;
             $gw = [
                 'enabled' => !empty($settings['notifications_enabled']),
-                'webhook_url' => $settings['slack_webhook_url'],
+                'webhook_url' => $legacy_url,
                 'types' => (array)($settings['notification_types'] ?? ['new_strings','completion_update','needs_attention','milestone']),
                 'threshold' => (int)(($settings['notification_defaults']['new_strings_threshold'] ?? 20)),
                 'milestones' => (array)(($settings['notification_defaults']['milestones'] ?? [50,80,100])),
@@ -621,22 +659,45 @@ class ProjectWatcher implements WatcherInterface {
         return $gw;
     }
 
-    /** Unified locale webhook config */
+    /**
+     * Get unified locale webhook configuration.
+     *
+     * @since 1.0.0
+     * @param string $locale Locale code (e.g., 'fr_FR').
+     * @return array Locale webhook configuration array with keys: enabled, webhook_url, types, threshold, milestones, mode, digest, scopes.
+     */
     private function get_locale_webhook_config(string $locale): array {
-        $settings = get_option('pierre_settings', []);
+        $settings = Settings::all();
         $lw = (array)($settings['locales'][$locale]['webhook'] ?? []);
+        // Decrypt webhook URL if present
+        if (!empty($lw['webhook_url'])) {
+            $decrypted = Encryption::decrypt($lw['webhook_url']);
+            $lw['webhook_url'] = ($decrypted !== false) ? $decrypted : $lw['webhook_url'];
+        }
         // Back-compat: map legacy single URL if present
         if (empty($lw) && !empty($settings['locales_slack'][$locale] ?? '')) {
+            $raw_legacy = $settings['locales_slack'][$locale];
+            $decrypted_legacy = Encryption::decrypt($raw_legacy);
+            $legacy_url = ($decrypted_legacy !== false) ? $decrypted_legacy : $raw_legacy;
             $lw = [
                 'enabled' => true,
-                'webhook_url' => $settings['locales_slack'][$locale],
+                'webhook_url' => $legacy_url,
                 'types' => (array)($settings['notification_types'] ?? ['new_strings','completion_update','needs_attention','milestone']),
             ];
         }
         return $lw;
     }
 
-    /** Evaluate types/scopes/thresholds and send (or enqueue) */
+    /**
+     * Evaluate types/scopes/thresholds and send (or enqueue) webhook notification.
+     *
+     * @since 1.0.0
+     * @param array  $webhook Webhook configuration array.
+     * @param array  $context Context array with keys: event_type, locale, project, metrics.
+     * @param array  $message Formatted message array.
+     * @param string $channel Channel identifier ('global' or 'locale').
+     * @return void
+     */
     private function evaluate_and_dispatch_webhook(array $webhook, array $context, array $message, string $channel): void {
         $type = (string)$context['event_type'];
         $allowed = (array)($webhook['types'] ?? []);
@@ -696,8 +757,8 @@ class ProjectWatcher implements WatcherInterface {
      * @return void
      */
     private function load_watched_projects(): void {
-        $this->watched_projects = get_option('pierre_watched_projects', []);
-        $this->log_debug('Pierre loaded ' . count($this->watched_projects) . ' watched projects! 🪨');
+        $this->watched_projects = \Pierre\Helpers\OptionHelper::get_option_array('pierre_watched_projects', []);
+        Logger::static_debug('Pierre loaded ' . count($this->watched_projects) . ' watched projects! 🪨', ['source' => 'ProjectWatcher']);
     }
     
     /**
@@ -708,7 +769,7 @@ class ProjectWatcher implements WatcherInterface {
      */
     private function save_watched_projects(): void {
         update_option('pierre_watched_projects', $this->watched_projects);
-        $this->log_debug('Pierre saved his watched projects! 🪨');
+        Logger::static_debug('Pierre saved his watched projects! 🪨', ['source' => 'ProjectWatcher']);
     }
 
     /**
@@ -789,7 +850,7 @@ class ProjectWatcher implements WatcherInterface {
                 'details' => [ 'project' => $candidate, 'scrape' => $scrape ],
             ];
         } catch (\Exception $e) {
-            $this->log_debug('Pierre encountered an error during test surveillance: ' . $e->getMessage() . ' 😢');
+            Logger::static_debug('Pierre encountered an error during test surveillance: ' . $e->getMessage() . ' 😢', ['source' => 'ProjectWatcher']);
             return [
                 'success' => false,
                 'reason' => 'unexpected_error',
@@ -810,9 +871,7 @@ class ProjectWatcher implements WatcherInterface {
     }
 
     private function get_settings(): array {
-        $settings = get_option('pierre_settings', []);
-        if (!is_array($settings)) { return []; }
-        return $settings;
+        return Settings::all();
     }
 
     private function get_locale_config(string $locale): array {

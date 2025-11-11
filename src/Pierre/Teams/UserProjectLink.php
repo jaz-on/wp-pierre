@@ -11,6 +11,8 @@
 
 namespace Pierre\Teams;
 
+use Pierre\Traits\StatusTrait;
+
 use Pierre\Surveillance\ProjectWatcher;
 
 /**
@@ -19,6 +21,7 @@ use Pierre\Surveillance\ProjectWatcher;
  * @since 1.0.0
  */
 class UserProjectLink {
+    use StatusTrait;
     
     /**
      * Pierre's team repository - he stores data! 🪨
@@ -296,15 +299,23 @@ class UserProjectLink {
     }
     
     /**
-     * Pierre gets his assignment system status! 🪨
-     * 
+     * Get status message.
+     *
      * @since 1.0.0
-     * @return array Assignment system status
+     * @return string Status message
      */
-    public function get_status(): array {
-        return [
-            'message' => 'Pierre\'s assignment system is ready! 🪨'
-        ];
+    protected function get_status_message(): string {
+        return 'Pierre\'s assignment system is ready! 🪨';
+    }
+
+    /**
+     * Get status details.
+     *
+     * @since 1.0.0
+     * @return array Status details
+     */
+    protected function get_status_details(): array {
+        return [];
     }
 
     /**
@@ -322,7 +333,7 @@ class UserProjectLink {
         $rows = $this->team_repository->get_user_assignments($user_id);
         if (!is_array($rows) || empty($rows)) { return []; }
 
-        $watched = get_option('pierre_watched_projects', []);
+        $watched = \Pierre\Helpers\OptionHelper::get_option_array('pierre_watched_projects', []);
         $details = [];
         foreach ($rows as $r) {
             $key = ($r['project_slug'] ?? '') . '_' . ($r['locale_code'] ?? '');

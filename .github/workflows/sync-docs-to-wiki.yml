@@ -1,0 +1,56 @@
+name: Sync docs to Wiki
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clone Wiki
+        run: |
+          git clone "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git" wiki
+
+      - name: Sync files from docs to wiki
+        run: |
+          rsync -av --delete \
+            --exclude '.nojekyll' \
+            --exclude '.DS_Store' \
+            --exclude 'Thumbs.db' \
+            docs/ wiki/
+          # Page d'accueil du Wiki = Home.md
+          if [ -f docs/index.md ]; then
+            cp docs/index.md wiki/Home.md
+          fi
+          # TOC/Footers optionnels
+          if [ -f docs/_Sidebar.md ]; then
+            cp docs/_Sidebar.md wiki/_Sidebar.md
+          fi
+          if [ -f docs/_Footer.md ]; then
+            cp docs/_Footer.md wiki/_Footer.md
+          fi
+
+      - name: Commit & push if changes
+        working-directory: wiki
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "Sync docs → wiki from $GITHUB_REF @ $GITHUB_SHA"
+            git push
+          else
+            echo "No changes."
+          fi
+

@@ -7,6 +7,7 @@
 .gitattributes
 composer.json
 composer.lock
+composer.phar
 phpunit.xml
 phpunit.xml.dist
 .phpunit.cache/
@@ -17,6 +18,9 @@ docs/
 *.md
 !README.md
 !readme.txt
+
+# WordPress.org assets (déployés séparément vers SVN assets/)
+.wordpress-org/
 
 # IDE files
 .vscode/

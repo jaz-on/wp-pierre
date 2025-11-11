@@ -11,7 +11,8 @@
         }
     ],
     "require": {
-        "php": ">=8.3"
+        "php": ">=8.3",
+        "defuse/php-encryption": "^2.4"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0",
@@ -22,11 +23,6 @@
     "autoload": {
         "psr-4": {
             "Pierre\\": "src/Pierre/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Pierre\\Tests\\": "tests/"
         }
     },
     "scripts": {

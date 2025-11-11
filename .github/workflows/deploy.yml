@@ -1,0 +1,80 @@
+name: Deploy to WordPress.org
+
+# ⚠️ WORKFLOW DÉSACTIVÉ - Le plugin n'est pas encore accepté sur WordPress.org
+# Pour activer ce workflow une fois le plugin accepté :
+# 1. Créer les secrets GitHub : SVN_USERNAME et SVN_PASSWORD
+# 2. Décommenter la condition `if` dans le job deploy
+# 3. Supprimer cette section de commentaires
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    # ⚠️ DÉSACTIVÉ : Décommenter cette condition une fois le plugin accepté sur WordPress.org
+    # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer
+      
+      - name: Install Composer dependencies (production)
+        run: |
+          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+      
+      - name: Verify .wordpress-org assets exist
+        run: |
+          if [ ! -d ".wordpress-org" ]; then
+            echo "❌ Error: .wordpress-org/ directory not found"
+            exit 1
+          fi
+          if [ ! -f ".wordpress-org/icon-128x128.png" ] || [ ! -f ".wordpress-org/icon-256x256.png" ] || [ ! -f ".wordpress-org/icon.svg" ]; then
+            echo "❌ Error: Required icons missing in .wordpress-org/"
+            exit 1
+          fi
+          echo "✅ Assets verified"
+      
+      - name: Deploy to WordPress.org
+        id: deploy
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        with:
+          generate-zip: true
+          # dry-run: true  # Décommenter pour tester sans commit SVN
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          # SLUG: wp-pierre  # Optionnel, par défaut = nom du repo
+          # VERSION: ${{ github.ref_name }}  # Optionnel, par défaut = nom du tag
+          # ASSETS_DIR: .wordpress-org  # Optionnel, par défaut = .wordpress-org
+      
+      - name: Display deployment info
+        if: success()
+        run: |
+          echo "✅ Deployment successful!"
+          echo "Tag: ${{ github.ref_name }}"
+          echo "SVN URL: https://plugins.svn.wordpress.org/wp-pierre/"
+          if [ -n "${{ steps.deploy.outputs.zip-path }}" ]; then
+            echo "ZIP generated: ${{ steps.deploy.outputs.zip-path }}"
+          fi
+      
+      # Optionnel : Attacher le ZIP à la release GitHub
+      # - name: Create GitHub Release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     files: ${{ steps.deploy.outputs.zip-path }}
+      #     draft: false
+      #     prerelease: false
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

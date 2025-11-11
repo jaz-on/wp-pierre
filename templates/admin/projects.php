@@ -42,7 +42,7 @@ sort($active_locales);
             <p><strong><?php echo esc_html__('No locales configured yet.', 'wp-pierre'); ?></strong></p>
             <p><?php echo esc_html__('Add locales from Settings > Locales Discovery, then return here to add projects.', 'wp-pierre'); ?></p>
             <p>
-                <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-settings#discovery')); ?>" class="button button-primary">
+                <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-settings&tab=discovery')); ?>" class="button button-primary">
                     <?php echo esc_html__('Open Locales Discovery →', 'wp-pierre'); ?>
                 </a>
             </p>

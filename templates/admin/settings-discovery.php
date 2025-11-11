@@ -85,7 +85,7 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
             <?php if (empty($cached_list)) : ?>
                 <div class="notice notice-info"><p>
                     <?php echo esc_html__('No cached locales available. Go to General → “Global Locales Discovery Settings” to fetch and schedule refreshes.', 'wp-pierre'); ?>
-                    <a class="button pierre-ml-8" href="<?php echo esc_url( admin_url('admin.php?page=pierre-settings#general') ); ?>"><?php echo esc_html__('Open General settings', 'wp-pierre'); ?></a>
+                    <a class="button pierre-ml-8" href="<?php echo esc_url( admin_url('admin.php?page=pierre-settings&tab=general') ); ?>"><?php echo esc_html__('Open General settings', 'wp-pierre'); ?></a>
                 </p></div>
             <?php endif; ?>
         </div>

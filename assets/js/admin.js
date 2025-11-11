@@ -573,6 +573,7 @@
     (function() {
         const slackForm = document.getElementById('pierre-slack-settings');
         const testBtn = document.getElementById('pierre-test-slack');
+        const testBtnInline = document.getElementById('pierre-test-slack-inline');
         const previewBtn = document.getElementById('pierre-preview-slack');
         const previewBox = document.getElementById('pierre-slack-preview');
         const globalUrlInput = document.getElementById('global_webhook_url');

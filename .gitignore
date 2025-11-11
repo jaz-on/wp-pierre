@@ -76,3 +76,4 @@ Thumbs.db
 
 # Composer binary
 composer.phar
+docs/assets/.gitkeep

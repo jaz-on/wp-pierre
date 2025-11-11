@@ -15,7 +15,8 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
 $locale_code = $data['locale_code'] ?? '';
 $locale_label = $data['locale_label'] ?? $locale_code;
 $projects = $data['projects'] ?? [];
-$slack_webhook = $data['slack_webhook'] ?? '';
+$raw_slack_webhook = $data['slack_webhook'] ?? '';
+$slack_webhook = !empty($raw_slack_webhook) ? pierre_decrypt_webhook($raw_slack_webhook) : '';
 $stats = $data['stats'] ?? [];
 $current_tab = sanitize_key(wp_unslash($_GET['tab'] ?? 'overview'));
 $base_url = admin_url('admin.php?page=pierre-locale-view&locale=' . esc_attr($locale_code));
@@ -130,13 +131,21 @@ $base_url = admin_url('admin.php?page=pierre-locale-view&locale=' . esc_attr($lo
     <?php elseif ($current_tab === 'notifications'): ?>
         <div class="pierre-card" style="margin-top: 20px;">
             <h2><?php echo esc_html__('Locale Slack WebHook', 'wp-pierre'); ?></h2>
-            <?php $lw = $data['locale_webhook'] ?? []; $lw_types = $lw['types'] ?? ['new_strings','completion_update','needs_attention','milestone']; $lwd = $lw['digest'] ?? []; ?>
+            <?php 
+            $lw = $data['locale_webhook'] ?? []; 
+            $lw_types = $lw['types'] ?? ['new_strings','completion_update','needs_attention','milestone']; 
+            $lwd = $lw['digest'] ?? [];
+            // Decrypt locale webhook URL if present
+            $raw_lw_webhook = $lw['webhook_url'] ?? '';
+            $lw_webhook = !empty($raw_lw_webhook) ? pierre_decrypt_webhook($raw_lw_webhook) : '';
+            $display_webhook = !empty($lw_webhook) ? $lw_webhook : $slack_webhook;
+            ?>
             <form id="pierre-locale-webhook-form" class="pierre-form-compact">
                 <input type="hidden" name="locale_code" value="<?php echo esc_attr($locale_code); ?>" />
                 <div class="pierre-form-group">
                     <label for="locale_webhook_url"><?php echo esc_html__('Webhook URL (this locale)', 'wp-pierre'); ?></label>
                     <input type="url" id="locale_webhook_url" name="locale_webhook_url" class="regular-text" 
-                        value="<?php echo esc_attr($lw['webhook_url'] ?? $slack_webhook); ?>"
+                        value="<?php echo esc_attr($display_webhook); ?>"
                         placeholder="https://hooks.slack.com/services/..." />
                 </div>
                 <div class="pierre-form-group">

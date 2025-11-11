@@ -232,6 +232,13 @@ if (!function_exists('esc_url')) {
     }
 }
 
+if (!function_exists('wp_salt')) {
+    function wp_salt($scheme = 'auth') {
+        // Pierre provides deterministic salts for tests! 🪨
+        return 'pierre_test_salt_' . $scheme;
+    }
+}
+
 if (!function_exists('wp_verify_nonce')) {
     function wp_verify_nonce($nonce, $action = -1) {
         return true; // Pierre trusts nonces in tests! 🪨

@@ -169,33 +169,67 @@ function pierre_get_cache_stats(): array {
  * @return int Number of cache entries flushed
  */
 function pierre_flush_all_cache(): int {
-    global $wpdb;
+    // Try to use CacheManager if available (preferred method)
+    if (class_exists('\Pierre\Performance\CacheManager')) {
+        try {
+            $cache_manager = new \Pierre\Performance\CacheManager();
+            $flushed = $cache_manager->flush_all_plugin_groups();
+            do_action('wp_pierre_debug', 'Flushed all plugin cache groups via CacheManager', ['source' => 'performance-config', 'count' => $flushed]);
+            return $flushed;
+        } catch (\Exception $e) {
+            do_action('wp_pierre_debug', 'CacheManager unavailable, using direct method: ' . $e->getMessage(), ['source' => 'performance-config']);
+        }
+    }
     
-    try {
-        $cache_entries = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT option_name FROM {$wpdb->options} 
-                 WHERE option_name LIKE %s",
-                '_transient_pierre_%'
-            )
-        );
-        
-        $flushed_count = 0;
-        
-        foreach ($cache_entries as $entry) {
-            $cache_key = str_replace('_transient_', '', $entry->option_name);
-            if (delete_transient($cache_key)) {
+    // Use wp_cache_flush_group if object cache is available
+    if (function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache()) {
+        if (function_exists('wp_cache_flush_group')) {
+            $groups = ['pierre', 'api', 'database', 'surveillance'];
+            $flushed_count = 0;
+            foreach ($groups as $group) {
+                wp_cache_flush_group($group);
                 $flushed_count++;
             }
+            do_action('wp_pierre_debug', 'Flushed object cache groups', ['source' => 'performance-config', 'groups' => $groups, 'count' => $flushed_count]);
+            return $flushed_count;
         }
-        
-        do_action('wp_pierre_debug', 'Flushed cache entries: ' . $flushed_count, ['source' => 'performance-config']);
-        return $flushed_count;
-        
-    } catch (\Exception $e) {
-        do_action('wp_pierre_debug', 'Error flushing cache: ' . $e->getMessage(), ['source' => 'performance-config']);
-        return 0;
+        // Fallback: flush entire cache if group-specific flush not available
+        if (function_exists('wp_cache_flush')) {
+            wp_cache_flush();
+            do_action('wp_pierre_debug', 'Flushed entire object cache (fallback)', ['source' => 'performance-config']);
+            return 1;
+        }
     }
+    
+    // Transient-based fallback - flush all plugin groups
+    global $wpdb;
+    
+    $groups = ['pierre', 'api', 'database', 'surveillance'];
+    $total_flushed = 0;
+    
+    foreach ($groups as $group) {
+        try {
+            $cache_entries = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT option_name FROM {$wpdb->options} 
+                     WHERE option_name LIKE %s",
+                    '_transient_' . $group . '_%'
+                )
+            );
+            
+            foreach ($cache_entries as $entry) {
+                $cache_key = str_replace('_transient_', '', $entry->option_name);
+                if (delete_transient($cache_key)) {
+                    $total_flushed++;
+                }
+            }
+        } catch (\Exception $e) {
+            do_action('wp_pierre_debug', 'Error flushing cache group: ' . $group . ' - ' . $e->getMessage(), ['source' => 'performance-config']);
+        }
+    }
+    
+    do_action('wp_pierre_debug', 'Flushed cache entries via transients', ['source' => 'performance-config', 'count' => $total_flushed]);
+    return $total_flushed;
 }
 
 /**

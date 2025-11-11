@@ -11,12 +11,15 @@
 
 namespace Pierre\Performance;
 
+use Pierre\Traits\StatusTrait;
+
 /**
  * Performance Optimizer class - Pierre's speed booster! 🪨
  * 
  * @since 1.0.0
  */
 class PerformanceOptimizer {
+    use StatusTrait;
     
     /**
      * Pierre's cache timeout for API responses! 🪨
@@ -47,6 +50,39 @@ class PerformanceOptimizer {
     private const BATCH_SIZE = 10;
     
     /**
+     * Pierre optimizes requests with intelligent caching! 🪨
+     * 
+     * Unified method for caching API requests and database queries.
+     * 
+     * @since 1.0.0
+     * @param string $cache_key Cache key for the request
+     * @param callable $callback Function to call if cache miss
+     * @param int $timeout Cache timeout in seconds
+     * @param string $type Request type ('api' or 'db') for logging
+     * @return mixed Cached or fresh data
+     */
+    private function cached_request(string $cache_key, callable $callback, int $timeout, string $type = 'request'): mixed {
+        // Pierre checks his cache first! 🪨
+        $cached_data = get_transient($cache_key);
+        
+        if ($cached_data !== false) {
+            do_action('wp_pierre_debug', "Cache hit ({$type}): {$cache_key}", ['source' => 'PerformanceOptimizer']);
+            return $cached_data;
+        }
+        
+        // Pierre executes the callback! 🪨
+        $fresh_data = $callback();
+        
+        if ($fresh_data !== null) {
+            // Pierre caches the fresh data! 🪨
+            set_transient($cache_key, $fresh_data, $timeout);
+            do_action('wp_pierre_debug', "Cache set ({$type}): {$cache_key}", ['source' => 'PerformanceOptimizer']);
+        }
+        
+        return $fresh_data;
+    }
+    
+    /**
      * Pierre optimizes API requests with intelligent caching! 🪨
      * 
      * @since 1.0.0
@@ -56,24 +92,7 @@ class PerformanceOptimizer {
      * @return mixed Cached or fresh data
      */
     public function cached_api_request(string $cache_key, callable $api_callback, int $timeout = self::API_CACHE_TIMEOUT): mixed {
-        // Pierre checks his cache first! 🪨
-        $cached_data = get_transient($cache_key);
-        
-        if ($cached_data !== false) {
-            do_action('wp_pierre_debug', 'Cache hit (API): ' . $cache_key, ['source' => 'PerformanceOptimizer']);
-            return $cached_data;
-        }
-        
-        // Pierre makes the API request! 🪨
-        $fresh_data = $api_callback();
-        
-        if ($fresh_data !== null) {
-            // Pierre caches the fresh data! 🪨
-            set_transient($cache_key, $fresh_data, $timeout);
-            do_action('wp_pierre_debug', 'Cache set (API): ' . $cache_key, ['source' => 'PerformanceOptimizer']);
-        }
-        
-        return $fresh_data;
+        return $this->cached_request($cache_key, $api_callback, $timeout, 'API');
     }
     
     /**
@@ -86,24 +105,7 @@ class PerformanceOptimizer {
      * @return mixed Cached or fresh query results
      */
     public function cached_db_query(string $cache_key, callable $query_callback, int $timeout = self::DB_CACHE_TIMEOUT): mixed {
-        // Pierre checks his cache first! 🪨
-        $cached_data = get_transient($cache_key);
-        
-        if ($cached_data !== false) {
-            do_action('wp_pierre_debug', 'Cache hit (DB): ' . $cache_key, ['source' => 'PerformanceOptimizer']);
-            return $cached_data;
-        }
-        
-        // Pierre executes the query! 🪨
-        $fresh_data = $query_callback();
-        
-        if ($fresh_data !== null) {
-            // Pierre caches the fresh data! 🪨
-            set_transient($cache_key, $fresh_data, $timeout);
-            do_action('wp_pierre_debug', 'Cache set (DB): ' . $cache_key, ['source' => 'PerformanceOptimizer']);
-        }
-        
-        return $fresh_data;
+        return $this->cached_request($cache_key, $query_callback, $timeout, 'DB');
     }
     
     /**
@@ -154,38 +156,6 @@ class PerformanceOptimizer {
     }
     
     /**
-     * Pierre optimizes database queries with prepared statements! 🪨
-     * 
-     * @since 1.0.0
-     * @param string $query SQL query with placeholders
-     * @param array $params Query parameters
-     * @return array Query results
-     */
-    public function optimized_query(string $query, array $params = []): array {
-        global $wpdb;
-        
-        try {
-            if (empty($params)) {
-                $results = $wpdb->get_results($query);
-            } else {
-                $prepared_query = $wpdb->prepare($query, $params);
-                $results = $wpdb->get_results($prepared_query);
-            }
-            
-            if ($wpdb->last_error) {
-                do_action('wp_pierre_debug', 'DB error: ' . $wpdb->last_error, ['source' => 'PerformanceOptimizer']);
-                return [];
-            }
-            
-            return $results ?: [];
-            
-        } catch (\Exception $e) {
-            do_action('wp_pierre_debug', 'Query exception: ' . $e->getMessage(), ['source' => 'PerformanceOptimizer']);
-            return [];
-        }
-    }
-    
-    /**
      * Pierre flushes specific cache entries! 🪨
      * 
      * @since 1.0.0
@@ -230,9 +200,42 @@ class PerformanceOptimizer {
      * @return int Total number of cache entries flushed
      */
     public function flush_all_cache(): int {
+        // Try to use CacheManager if available (preferred method)
+        if (class_exists('\Pierre\Performance\CacheManager')) {
+            try {
+                $cache_manager = new \Pierre\Performance\CacheManager();
+                $flushed = $cache_manager->flush_all_plugin_groups();
+                do_action('wp_pierre_debug', 'Flushed all plugin cache groups via CacheManager', ['source' => 'PerformanceOptimizer', 'count' => $flushed]);
+                return $flushed;
+            } catch (\Exception $e) {
+                do_action('wp_pierre_debug', 'CacheManager unavailable, using direct method: ' . $e->getMessage(), ['source' => 'PerformanceOptimizer']);
+            }
+        }
+        
+        // Use wp_cache_flush_group if object cache is available
+        if (function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache()) {
+            if (function_exists('wp_cache_flush_group')) {
+                $groups = ['pierre', 'api', 'database', 'surveillance'];
+                $flushed_count = 0;
+                foreach ($groups as $group) {
+                    wp_cache_flush_group($group);
+                    $flushed_count++;
+                }
+                do_action('wp_pierre_debug', 'Flushed object cache groups', ['source' => 'PerformanceOptimizer', 'groups' => $groups, 'count' => $flushed_count]);
+                return $flushed_count;
+            }
+        }
+        
+        // Fallback: use transient patterns
         $patterns = [
             '_transient_pierre_%',
-            '_transient_timeout_pierre_%'
+            '_transient_timeout_pierre_%',
+            '_transient_api_%',
+            '_transient_timeout_api_%',
+            '_transient_database_%',
+            '_transient_timeout_database_%',
+            '_transient_surveillance_%',
+            '_transient_timeout_surveillance_%',
         ];
         
         $total_flushed = 0;
@@ -282,18 +285,27 @@ class PerformanceOptimizer {
     }
     
     /**
-     * Pierre gets his performance status! 🪨
-     * 
+     * Get status message.
+     *
      * @since 1.0.0
-     * @return array Performance status information
+     * @return string Status message
      */
-    public function get_status(): array {
+    protected function get_status_message(): string {
+        return 'Pierre\'s performance optimizer is active! 🪨';
+    }
+
+    /**
+     * Get status details.
+     *
+     * @since 1.0.0
+     * @return array Status details
+     */
+    protected function get_status_details(): array {
         return [
             'cache_enabled' => true,
             'batch_processing_enabled' => true,
             'query_optimization_enabled' => true,
             'memory_stats' => $this->get_memory_stats(),
-            'message' => 'Pierre\'s performance optimizer is active! 🪨'
         ];
     }
 }

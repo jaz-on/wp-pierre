@@ -1,6 +1,6 @@
 <div align="center">
 
-# Pierre 🪨 WordPress Translation Monitor
+# Pierre - WordPress Translation Monitor 🪨
 
 [![CI](https://github.com/jaz-on/wp-pierre/actions/workflows/ci.yml/badge.svg)](https://github.com/jaz-on/wp-pierre/actions/workflows/ci.yml)
 [![Tests](https://github.com/jaz-on/wp-pierre/actions/workflows/tests.yml/badge.svg)](https://github.com/jaz-on/wp-pierre/actions/workflows/tests.yml)

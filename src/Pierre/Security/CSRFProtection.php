@@ -12,6 +12,9 @@
 
 namespace Pierre\Security;
 
+use Pierre\Traits\StatusTrait;
+use Pierre\Helpers\ErrorHelper;
+
 // Pierre imports WordPress functions! 🪨
 use function __;
 use function _e;
@@ -44,6 +47,7 @@ use const MINUTE_IN_SECONDS;
  * @since 1.0.0
  */
 class CSRFProtection {
+    use StatusTrait;
     
     /**
      * Pierre's CSRF token lifetime! 🪨
@@ -82,7 +86,7 @@ class CSRFProtection {
             if (!$nonce_valid) {
                 return [
                     'valid' => false,
-                    'message' => __('Pierre says: Invalid nonce! CSRF attack detected!', 'wp-pierre') . ' 😢',
+                    'message' => ErrorHelper::format_error_message( __('Invalid nonce! CSRF attack detected!', 'wp-pierre') ),
                     'action' => 'log_security_event'
                 ];
             }
@@ -93,7 +97,7 @@ class CSRFProtection {
                 if (!$referrer_valid) {
                     return [
                         'valid' => false,
-                        'message' => __('Pierre says: Invalid referrer! CSRF attack detected!', 'wp-pierre') . ' 😢',
+                        'message' => ErrorHelper::format_error_message( __('Invalid referrer! CSRF attack detected!', 'wp-pierre') ),
                         'action' => 'log_security_event'
                     ];
                 }
@@ -105,7 +109,7 @@ class CSRFProtection {
                 if (!$rate_limit_valid) {
                     return [
                         'valid' => false,
-                        'message' => __('Pierre says: Rate limit exceeded! Too many requests!', 'wp-pierre') . ' 😢',
+                        'message' => ErrorHelper::format_error_message( __('Rate limit exceeded! Too many requests!', 'wp-pierre') ),
                         'action' => 'rate_limit_exceeded'
                     ];
                 }
@@ -117,7 +121,7 @@ class CSRFProtection {
                 if (!$capability_valid) {
                     return [
                         'valid' => false,
-                        'message' => __('Pierre says: Insufficient permissions!', 'wp-pierre') . ' 😢',
+                        'message' => ErrorHelper::format_error_message( __('Insufficient permissions!', 'wp-pierre') ),
                         'action' => 'log_security_event'
                     ];
                 }
@@ -141,7 +145,7 @@ class CSRFProtection {
             do_action('wp_pierre_debug', 'CSRF validation error: ' . $e->getMessage(), ['source' => 'CSRFProtection']);
             return [
                 'valid' => false,
-                'message' => __('Pierre says: CSRF validation error!', 'wp-pierre') . ' 😢',
+                'message' => ErrorHelper::format_error_message( __('CSRF validation error!', 'wp-pierre') ),
                 'action' => 'log_security_event'
             ];
         }
@@ -307,7 +311,7 @@ class CSRFProtection {
             if (!$token_data || !isset($token_data['action'], $token_data['user_id'], $token_data['timestamp'])) {
                 return [
                     'valid' => false,
-                    'message' => __('Pierre says: Invalid token format!', 'wp-pierre') . ' 😢'
+                    'message' => ErrorHelper::format_error_message( __('Invalid token format!', 'wp-pierre') )
                 ];
             }
             
@@ -315,7 +319,7 @@ class CSRFProtection {
             if ($token_data['action'] !== $expected_action) {
                 return [
                     'valid' => false,
-                    'message' => __('Pierre says: Token action mismatch!', 'wp-pierre') . ' 😢'
+                    'message' => ErrorHelper::format_error_message( __('Token action mismatch!', 'wp-pierre') )
                 ];
             }
             
@@ -323,7 +327,7 @@ class CSRFProtection {
             if (time() - $token_data['timestamp'] > self::TOKEN_LIFETIME) {
                 return [
                     'valid' => false,
-                    'message' => __('Pierre says: Token expired!', 'wp-pierre') . ' 😢'
+                    'message' => ErrorHelper::format_error_message( __('Token expired!', 'wp-pierre') )
                 ];
             }
             
@@ -334,7 +338,7 @@ class CSRFProtection {
             if (!$stored_data) {
                 return [
                     'valid' => false,
-                    'message' => __('Pierre says: Token not found or expired!', 'wp-pierre') . ' 😢'
+                    'message' => ErrorHelper::format_error_message( __('Token not found or expired!', 'wp-pierre') )
                 ];
             }
             
@@ -351,7 +355,7 @@ class CSRFProtection {
             do_action('wp_pierre_debug', 'Token validation error: ' . $e->getMessage(), ['source' => 'CSRFProtection']);
             return [
                 'valid' => false,
-                'message' => __('Pierre says: Token validation error!', 'wp-pierre') . ' 😢'
+                'message' => ErrorHelper::format_error_message( __('Token validation error!', 'wp-pierre') )
             ];
         }
     }
@@ -408,12 +412,22 @@ class CSRFProtection {
     }
     
     /**
-     * Pierre gets his CSRF protection status! 🪨
-     * 
+     * Get status message.
+     *
      * @since 1.0.0
-     * @return array CSRF protection status
+     * @return string Status message
      */
-    public function get_status(): array {
+    protected function get_status_message(): string {
+        return 'Pierre\'s CSRF protection is active! 🪨';
+    }
+
+    /**
+     * Get status details.
+     *
+     * @since 1.0.0
+     * @return array Status details
+     */
+    protected function get_status_details(): array {
         return [
             'csrf_protection_enabled' => true,
             'nonce_verification_active' => true,
@@ -421,7 +435,6 @@ class CSRFProtection {
             'rate_limiting_active' => true,
             'secure_tokens_enabled' => true,
             'security_logging_active' => true,
-            'message' => 'Pierre\'s CSRF protection is active! 🪨'
         ];
     }
 }

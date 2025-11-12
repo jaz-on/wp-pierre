@@ -14,14 +14,25 @@ class TeamRepository {
     private string $table;
 
 	/** @var string */
-	private string $cache_group = 'wp-pierre';
+	private string $cache_group = 'pierre';
 
     public function __construct() {
         global $wpdb;
         $this->table = $wpdb->prefix . 'pierre_user_projects';
     }
 
-    /** Create assignment */
+    /**
+     * Assign a user to a project/locale with a specific role.
+     *
+     * @since 1.0.0
+     * @param int    $user_id      WordPress user ID.
+     * @param string $project_type Project type (plugin, theme, meta, app).
+     * @param string $project_slug Project slug identifier.
+     * @param string $locale_code  Locale code (e.g., 'fr_FR').
+     * @param string $role         User role (locale_manager, gte, pte, contributor, validator).
+     * @param int    $assigned_by  User ID who created this assignment.
+     * @return bool True on success, false on failure.
+     */
     public function assign_user_to_project(
         int $user_id,
         string $project_type,
@@ -55,7 +66,15 @@ class TeamRepository {
         return $ok;
     }
 
-    /** Check existence (active) */
+    /**
+     * Check if an active assignment exists for a user/project/locale combination.
+     *
+     * @since 1.0.0
+     * @param int    $user_id     WordPress user ID.
+     * @param string $project_slug Project slug identifier.
+     * @param string $locale_code Locale code (e.g., 'fr_FR').
+     * @return bool True if active assignment exists, false otherwise.
+     */
     public function assignment_exists( int $user_id, string $project_slug, string $locale_code ): bool {
         global $wpdb;
         $sql = "SELECT id FROM {$this->table}
@@ -65,7 +84,15 @@ class TeamRepository {
         return ! empty( $id );
     }
 
-    /** Remove (soft deactivate) */
+    /**
+     * Remove a user assignment by soft-deactivating it (sets is_active to 0).
+     *
+     * @since 1.0.0
+     * @param int    $user_id     WordPress user ID.
+     * @param string $project_slug Project slug identifier.
+     * @param string $locale_code Locale code (e.g., 'fr_FR').
+     * @return bool True on success, false on failure.
+     */
     public function remove_user_from_project( int $user_id, string $project_slug, string $locale_code ): bool {
         global $wpdb;
         $ok = (bool) $wpdb->update(
@@ -88,7 +115,13 @@ class TeamRepository {
         return $ok;
     }
 
-    /** Get all active assignments for user */
+    /**
+     * Get all active assignments for a specific user.
+     *
+     * @since 1.0.0
+     * @param int $user_id WordPress user ID.
+     * @return array Array of assignment rows with keys: id, user_id, project_type, project_slug, locale_code, role, assigned_by, assigned_at, is_active.
+     */
     public function get_user_assignments( int $user_id ): array {
         // Try runtime/persistent cache first
         $cache_key = 'user_assignments_' . $user_id;
@@ -106,7 +139,14 @@ class TeamRepository {
         return $rows;
     }
 
-    /** Get all active assignments for project/locale */
+    /**
+     * Get all active assignments for a specific project/locale combination.
+     *
+     * @since 1.0.0
+     * @param string $project_slug Project slug identifier.
+     * @param string $locale_code  Locale code (e.g., 'fr_FR').
+     * @return array Array of assignment rows with keys: id, user_id, project_type, project_slug, locale_code, role, assigned_by, assigned_at, is_active.
+     */
     public function get_project_assignments( string $project_slug, string $locale_code ): array {
         // Try cache first
         $cache_key = 'project_assignments_' . $project_slug . '_' . $locale_code;
@@ -123,7 +163,12 @@ class TeamRepository {
         return $rows;
     }
 
-    /** Get all active assignments */
+    /**
+     * Get all active assignments across all users, projects, and locales.
+     *
+     * @since 1.0.0
+     * @return array Array of assignment rows with keys: id, user_id, project_type, project_slug, locale_code, role, assigned_by, assigned_at, is_active.
+     */
     public function get_all_assignments(): array {
         // Try cache first
         $cache_key = 'all_assignments_active';
@@ -133,17 +178,24 @@ class TeamRepository {
         }
 
         global $wpdb;
-        $sql = "SELECT * FROM {$this->table} WHERE is_active = 1 ORDER BY assigned_at DESC";
+        $table = esc_sql($this->table);
+        $sql = "SELECT * FROM {$table} WHERE is_active = 1 ORDER BY assigned_at DESC";
         $rows = $wpdb->get_results( $sql, ARRAY_A );
         $rows = is_array( $rows ) ? $rows : [];
         wp_cache_set($cache_key, $rows, $this->cache_group);
         return $rows;
     }
 
-    /** Hard clear (admin) */
+    /**
+     * Hard delete all assignments from the database (admin operation).
+     *
+     * @since 1.0.0
+     * @return bool True on success, false on failure.
+     */
     public function clear_all(): bool {
         global $wpdb;
-        $ok = (bool) $wpdb->query( "DELETE FROM {$this->table}" );
+        $table = esc_sql($this->table);
+        $ok = (bool) $wpdb->query( "DELETE FROM {$table}" );
         if ($ok) {
             // Best-effort: flush group if supported, else do nothing
             if (function_exists('wp_cache_flush_group')) {

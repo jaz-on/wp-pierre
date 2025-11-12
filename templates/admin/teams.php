@@ -246,6 +246,13 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
 
     <div class="pierre-card">
             <h2><?php echo esc_html__('Roles & Capabilities', 'wp-pierre'); ?></h2>
+            <p class="description">
+                <?php echo esc_html__('This section displays all Pierre roles and capabilities. For detailed documentation, see the', 'wp-pierre'); ?>
+                <a href="https://github.com/jaz-on/wp-pierre/wiki/Capabilities" target="_blank" rel="noopener noreferrer">
+                    <?php echo esc_html__('Capabilities Documentation', 'wp-pierre'); ?>
+                </a>
+                <?php echo esc_html__('in the wiki.', 'wp-pierre'); ?>
+            </p>
             <div class="pierre-grid" style="grid-template-columns: 1fr 1fr; gap:16px;">
                 <div>
                     <h3 style="margin-top:0;"><?php echo esc_html__('Pierre Roles', 'wp-pierre'); ?></h3>
@@ -260,7 +267,7 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
                             <?php if (!empty($data['roles'])): ?>
                                 <?php foreach ($data['roles'] as $key => $label): ?>
                                 <tr>
-                                    <td><?php echo esc_html($key); ?></td>
+                                    <td><strong><?php echo esc_html($key); ?></strong></td>
                                     <td><?php echo esc_html($label); ?></td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -278,18 +285,34 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
                         <thead>
                             <tr>
                                 <th scope="col" class="manage-column"><?php echo esc_html__('Capability', 'wp-pierre'); ?></th>
+                                <th scope="col" class="manage-column"><?php echo esc_html__('Description', 'wp-pierre'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (!empty($data['capabilities'])): ?>
-                                <?php foreach ($data['capabilities'] as $capability): ?>
+                                <?php foreach ($data['capabilities'] as $cap_name => $cap_info): ?>
                                 <tr>
-                                    <td><code><?php echo esc_html($capability); ?></code></td>
+                                    <td>
+                                        <code><?php echo esc_html($cap_name); ?></code>
+                                        <?php if (is_array($cap_info) && !empty($cap_info['meta_cap'])): ?>
+                                            <span class="description" style="display:block;margin-top:4px;">
+                                                <em><?php echo esc_html__('(Meta capability)', 'wp-pierre'); ?></em>
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        $description = is_array($cap_info) && isset($cap_info['description']) 
+                                            ? $cap_info['description'] 
+                                            : (is_string($cap_info) ? $cap_info : '');
+                                        echo esc_html($description); 
+                                        ?>
+                                    </td>
                                 </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr class="no-items">
-                                    <td class="colspanchange" colspan="1"><?php echo esc_html__('No capabilities found.', 'wp-pierre'); ?></td>
+                                    <td class="colspanchange" colspan="2"><?php echo esc_html__('No capabilities found.', 'wp-pierre'); ?></td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>

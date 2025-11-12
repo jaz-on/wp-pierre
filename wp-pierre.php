@@ -87,6 +87,11 @@ add_action('plugins_loaded', function() {
     pierre()->init();
 });
 
+// Invalidate encryption key cache when the key is updated
+add_action('update_option_pierre_encryption_key', function() {
+    wp_cache_delete('pierre_defuse_encryption_key', 'pierre_encryption');
+}, 10, 2);
+
 // Add "Settings" link on the plugin row
 add_filter('plugin_action_links_' . PIERRE_PLUGIN_BASENAME, function(array $links): array {
     $url = esc_url(admin_url('admin.php?page=pierre-settings'));

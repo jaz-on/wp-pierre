@@ -20,7 +20,7 @@ $locale_stats = $data['locale_stats'] ?? [];
 
 <div class="wrap">
     <h1 class="wp-heading-inline"><?php echo esc_html__('Locales', 'wp-pierre'); ?></h1>
-    <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-settings#discovery')); ?>" class="page-title-action"><?php echo esc_html__('Discover from WP.org', 'wp-pierre'); ?></a>
+    <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-settings&tab=discovery')); ?>" class="page-title-action"><?php echo esc_html__('Discover from WP.org', 'wp-pierre'); ?></a>
     <hr class="wp-header-end">
 
     <?php if (empty($active_locales)): ?>
@@ -28,7 +28,7 @@ $locale_stats = $data['locale_stats'] ?? [];
             <p><strong><?php echo esc_html__('No locales configured yet.', 'wp-pierre'); ?></strong></p>
             <p><?php echo esc_html__('Add locales from Settings > Locales Discovery. You can add projects after locales exist.', 'wp-pierre'); ?></p>
             <p>
-                <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-settings#discovery')); ?>" class="button button-primary"><?php echo esc_html__('Open Locales Discovery →', 'wp-pierre'); ?></a>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-settings&tab=discovery')); ?>" class="button button-primary"><?php echo esc_html__('Open Locales Discovery →', 'wp-pierre'); ?></a>
             </p>
         </div>
     <?php endif; ?>
@@ -68,10 +68,7 @@ $locale_stats = $data['locale_stats'] ?? [];
                         <input type="checkbox" name="locale[]" value="<?php echo esc_attr($locale); ?>" />
                     </th>
                     <td class="column-locale column-primary">
-                        <strong><?php echo esc_html($label); ?></strong>
-                        <div class="row-actions">
-                            <span class="manage"><a href="<?php echo esc_url($manage_url); ?>"><?php echo esc_html__('Manage', 'wp-pierre'); ?></a></span>
-                        </div>
+                        <strong><a href="<?php echo esc_url($manage_url); ?>"><?php echo esc_html($label); ?></a></strong>
                     </td>
                     <td class="column-projects">
                         <?php echo esc_html($stats['projects_count']); ?>
@@ -91,7 +88,7 @@ $locale_stats = $data['locale_stats'] ?? [];
                 <tr class="no-items">
                     <td class="colspanchange" colspan="6">
                         <?php echo esc_html__('No active locales found.', 'wp-pierre'); ?>
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-settings#discovery')); ?>"><?php echo esc_html__('Add your first locale from Settings', 'wp-pierre'); ?></a>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=pierre-settings&tab=discovery')); ?>"><?php echo esc_html__('Add your first locale from Settings', 'wp-pierre'); ?></a>
                     </td>
                 </tr>
             <?php endif; ?>

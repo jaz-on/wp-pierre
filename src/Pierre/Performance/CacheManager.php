@@ -11,19 +11,22 @@
 
 namespace Pierre\Performance;
 
+use Pierre\Traits\StatusTrait;
+
 /**
  * Cache Manager class - Pierre's caching system! 🪨
  * 
  * @since 1.0.0
  */
 class CacheManager {
+    use StatusTrait;
     
     /**
      * Pierre's cache group prefix! 🪨
      * 
      * @var string
      */
-    private const CACHE_GROUP = 'wp_pierre';
+    private const CACHE_GROUP = 'pierre';
     
     /**
      * Pierre's default cache timeout! 🪨
@@ -172,6 +175,38 @@ class CacheManager {
      */
     public function flush_all(): int {
         return $this->flush_group(self::CACHE_GROUP);
+    }
+    
+    /**
+     * Pierre flushes all plugin cache groups! 🪨
+     * 
+     * Invalidates all cache groups used by the plugin:
+     * - Main group: 'pierre'
+     * - Sub-groups: 'api', 'database', 'surveillance'
+     * 
+     * @since 1.0.0
+     * @return int Total number of cache groups flushed
+     */
+    public function flush_all_plugin_groups(): int {
+        $groups = [
+            self::CACHE_GROUP, // 'pierre'
+            'api',
+            'database',
+            'surveillance',
+        ];
+        
+        $flushed_count = 0;
+        foreach ($groups as $group) {
+            try {
+                $this->flush_group($group);
+                $flushed_count++;
+            } catch (\Exception $e) {
+                do_action('wp_pierre_debug', 'Error flushing cache group: ' . $group . ' - ' . $e->getMessage(), ['source' => 'CacheManager']);
+            }
+        }
+        
+        do_action('wp_pierre_debug', 'Flushed all plugin cache groups', ['source' => 'CacheManager', 'count' => $flushed_count]);
+        return $flushed_count;
     }
     
     /**
@@ -341,17 +376,26 @@ class CacheManager {
     }
     
     /**
-     * Pierre gets his cache manager status! 🪨
-     * 
+     * Get status message.
+     *
      * @since 1.0.0
-     * @return array Cache manager status
+     * @return string Status message
      */
-    public function get_status(): array {
+    protected function get_status_message(): string {
+        return 'Pierre\'s cache manager is active! 🪨';
+    }
+
+    /**
+     * Get status details.
+     *
+     * @since 1.0.0
+     * @return array Status details
+     */
+    protected function get_status_details(): array {
         return [
             'cache_enabled' => true,
             'cache_version' => $this->cache_version,
             'stats' => $this->get_stats(),
-            'message' => 'Pierre\'s cache manager is active! 🪨'
         ];
     }
 }

@@ -11,12 +11,16 @@
 
 namespace Pierre\Surveillance;
 
+use Pierre\Traits\StatusTrait;
+use Pierre\Logging\Logger;
+
 /**
  * Translation Scraper class - Pierre's data collection system! 🪨
  * 
  * @since 1.0.0
  */
 class TranslationScraper {
+    use StatusTrait;
     
     /**
      * Pierre's base API URL - he knows where to look! 🪨
@@ -25,7 +29,14 @@ class TranslationScraper {
      */
     private const API_BASE_URL = 'https://translate.wordpress.org/api/projects';
 
-    // Type → segment mapping (best effort; fallback to 'meta')
+    /**
+     * Type to segment mapping for translate.wordpress.org API.
+     *
+     * Maps project types to their corresponding API segments.
+     * Falls back to 'meta' if type is unknown.
+     *
+     * @var array<string, string>
+     */
     private const TYPE_SEGMENTS = [
         'core'   => 'wp',
         'plugin' => 'wp-plugins',
@@ -48,11 +59,25 @@ class TranslationScraper {
      */
     private const REQUEST_TIMEOUT = 30;
 
-    // Backoff simple en cas d'erreurs API
+    /**
+     * Backoff delay in seconds when API errors occur.
+     *
+     * @var int
+     */
     private const BACKOFF_SECONDS = 300;
 
-    /** Last response metadata for backoff decisions */
+    /**
+     * Last HTTP response code from API request.
+     *
+     * @var int
+     */
     private int $last_response_code = 0;
+
+    /**
+     * Last Retry-After header value from API response (in seconds).
+     *
+     * @var int
+     */
     private int $last_retry_after = 0;
     
     /**
@@ -63,26 +88,38 @@ class TranslationScraper {
      * @param string $locale_code The locale code to check
      * @return array|null Project data or null if failed
      */
-    public function scrape_project_data(string $project_slug, string $locale_code): ?array {
+    public function scrape_project_data(string $project_slug, string $locale_code): array|\WP_Error|null {
         // Backward-compat: route vers type 'meta'
         return $this->scrape_typed_project('meta', $project_slug, $locale_code, 'default');
     }
 
     /**
-     * Scrape typed project (core/plugin/theme/meta/app)
+     * Scrape typed project (core/plugin/theme/meta/app).
+     *
+     * @since 1.0.0
+     * @param string $type        Project type (core, plugin, theme, meta, app).
+     * @param string $project_slug Project slug identifier.
+     * @param string $locale_code  Locale code (e.g., 'fr_FR').
+     * @param string $set          Translation set (default: 'default').
+     * @return array|\WP_Error Project data array on success, WP_Error on failure.
+     * @throws \Exception If API request fails critically.
      */
-    public function scrape_typed_project(string $type, string $project_slug, string $locale_code, string $set = 'default'): ?array {
+    public function scrape_typed_project(string $type, string $project_slug, string $locale_code, string $set = 'default'): array|\WP_Error {
         try {
             if ($this->is_in_backoff()) {
-                error_log('Pierre is in API backoff, skipping request for now. 🪨');
-                return null;
+                Logger::static_debug('Pierre is in API backoff, skipping request for now. 🪨', ['source' => 'TranslationScraper']);
+                return new \WP_Error(
+                    'pierre_backoff',
+                    __('Pierre is in API backoff, skipping request for now.', 'wp-pierre'),
+                    ['type' => $type, 'project_slug' => $project_slug, 'locale_code' => $locale_code]
+                );
             }
 
             [$cache_key, $prev_key] = $this->get_snapshot_keys($type, $project_slug, $locale_code);
 
             $cached_data = get_transient($cache_key);
             if ($cached_data !== false) {
-                error_log("Pierre found cached data for {$type}:{$project_slug} ({$locale_code})! 🪨");
+                Logger::static_debug("Pierre found cached data for {$type}:{$project_slug} ({$locale_code})! 🪨", ['source' => 'TranslationScraper']);
                 return $cached_data;
             }
 
@@ -90,21 +127,36 @@ class TranslationScraper {
             $resolved_type = $this->resolve_segment_for($type, $project_slug, $locale_code, $set) ?? $type;
             // Per-project backoff
             if ($this->is_in_backoff_for($resolved_type, $project_slug)) {
-                return null;
+                return new \WP_Error(
+                    'pierre_project_backoff',
+                    __('Project is in backoff period.', 'wp-pierre'),
+                    ['type' => $resolved_type, 'project_slug' => $project_slug]
+                );
             }
             $api_url = $this->build_typed_api_url($resolved_type, $project_slug, $locale_code, $set);
             $response = $this->make_api_request($api_url);
-            if ($response === null) {
+            if (is_wp_error($response)) {
                 $secs = $this->last_retry_after > 0 ? min($this->last_retry_after, 600) : self::BACKOFF_SECONDS;
                 $this->start_backoff_for($resolved_type, $project_slug, $secs);
-                error_log("Pierre failed to get data for {$type}:{$project_slug} ({$locale_code})! 😢");
-                return null;
+                Logger::static_debug("Pierre failed to get data for {$type}:{$project_slug} ({$locale_code})! 😢", ['source' => 'TranslationScraper']);
+                // Enhance the WP_Error with additional context
+                $response->add_data([
+                    'type' => $resolved_type,
+                    'project_slug' => $project_slug,
+                    'locale_code' => $locale_code,
+                    'response_code' => $this->last_response_code,
+                ]);
+                return $response;
             }
 
             $project_data = $this->process_api_response($response, $project_slug, $locale_code, $type);
             if ($project_data === null) {
-                error_log("Pierre failed to process data for {$type}:{$project_slug} ({$locale_code})! 😢");
-                return null;
+                Logger::static_debug("Pierre failed to process data for {$type}:{$project_slug} ({$locale_code})! 😢", ['source' => 'TranslationScraper']);
+                return new \WP_Error(
+                    'pierre_process_failed',
+                    __('Failed to process API response.', 'wp-pierre'),
+                    ['type' => $type, 'project_slug' => $project_slug, 'locale_code' => $locale_code]
+                );
             }
 
             // Store previous snapshot too (for external deltas if needed)
@@ -112,12 +164,16 @@ class TranslationScraper {
             set_transient($prev_key, $project_data, self::CACHE_TIMEOUT);
             set_transient($cache_key, $project_data, self::CACHE_TIMEOUT);
 
-            error_log("Pierre successfully scraped data for {$type}:{$project_slug} ({$locale_code})! 🪨");
+            Logger::static_debug("Pierre successfully scraped data for {$type}:{$project_slug} ({$locale_code})! 🪨", ['source' => 'TranslationScraper']);
             return $project_data;
 
         } catch (\Exception $e) {
-            error_log("Pierre encountered an error scraping {$type}:{$project_slug} ({$locale_code}): " . $e->getMessage() . ' 😢');
-            return null;
+            Logger::static_error("Pierre encountered an error scraping {$type}:{$project_slug} ({$locale_code}): " . $e->getMessage() . ' 😢', ['source' => 'TranslationScraper']);
+            return new \WP_Error(
+                'pierre_exception',
+                __('An exception occurred while scraping.', 'wp-pierre'),
+                ['message' => $e->getMessage(), 'type' => $type, 'project_slug' => $project_slug, 'locale_code' => $locale_code]
+            );
         }
     }
     
@@ -132,7 +188,7 @@ class TranslationScraper {
         $results = [];
 
         $total = count($projects);
-        error_log('Pierre is scraping ' . $total . ' projects! 🪨');
+        Logger::static_debug('Pierre is scraping ' . $total . ' projects! 🪨', ['source' => 'TranslationScraper']);
 
         $i = 0;
         foreach ($projects as $project) {
@@ -143,19 +199,19 @@ class TranslationScraper {
             $locale = $project['locale'] ?? ($project['locale_code'] ?? null);
             $type = $project['type'] ?? 'meta';
             if (!$slug || !$locale) {
-                error_log('Pierre found invalid project data! 😢');
+                Logger::static_debug('Pierre found invalid project data! 😢', ['source' => 'TranslationScraper']);
                 continue;
             }
 
             $data = $this->scrape_typed_project($type, $slug, $locale, 'default');
-            if ($data !== null) {
+            if (!is_wp_error($data) && $data !== null) {
                 $results[] = $data;
             }
             $i++;
             set_transient('pierre_surv_progress', [ 'processed' => $i, 'total' => $total, 'ts' => time() ], 15 * MINUTE_IN_SECONDS);
         }
 
-        error_log('Pierre scraped ' . count($results) . ' projects successfully! 🪨');
+        Logger::static_debug('Pierre scraped ' . count($results) . ' projects successfully! 🪨', ['source' => 'TranslationScraper']);
         delete_transient('pierre_surv_progress');
         delete_transient('pierre_surv_abort');
         return $results;
@@ -206,9 +262,9 @@ class TranslationScraper {
      * 
      * @since 1.0.0
      * @param string $url The API URL to request
-     * @return array|null Response data or null if failed
+     * @return array|\WP_Error Response data or WP_Error if failed
      */
-    private function make_api_request(string $url): ?array {
+    private function make_api_request(string $url): array|\WP_Error {
         $defaults = \Pierre\Plugin::get_http_defaults();
         $args = [
             'timeout' => $defaults['timeout'] ?? self::REQUEST_TIMEOUT,
@@ -217,16 +273,34 @@ class TranslationScraper {
             'headers' => $defaults['headers'] ?? [ 'Accept' => 'application/json', 'Content-Type' => 'application/json' ],
         ];
 
+        /**
+         * Filter API request arguments before making the request.
+         *
+         * @since 1.0.0
+         * @param array  $args Request arguments.
+         * @param string $url  The API URL being requested.
+         */
+        $args = apply_filters('pierre_api_request_args', $args, $url);
+
         $this->last_response_code = 0;
         $this->last_retry_after = 0;
 
         $t0 = microtime(true);
-        $response = wp_remote_get($url, $args);
+        $response = wp_safe_remote_get($url, $args);
         $ms = (int) round((microtime(true) - $t0) * 1000);
 
         if (is_wp_error($response)) {
             do_action('wp_pierre_debug', 'api_call', ['url'=>$url,'code'=>0,'ms'=>$ms,'error'=>$response->get_error_message(),'source'=>'TranslationScraper']);
-            return null;
+            return new \WP_Error(
+                'pierre_http_error',
+                __('HTTP request failed.', 'wp-pierre'),
+                [
+                    'url' => $url,
+                    'error_code' => $response->get_error_code(),
+                    'error_message' => $response->get_error_message(),
+                    'response_time_ms' => $ms,
+                ]
+            );
         }
 
         $code = (int) wp_remote_retrieve_response_code($response);
@@ -235,7 +309,7 @@ class TranslationScraper {
             // Retry once on server/network errors
             usleep(250000);
             $t1 = microtime(true);
-            $response = wp_remote_get($url, $args);
+            $response = wp_safe_remote_get($url, $args);
             $ms2 = (int) round((microtime(true) - $t1) * 1000);
             $code = (int) wp_remote_retrieve_response_code($response);
             $this->last_response_code = $code;
@@ -249,13 +323,31 @@ class TranslationScraper {
             $this->last_retry_after = is_numeric($ra) ? (int) $ra : 0;
         }
         if ($code !== 200) {
-            return null;
+            $body = wp_remote_retrieve_body($response);
+            return new \WP_Error(
+                'pierre_http_status_error',
+                __('API returned non-200 status code.', 'wp-pierre'),
+                [
+                    'url' => $url,
+                    'status_code' => $code,
+                    'response_time_ms' => $ms,
+                    'response_body' => substr($body, 0, 500), // First 500 chars for debugging
+                ]
+            );
         }
 
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return null;
+            return new \WP_Error(
+                'pierre_json_decode_error',
+                __('Failed to decode JSON response.', 'wp-pierre'),
+                [
+                    'url' => $url,
+                    'json_error' => json_last_error_msg(),
+                    'response_time_ms' => $ms,
+                ]
+            );
         }
         return $data;
     }
@@ -275,9 +367,20 @@ class TranslationScraper {
             $translation_data = $response['translation_sets'][0] ?? null;
             
             if ($translation_data === null) {
-                error_log("Pierre found no translation data for {$project_slug} ({$locale_code})! 😢");
+                Logger::static_debug("Pierre found no translation data for {$project_slug} ({$locale_code})! 😢", ['source' => 'TranslationScraper']);
                 return null;
             }
+            
+            /**
+             * Filter translation data before processing.
+             *
+             * @since 1.0.0
+             * @param array  $translation_data Raw translation data from API.
+             * @param string $project_slug    Project slug.
+             * @param string $locale_code      Locale code.
+             * @param string $project_type    Project type (core/plugin/theme/meta/app).
+             */
+            $translation_data = apply_filters('pierre_translation_data', $translation_data, $project_slug, $locale_code, $project_type);
             
             // Pierre calculates the statistics! 🪨
             $stats = $this->calculate_translation_stats($translation_data);
@@ -297,7 +400,7 @@ class TranslationScraper {
             return $project_data;
             
         } catch (\Exception $e) {
-            error_log('Pierre failed to process API response: ' . $e->getMessage() . ' 😢');
+            Logger::static_error('Pierre failed to process API response: ' . $e->getMessage() . ' 😢', ['source' => 'TranslationScraper']);
             return null;
         }
     }
@@ -331,7 +434,7 @@ class TranslationScraper {
     }
 
     private function get_snapshot_keys(string $type, string $slug, string $locale): array {
-        $base = 'pierre_project_' . sanitize_key($type) . '_' . sanitize_key($slug) . '_' . sanitize_key($locale);
+        $base = 'pierre_project_' . sanitize_key($type) . '_' . sanitize_key($slug) . '_' . \Pierre\Helpers\OptionHelper::sanitize_locale_code($locale);
         return [$base, $base . '_prev'];
     }
 
@@ -366,7 +469,7 @@ class TranslationScraper {
     private function resolve_segment_for(string $type, string $slug, string $locale, string $set): ?string {
         $type = sanitize_key($type);
         $slug = sanitize_key($slug);
-        $locale = sanitize_key($locale);
+        $locale = \Pierre\Helpers\OptionHelper::sanitize_locale_code($locale);
         $set = sanitize_key($set);
 
         // Check cache first
@@ -386,7 +489,7 @@ class TranslationScraper {
             $code = is_wp_error($resp) ? 0 : (int) wp_remote_retrieve_response_code($resp);
             if ($code === 200 || $code === 405) { // 405: HEAD not allowed → try GET
                 if ($code === 405) {
-                    $resp2 = wp_remote_get($url, $args);
+                    $resp2 = wp_safe_remote_get($url, $args);
                     $code2 = is_wp_error($resp2) ? 0 : (int) wp_remote_retrieve_response_code($resp2);
                     if ($code2 !== 200) { continue; }
                 }
@@ -429,7 +532,7 @@ class TranslationScraper {
      * @return array Test results
      */
     public function test_scraping(string $project_slug = 'wp', string $locale_code = 'fr'): array {
-        error_log("Pierre is testing his scraping system with {$project_slug} ({$locale_code})! 🪨");
+        Logger::static_debug("Pierre is testing his scraping system with {$project_slug} ({$locale_code})! 🪨", ['source' => 'TranslationScraper']);
         
         $start_time = microtime(true);
         $data = $this->scrape_project_data($project_slug, $locale_code);
@@ -437,26 +540,38 @@ class TranslationScraper {
         
         $response_time = round(($end_time - $start_time) * 1000, 2);
         
+        $success = !is_wp_error($data) && $data !== null;
+        
         return [
-            'success' => $data !== null,
+            'success' => $success,
             'response_time_ms' => $response_time,
             'data' => $data,
-            'message' => $data ? 'Pierre\'s scraping test passed! 🪨' : 'Pierre\'s scraping test failed! 😢'
+            'error' => is_wp_error($data) ? $data->get_error_message() : null,
+            'message' => $success ? 'Pierre\'s scraping test passed! 🪨' : 'Pierre\'s scraping test failed! 😢'
         ];
     }
     
     /**
-     * Pierre gets his scraping status! 🪨
-     * 
+     * Get status message.
+     *
      * @since 1.0.0
-     * @return array Scraping system status
+     * @return string Status message
      */
-    public function get_status(): array {
+    protected function get_status_message(): string {
+        return 'Pierre\'s scraping system is ready! 🪨';
+    }
+
+    /**
+     * Get status details.
+     *
+     * @since 1.0.0
+     * @return array Status details
+     */
+    protected function get_status_details(): array {
         return [
             'api_base_url' => self::API_BASE_URL,
             'cache_timeout' => self::CACHE_TIMEOUT,
             'request_timeout' => self::REQUEST_TIMEOUT,
-            'message' => 'Pierre\'s scraping system is ready! 🪨'
         ];
     }
 }

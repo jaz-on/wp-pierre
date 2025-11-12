@@ -18,6 +18,8 @@ use Pierre\Teams\RoleManager;
 use Pierre\Teams\TeamRepository;
 use Pierre\Admin\AdminController;
 use Pierre\Frontend\DashboardController;
+use Pierre\Settings\Settings;
+use Pierre\Container;
 use function __;
 use function admin_url;
 use function wp_create_nonce;
@@ -77,6 +79,13 @@ class Plugin {
      * @var DashboardController
      */
     private DashboardController $frontend_controller;
+    
+    /**
+     * Pierre's dependency injection container - he manages dependencies! 🪨
+     * 
+     * @var Container
+     */
+    private Container $container;
     
     /**
      * Pierre's initialization flag - he tracks his state! 🪨
@@ -149,7 +158,7 @@ class Plugin {
             // Pierre schedules his surveillance! 🪨
             $this->schedule_cron_events();
             // Auto-start surveillance immediately if configured (default: ON if unset) 🪨
-            $settings = get_option('pierre_settings', []);
+            $settings = Settings::all();
             if (!array_key_exists('auto_start_surveillance', $settings) || !empty($settings['auto_start_surveillance'])) {
                 $this->project_watcher->start_surveillance();
             }
@@ -214,17 +223,27 @@ class Plugin {
      * @return void
      */
     private function init_components(): void {
+        // Pierre creates his dependency injection container first! 🪨
+        $this->container = new Container();
+        
         // Pierre creates his surveillance components! 🪨
         $this->slack_notifier = new SlackNotifier();
-        $this->cron_manager = new CronManager();
         $this->project_watcher = new ProjectWatcher();
+        $this->cron_manager = new CronManager($this->project_watcher);
         
         // Pierre creates his team management components! 🪨
         $this->role_manager = new RoleManager();
         $this->team_repository = new TeamRepository();
         
+        // Register services in container for dependency injection! 🪨
+        $this->container->set(SlackNotifier::class, $this->slack_notifier);
+        $this->container->set(ProjectWatcher::class, $this->project_watcher);
+        $this->container->set(CronManager::class, $this->cron_manager);
+        $this->container->set(RoleManager::class, $this->role_manager);
+        $this->container->set(TeamRepository::class, $this->team_repository);
+        
         // Pierre creates his interface components! 🪨
-        $this->admin_controller = new AdminController();
+        $this->admin_controller = new AdminController($this->container);
         $this->frontend_controller = new DashboardController();
     }
     
@@ -273,9 +292,14 @@ class Plugin {
 
     /**
      * Centralized throttled debug handler. Avoids log storms while keeping useful traces.
+     *
+     * @since 1.0.0
+     * @param string $message Debug message to log.
+     * @param array  $context Optional context array with keys: scope, action, code.
+     * @return void
      */
     public function handle_debug(string $message, array $context = []): void {
-        if (!$this->is_debug()) { return; }
+        if (!\Pierre\Logging\Logger::is_debug()) { return; }
         // Build a signature from message + important context keys
         $scope = isset($context['scope']) ? (string)$context['scope'] : 'general';
         $sigBase = $message . '|' . $scope;
@@ -298,23 +322,30 @@ class Plugin {
      * @since 1.0.0
      * @return void
      */
-    public function init_admin_hooks(): void {
-        // Prevent double-binding within the same request
-        static $adminBooted = false;
-        if ($adminBooted) { return; }
-        $adminBooted = true;
+	public function init_admin_hooks(): void {
+		// Prevent double-binding within the same request
+		$cache_key = 'pierre_admin_booted';
+		$cache_group = 'pierre_plugin';
+		// Use wp_cache_add() which only sets if key doesn't exist (atomic operation)
+		if ( wp_cache_add( $cache_key, true, $cache_group, 0 ) === false ) {
+			// Already booted in this request
+			return;
+		}
 
-        // Pierre sets up his admin interface! 🪨
-        // Add capabilities only once (persisted flag); activation already seeds caps
-        if (isset($this->role_manager) && !get_option('pierre_caps_initialized')) {
-            $this->role_manager->add_capabilities();
-            update_option('pierre_caps_initialized', time());
-        }
-        if (defined('PIERRE_DEBUG') && PIERRE_DEBUG) {
-            error_log('PIERRE Plugin::init_admin_hooks fired');
-        }
-        $this->admin_controller->init();
-    }
+		// Register settings with WordPress Settings API
+		Settings::register();
+
+		// Pierre sets up his admin interface! 🪨
+		// Add capabilities only once (persisted flag); activation already seeds caps
+		if (isset($this->role_manager) && !get_option('pierre_caps_initialized')) {
+			$this->role_manager->add_capabilities();
+			update_option('pierre_caps_initialized', time());
+		}
+		if (defined('PIERRE_DEBUG') && PIERRE_DEBUG) {
+			error_log('PIERRE Plugin::init_admin_hooks fired');
+		}
+		$this->admin_controller->init();
+	}
     
     /**
      * Pierre enqueues his public scripts and styles! 🪨
@@ -414,7 +445,6 @@ class Plugin {
         // If table already exists, skip dbDelta to avoid noisy primary key adjustments
         $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_name));
         if (!$exists) {
-            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
             dbDelta($sql);
         }
         
@@ -450,8 +480,10 @@ class Plugin {
      * @return void
      */
     private function clear_cron_events(): void {
-        $this->cron_manager->clear_events();
-        $this->log_debug('Pierre cleared his scheduled events! 🪨');
+        if (isset($this->cron_manager)) {
+            $this->cron_manager->clear_events();
+            $this->log_debug('Pierre cleared his scheduled events! 🪨');
+        }
     }
     
     /**
@@ -464,6 +496,7 @@ class Plugin {
         global $wpdb;
         
         $table_name = $wpdb->prefix . 'pierre_user_projects';
+        $table_name = esc_sql($table_name);
         $wpdb->query("DROP TABLE IF EXISTS {$table_name}");
         
         $this->log_debug('Pierre removed his database tables! 🪨');
@@ -476,27 +509,58 @@ class Plugin {
      * @return void
      */
     private function remove_options(): void {
+        global $wpdb;
+        
+        // Remove main options
         delete_option('pierre_settings');
         delete_option('pierre_version');
+        delete_option('pierre_caps_initialized');
+        delete_option('pierre_cache_version');
+        delete_option('pierre_last_run_now_surveillance');
+        delete_option('pierre_last_run_now_cleanup');
+        delete_option('pierre_projects_catalog_meta');
+        delete_option('pierre_projects_catalog_errors');
+        delete_option('pierre_projects_discovery');
+        delete_option('pierre_security_logs');
+        
+        // Remove options with patterns using LIKE
+        $patterns = array(
+            $wpdb->esc_like('pierre_last_forced_scan_') . '%',
+            $wpdb->esc_like('pierre_catalog_fetch_') . '%',
+        );
+        
+        foreach ( $patterns as $pattern ) {
+            $wpdb->query(
+                $wpdb->prepare(
+                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+                    $pattern
+                )
+            );
+        }
+        
+        // Remove catalog progress transient
+        delete_transient('pierre_catalog_progress');
+        
+        // Remove catalog page options (pierre_projects_catalog_plugin_1, etc.)
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+                $wpdb->esc_like('pierre_projects_catalog_') . '%'
+            )
+        );
         
         $this->log_debug('Pierre removed his options! 🪨');
-
-    }
-
-    /**
-     * Whether verbose debug logging is enabled.
-     */
-    private function is_debug(): bool {
-        return defined('PIERRE_DEBUG') ? (bool) PIERRE_DEBUG : false;
     }
 
     /**
      * Log a debug message if debug is enabled.
+     *
+     * @since 1.0.0
+     * @param string $message Debug message to log.
+     * @return void
      */
     private function log_debug(string $message): void {
-        if ($this->is_debug()) {
-            do_action('wp_pierre_debug', $message, ['source' => 'Plugin']);
-        }
+        \Pierre\Logging\Logger::static_debug($message, ['source' => 'Plugin']);
     }
 
     
@@ -529,12 +593,25 @@ class Plugin {
     public function get_slack_notifier(): SlackNotifier {
         return $this->slack_notifier;
     }
+    
+    /**
+     * Pierre gets his dependency injection container! 🪨
+     * 
+     * @since 1.0.0
+     * @return Container
+     */
+    public function get_container(): Container {
+        return $this->container;
+    }
 
     /**
      * Centralized HTTP defaults (timeout, UA, headers) for all outbound requests.
+     *
+     * @since 1.0.0
+     * @return array HTTP request arguments array with keys: timeout, redirection, user-agent, headers.
      */
     public static function get_http_defaults(): array {
-        $settings = get_option('pierre_settings', []);
+        $settings = Settings::all();
         $timeout = isset($settings['request_timeout']) ? max(3, (int) $settings['request_timeout']) : 30;
         $ua = 'wp-pierre/' . (defined('PIERRE_VERSION') ? PIERRE_VERSION : '1.0.0') . '; ' . home_url('/');
         return [
@@ -547,4 +624,29 @@ class Plugin {
             ],
         ];
     }
+}
+
+/**
+ * Helper function to check if debug is enabled.
+ * 
+ * @since 1.0.0
+ * @return bool True if debug is enabled
+ */
+function pierre_is_debug(): bool {
+	return \Pierre\Logging\Logger::is_debug();
+}
+
+/**
+ * Helper function to decrypt webhook URLs in templates
+ * 
+ * @since 1.0.0
+ * @param string $encrypted_webhook Encrypted webhook URL
+ * @return string Decrypted webhook URL or empty string
+ */
+function pierre_decrypt_webhook( string $encrypted_webhook ): string {
+	if ( empty( $encrypted_webhook ) ) {
+		return '';
+	}
+	$decrypted = \Pierre\Security\Encryption::decrypt( $encrypted_webhook );
+	return ( $decrypted !== false ) ? $decrypted : $encrypted_webhook;
 }

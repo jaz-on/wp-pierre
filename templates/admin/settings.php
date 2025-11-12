@@ -6,6 +6,8 @@
  * @since 1.0.0
  */
 
+use Pierre\Admin\UI;
+
 // Pierre prevents direct access! 🪨
 if (!defined('ABSPATH')) {
     exit;
@@ -15,9 +17,18 @@ $data = $GLOBALS['pierre_admin_template_data'] ?? [];
 $settings = $data['settings'] ?? [];
 ?>
 
-<div class="wrap">
-    <div class="pierre-visually-hidden" role="status" aria-live="polite" id="pierre-aria-live"></div>
+<div class="wrap pierre-settings">
+    <div class="pierre-visually-hidden" role="status" aria-live="polite" id="pierre-global-aria-live"></div>
+    <?php $ui_name = (string) (($settings['ui']['plugin_name'] ?? 'Pierre') ?: 'Pierre'); ?>
+    <h1><?php echo esc_html($ui_name . ' 🪨 Settings'); ?></h1>
     <!-- Settings page header is handled by render_settings_page() -->
+
+    <?php if (defined('PIERRE_COMPOSER_MISSING') && PIERRE_COMPOSER_MISSING && defined('WP_DEBUG') && WP_DEBUG && current_user_can('manage_options')): ?>
+        <div class="notice notice-warning is-dismissible">
+            <p><strong><?php echo esc_html__('Developer tip:', 'wp-pierre'); ?></strong> <?php echo esc_html__('Composer autoload is missing. Run "composer dump-autoload" in the plugin folder for better performance.', 'wp-pierre'); ?></p>
+            <p class="description"><?php echo esc_html__('How these settings work.', 'wp-pierre'); ?></p>
+        </div>
+    <?php endif; ?>
 
     <div class="pierre-card pierre-mb-16">
         <h2><?php echo esc_html__('How these settings work', 'wp-pierre'); ?></h2>
@@ -30,6 +41,7 @@ $settings = $data['settings'] ?? [];
             <li><?php echo esc_html__('Projects Discovery: manage a library of projects and bulk-add to surveillance (coming options).', 'wp-pierre'); ?></li>
             <li><?php echo esc_html__('Global Webhook: set the destination, event types, thresholds/digest mode, optional scopes; preview and test payloads.', 'wp-pierre'); ?></li>
         </ul>
+        
         <p class="description">
             <?php echo esc_html__('Docs:', 'wp-pierre'); ?>
             <a href="https://github.com/jaz-on/wp-pierre" target="_blank" rel="noopener">GitHub</a>
@@ -39,7 +51,7 @@ $settings = $data['settings'] ?? [];
 
     <div class="pierre-grid pierre-grid--cards">
         <div class="pierre-card">
-            <h2><?php echo esc_html__('Global Surveillance Settings', 'wp-pierre'); ?></h2>
+            <h2><?php echo esc_html__('Plugin Surveillance Settings', 'wp-pierre'); ?></h2>
             <form class="pierre-form-wide" id="pierre-surveillance-settings">
                 <?php $enabled_default = array_key_exists('surveillance_enabled', $settings) ? !empty($settings['surveillance_enabled']) : true; ?>
                 <h3><?php echo esc_html__('Global toggle', 'wp-pierre'); ?></h3>
@@ -73,7 +85,7 @@ $settings = $data['settings'] ?? [];
                 </div>
                 
                 <h3 class="pierre-mt-16"><?php echo esc_html__('Scheduling', 'wp-pierre'); ?></h3>
-                <div class="pierre-form-group">
+                <div class="pierre-form-group" id="surv-scheduling-group">
                     <label for="surveillance_interval"><?php echo esc_html__('Surveillance interval (minutes):', 'wp-pierre'); ?></label>
                     <select id="surveillance_interval" name="surveillance_interval" class="wp-core-ui">
                         <option value="5" <?php selected(($settings['surveillance_interval'] ?? 15) == 5); ?>><?php echo esc_html__('5 minutes', 'wp-pierre'); ?></option>
@@ -112,7 +124,7 @@ $settings = $data['settings'] ?? [];
                     </div>
                 </div>
                 
-                <div class="pierre-form-actions">
+                <div class="pierre-form-actions" id="surv-actions-group">
                     <button type="submit" class="button button-primary">
                         <?php echo esc_html__('Save Settings', 'wp-pierre'); ?>
                     </button>
@@ -123,17 +135,20 @@ $settings = $data['settings'] ?? [];
         </div>
 
         <div class="pierre-card">
-            <h2><?php echo esc_html__('Global Webhook Settings', 'wp-pierre'); ?></h2>
+            <h2><?php echo esc_html__('Plugin Webhook Settings', 'wp-pierre'); ?></h2>
             <?php 
             $global_webhook = $settings['global_webhook']['webhook_url'] ?? ($settings['slack_webhook_url'] ?? '');
             $global_hook_empty = empty($global_webhook);
-            $settings_opt = get_option('pierre_settings', []);
+            $settings_opt = \Pierre\Settings\Settings::all();
             $local_hooks = (array)($settings_opt['locales_slack'] ?? []);
             $all_empty = $global_hook_empty && (empty(array_filter($local_hooks)));
             if ($all_empty): ?>
-                <div class="notice notice-warning">
-                    <p><strong><?php echo esc_html__('No Slack webhook configured (global or per-locale). Notifications will not be delivered.', 'wp-pierre'); ?></strong></p>
-                </div>
+                <?php echo UI::notice('warning', '<strong>' . esc_html__('No Slack webhook configured (global or per-locale). Notifications will not be delivered.', 'wp-pierre') . '</strong><br/>'
+                    . '<a href="' . esc_url(admin_url('admin.php?page=pierre-settings#global-webhook')) . '">' . esc_html__('Add a Global Webhook', 'wp-pierre') . '</a>'
+                    . ' · '
+                    . '<a href="' . esc_url(admin_url('admin.php?page=pierre-locales')) . '">' . esc_html__('Or per-locale: go to Locales → Manage → Slack Webhook', 'wp-pierre') . '</a>'
+                    , true);
+                ?>
             <?php endif; ?>
             <form class="pierre-form-compact" id="pierre-notification-settings">
                 <fieldset class="pierre-form-group pierre-fieldset">
@@ -182,11 +197,12 @@ $settings = $data['settings'] ?? [];
                             <?php echo esc_html__('Used only with Digest/Fixed time. Notification is sent once per day at the set time.', 'wp-pierre'); ?>
                         </div>
                     </p>
-                </fieldset>
                 <details class="pierre-mt-16">
                     <summary><?php echo esc_html__('Help: Digest mode', 'wp-pierre'); ?></summary>
                     <p class="description"><?php echo esc_html__('Digest mode groups notifications and sends them periodically (by interval or fixed time).', 'wp-pierre'); ?></p>
                 </details>
+                </fieldset>
+                
                 <div class="pierre-form-group">
                     <label for="notification_types"><?php echo esc_html__('Notification Types:', 'wp-pierre'); ?></label>
                     <div class="pierre-checkbox-group">
@@ -246,7 +262,7 @@ $settings = $data['settings'] ?? [];
         </div>
 
         <div class="pierre-card">
-            <h2><?php echo esc_html__('Global Locales Discovery Settings', 'wp-pierre'); ?></h2>
+            <h2><?php echo esc_html__('Plugin Locales Discovery Settings', 'wp-pierre'); ?></h2>
             <?php 
             $cache = get_option('pierre_locales_cache');
             $rows = [];
@@ -277,7 +293,11 @@ $settings = $data['settings'] ?? [];
             ?>
             <h3><?php echo esc_html__('Logs', 'wp-pierre'); ?></h3>
             <?php $count = is_array($rows)? count($rows):0; ?>
-            <p class="pierre-mt-8 pierre-mb-8"><?php echo esc_html(sprintf(__('Anomalies detected: %d', 'wp-pierre'), (int)$count)); ?></p>
+            <p class="pierre-mt-8 pierre-mb-8">
+                <span class="<?php echo $count === 0 ? 'status-ok' : 'status-ko'; ?>">
+                    <?php echo esc_html(sprintf(__('Anomalies detected: %d', 'wp-pierre'), (int)$count)); ?>
+                </span>
+            </p>
             <div class="pierre-row pierre-mt-8 pierre-mb-8">
                 <button type="button" class="button" id="pierre-check-all-locales" data-nonce="<?php echo esc_attr( wp_create_nonce('pierre_admin_ajax') ); ?>"><?php echo esc_html__('Check all now', 'wp-pierre'); ?></button>
                 <button type="button" class="button" id="pierre-clear-locale-log"><?php echo esc_html__('Purge log', 'wp-pierre'); ?></button>
@@ -309,13 +329,14 @@ $settings = $data['settings'] ?? [];
                 <p><?php echo esc_html__('No anomalies detected.', 'wp-pierre'); ?></p>
             <?php else: ?>
                 <table class="wp-list-table widefat fixed striped">
+                    <?php echo UI::tableCaption(esc_html__('Locales anomalies', 'wp-pierre')); ?>
                     <thead>
                         <tr>
-                            <th><?php echo esc_html__('Code', 'wp-pierre'); ?></th>
-                            <th><?php echo esc_html__('Label', 'wp-pierre'); ?></th>
-                            <th><?php echo esc_html__('Translate Slug', 'wp-pierre'); ?></th>
-                            <th><?php echo esc_html__('Rosetta', 'wp-pierre'); ?></th>
-                            <th><?php echo esc_html__('Issues', 'wp-pierre'); ?></th>
+                            <th scope="col"><?php echo esc_html__('Code', 'wp-pierre'); ?></th>
+                            <th scope="col"><?php echo esc_html__('Label', 'wp-pierre'); ?></th>
+                            <th scope="col"><?php echo esc_html__('Translate Slug', 'wp-pierre'); ?></th>
+                            <th scope="col"><?php echo esc_html__('Rosetta', 'wp-pierre'); ?></th>
+                            <th scope="col"><?php echo esc_html__('Issues', 'wp-pierre'); ?></th>
                         </tr>
                     </thead>
                     <tbody id="pierre-anomalies-body">
@@ -334,12 +355,177 @@ $settings = $data['settings'] ?? [];
         </div>
 
         <div class="pierre-card">
-            <h2><?php echo esc_html__('Global Projects Discovery Settings', 'wp-pierre'); ?></h2>
-            <p class="description"><?php echo esc_html__('Options for projects discovery will appear here (sources, mapping rules, auto-mapping, bulk behaviors).', 'wp-pierre'); ?></p>
+            <h2><?php echo esc_html__('Plugin Projects Discovery Settings', 'wp-pierre'); ?></h2>
+            <p class="description"><?php echo esc_html__('Planifier le crawl du catalogue projets et consulter le statut. Première version minimale.', 'wp-pierre'); ?></p>
+            <?php $meta = get_option('pierre_projects_catalog_meta', []); $last = (int)($meta['last_built']??0); $next=(int)($meta['next_build']??0); $dur=(int)($meta['last_duration_ms']??0); $err=$meta['last_error']??null; ?>
+            <ul class="pierre-list">
+                <li><strong><?php echo esc_html__('Last run:', 'wp-pierre'); ?></strong> <?php echo $last?esc_html(date_i18n(get_option('date_format').' '.get_option('time_format'), $last)):esc_html__('N/A','wp-pierre'); ?></li>
+                <li><strong><?php echo esc_html__('Next run:', 'wp-pierre'); ?></strong> <?php echo $next?esc_html(date_i18n(get_option('date_format').' '.get_option('time_format'), $next)):esc_html__('N/A','wp-pierre'); ?></li>
+                <li><strong><?php echo esc_html__('Last duration:', 'wp-pierre'); ?></strong> <?php echo $dur?esc_html($dur.' ms'):esc_html__('N/A','wp-pierre'); ?></li>
+                <?php if (is_array($err)&&!empty($err['message'])): ?>
+                <li><strong><?php echo esc_html__('Last error:', 'wp-pierre'); ?></strong> <code><?php echo esc_html((string)$err['message']); ?></code> <?php if(!empty($err['code'])) echo '(' . (int)$err['code'] . ')'; ?></li>
+                <?php endif; ?>
+            </ul>
+            <?php $schedule = (array)($meta['schedule']??[]); $interval = (int)($schedule['interval_minutes']??1440); $mpr=(int)($schedule['max_per_run']??200); $sources=(array)($meta['sources']??[]); ?>
+            <form id="pierre-catalog-settings-form" class="pierre-form-wide pierre-mt-8">
+                <div class="pierre-row">
+                    <label><?php echo esc_html__('Interval (minutes)', 'wp-pierre'); ?>
+                        <input type="number" min="60" step="60" name="interval_minutes" value="<?php echo esc_attr($interval); ?>" />
+                    </label>
+                    <label><?php echo esc_html__('Max per run', 'wp-pierre'); ?>
+                        <input type="number" min="10" max="500" step="10" name="max_per_run" value="<?php echo esc_attr($mpr); ?>" />
+                    </label>
+                </div>
+                <fieldset class="pierre-mt-8">
+                    <legend><?php echo esc_html__('Sources', 'wp-pierre'); ?></legend>
+                    <label><input type="checkbox" name="plugins_popular" <?php echo !empty($sources['plugins']['popular'])?'checked':''; ?> /> Plugins · Popular</label>
+                    <label><input type="checkbox" name="plugins_featured" <?php echo !empty($sources['plugins']['featured'])?'checked':''; ?> /> Plugins · Featured</label>
+                    <label><input type="checkbox" name="themes_popular" <?php echo !empty($sources['themes']['popular'])?'checked':''; ?> /> Themes · Popular</label>
+                    <label><input type="checkbox" name="themes_featured" <?php echo !empty($sources['themes']['featured'])?'checked':''; ?> /> Themes · Featured</label>
+                </fieldset>
+                <div class="pierre-form-actions">
+                    <button type="submit" class="button button-primary"><?php echo esc_html__('Save settings', 'wp-pierre'); ?></button>
+                    <span id="pierre-catalog-save-status" class="description"></span>
+                </div>
+            </form>
+            <div class="pierre-form-actions">
+                <button type="button" class="button" id="pierre-rebuild-catalog-btn"><?php echo esc_html__('Rebuild index now', 'wp-pierre'); ?></button>
+                <button type="button" class="button" id="pierre-schedule-catalog-btn"><?php echo esc_html__('Schedule now', 'wp-pierre'); ?></button>
+                <button type="button" class="button pierre-button-danger" id="pierre-reset-catalog-btn"><?php echo esc_html__('Reset index', 'wp-pierre'); ?></button>
+                <span id="pierre-rebuild-catalog-status" class="description"></span>
+                <span id="pierre-rebuild-spinner" class="spinner"></span>
+            </div>
+            <input type="hidden" id="pierre-ajax-nonce" value="<?php echo esc_attr( wp_create_nonce('pierre_admin_ajax') ); ?>" />
+        </div>
+
+        <script>
+        (function(){
+            const btn = document.getElementById('pierre-rebuild-catalog-btn');
+            const sched = document.getElementById('pierre-schedule-catalog-btn');
+            const status = document.getElementById('pierre-rebuild-catalog-status');
+            const resetBtn = document.getElementById('pierre-reset-catalog-btn');
+            const nonce = document.getElementById('pierre-ajax-nonce')?.value || '';
+            const ajaxUrl = window.pierreAdminL10n?.ajaxUrl || (typeof ajaxurl !== 'undefined' ? ajaxurl : '<?php echo esc_js(admin_url('admin-ajax.php')); ?>');
+            const spinner = document.getElementById('pierre-rebuild-spinner');
+
+            function setBusy(b){ if (spinner) { if (b) spinner.classList.remove('is-hidden'); else spinner.classList.add('is-hidden'); } if (btn) btn.disabled=!!b; if (sched) sched.disabled=!!b; }
+            function fmt(ts){ if(!ts) return '<?php echo esc_js(__('N/A','wp-pierre')); ?>'; try { return new Date(parseInt(ts,10)*1000).toLocaleString(); } catch(e){ return '<?php echo esc_js(__('N/A','wp-pierre')); ?>'; } }
+            function refreshStatus(){
+                const fd = new FormData(); fd.append('action','pierre_admin_get_catalog_status'); fd.append('nonce', nonce);
+                return fetch(ajaxUrl, {method:'POST', body: fd}).then(r=>r.json()).then(j=>{
+                    if (j && j.success && j.data) {
+                        const meta = j.data; const list = document.querySelector('.pierre-card h2+ .pierre-list');
+                        if (list) {
+                            const lis = list.querySelectorAll('li');
+                            if (lis[0]) lis[0].innerHTML = '<strong><?php echo esc_js(__('Last run:', 'wp-pierre')); ?></strong> ' + fmt(meta.last_built||0);
+                            if (lis[1]) lis[1].innerHTML = '<strong><?php echo esc_js(__('Next run:', 'wp-pierre')); ?></strong> ' + fmt(meta.next_build||0);
+                            if (lis[2]) lis[2].innerHTML = '<strong><?php echo esc_js(__('Last duration:', 'wp-pierre')); ?></strong> ' + ((meta.last_duration_ms? (parseInt(meta.last_duration_ms,10)+' ms') : '<?php echo esc_js(__('N/A','wp-pierre')); ?>'));
+                        }
+                    }
+                }).catch(()=>{});
+            }
+
+            if (btn) {
+                btn.addEventListener('click', function(){
+                    if (!nonce) return; setBusy(true);
+                    status.textContent = '<?php echo esc_js(__('Rebuilding…', 'wp-pierre')); ?>';
+                    const fd = new FormData(); fd.append('action','pierre_admin_rebuild_catalog'); fd.append('nonce', nonce);
+                    fetch(ajaxUrl, { method:'POST', body: fd })
+                        .then(r=>r.json())
+                        .then(j=>{ status.textContent = (j && j.success) ? '<?php echo esc_js(__('Done.', 'wp-pierre')); ?>' : ((j && (j.data?.message||j.message))||'<?php echo esc_js(__('Failed.', 'wp-pierre')); ?>'); return refreshStatus(); })
+                        .catch(()=>{ status.textContent = '<?php echo esc_js(__('Network error.', 'wp-pierre')); ?>'; })
+                        .finally(()=> setBusy(false));
+                    const poll = setInterval(function(){
+                        const fd2 = new FormData(); fd2.append('action','pierre_admin_get_catalog_progress'); fd2.append('nonce', nonce);
+                        fetch(ajaxUrl,{method:'POST', body: fd2}).then(r=>r.json()).then(j=>{
+                            if (j && j.success && j.data) { status.textContent = '<?php echo esc_js(__('Progress','wp-pierre')); ?>: ' + (j.data.processed||0) + ' / ' + (j.data.total||0) + (j.data.phase?(' ('+j.data.phase+')'):''); }
+                        }).catch(()=>{});
+                    }, 1000);
+                    setTimeout(()=>clearInterval(poll), 120000);
+                });
+            }
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function(){
+                    if (!nonce) return; if (!confirm('<?php echo esc_js(__('Reset the catalog? This will purge cached pages and index.','wp-pierre')); ?>')) return;
+                    setBusy(true);
+                    const fd = new FormData(); fd.append('action','pierre_admin_reset_catalog'); fd.append('nonce', nonce);
+                    fetch(ajaxUrl, { method:'POST', body: fd })
+                        .then(r=>r.json())
+                        .then(j=>{ status.textContent = (j && j.success) ? ((j.data?.message)||'<?php echo esc_js(__('Done.','wp-pierre')); ?>') : ((j && (j.data?.message||j.message))||'<?php echo esc_js(__('Failed.', 'wp-pierre')); ?>'); return refreshStatus(); })
+                        .catch(()=>{ status.textContent = '<?php echo esc_js(__('Network error.', 'wp-pierre')); ?>'; })
+                        .finally(()=> setBusy(false));
+                });
+            }
+            if (sched) {
+                sched.addEventListener('click', function(){
+                    if (!nonce) return; setBusy(true);
+                    const fd = new FormData(); fd.append('action','pierre_admin_schedule_catalog'); fd.append('nonce', nonce);
+                    fetch(ajaxUrl, { method:'POST', body: fd })
+                        .then(r=>r.json())
+                        .then(j=>{ status.textContent = (j && j.success) ? '<?php echo esc_js(__('Scheduled.', 'wp-pierre')); ?>' : ((j && (j.data?.message||j.message))||'<?php echo esc_js(__('Failed.', 'wp-pierre')); ?>'); return refreshStatus(); })
+                        .catch(()=>{ status.textContent = '<?php echo esc_js(__('Network error.', 'wp-pierre')); ?>'; })
+                        .finally(()=> setBusy(false));
+                });
+            }
+            const form = document.getElementById('pierre-catalog-settings-form');
+            const saveStatus = document.getElementById('pierre-catalog-save-status');
+            if (form) {
+                form.addEventListener('submit', function(ev){
+                    ev.preventDefault(); if (!nonce) return;
+                    saveStatus.textContent = '<?php echo esc_js(__('Saving…', 'wp-pierre')); ?>';
+                    const fd = new FormData(form); fd.append('action','pierre_admin_save_catalog_settings'); fd.append('nonce', nonce);
+                    fetch(ajaxUrl, { method:'POST', body: fd })
+                        .then(r=>r.json())
+                        .then(j=>{ saveStatus.textContent = (j && j.success) ? '<?php echo esc_js(__('Saved.', 'wp-pierre')); ?>' : ((j && (j.data?.message||j.message))||'<?php echo esc_js(__('Failed.', 'wp-pierre')); ?>'); })
+                        .catch(()=>{ saveStatus.textContent = '<?php echo esc_js(__('Network error.', 'wp-pierre')); ?>'; });
+                });
+            }
+        })();
+        </script>
+
+        
+    </div>
+
+    <div class="columns-2">
+        <div class="pierre-card">
+            <h2><?php echo esc_html__('Plugin Admin UI', 'wp-pierre'); ?></h2>
+            <div class="pierre-form-group">
+                <?php $menu_icon = $settings['ui']['menu_icon'] ?? 'emoji'; ?>
+                <h3 class="pierre-mt-8"><?php echo esc_html__('Menu icon', 'wp-pierre'); ?></h3>
+                <fieldset class="pierre-form-group" role="radiogroup" aria-label="<?php echo esc_attr__('Menu icon', 'wp-pierre'); ?>">
+                    <label class="pierre-ml-8">
+                        <input type="radio" name="menu_icon_choice" value="emoji" <?php checked($menu_icon === 'emoji'); ?>>
+                        <span aria-hidden="true" class="fs-18 va-middle">🪨</span>
+                        <span class="pierre-ml-8"><?php echo esc_html__('Emoji (default)', 'wp-pierre'); ?></span>
+                    </label>
+                    <label class="pierre-ml-8">
+                        <input type="radio" name="menu_icon_choice" value="dashicons" <?php checked($menu_icon === 'dashicons'); ?>>
+                        <span class="dashicons dashicons-translation va-middle" aria-hidden="true"></span>
+                        <span class="pierre-ml-8"><?php echo esc_html__('Dashicons: translation', 'wp-pierre'); ?></span>
+                    </label>
+                </fieldset>
+                <h3 class="pierre-mt-8"><?php echo esc_html__('Plugin name', 'wp-pierre'); ?></h3>
+                <?php $plugin_name = isset($settings['ui']['plugin_name']) ? (string)$settings['ui']['plugin_name'] : 'Pierre'; ?>
+                <div class="pierre-form-group">
+                    <label for="plugin_name_choice" class="pierre-ml-8"><?php echo esc_html__('Displayed name in UI:', 'wp-pierre'); ?></label>
+                    <select id="plugin_name_choice" name="plugin_name_choice" class="wp-core-ui">
+                        <?php $names = array('Pierre','Pieter','Peter','Peio','Pedro','Πέτρος','Pier','Pietro','Piotr');
+                        foreach ($names as $n): ?>
+                            <option value="<?php echo esc_attr($n); ?>" <?php selected($plugin_name === $n); ?>><?php echo esc_html($n); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="pierre-help">
+                    <?php echo esc_html__('Emoji rendering can vary by platform. Use Dashicons for consistent appearance. “Clear All Data” removes all stored data (irreversible).', 'wp-pierre'); ?>
+                </div>
+                <div class="pierre-form-actions pierre-mt-8">
+                    <button type="button" class="button button-primary" id="pierre-save-admin-ui"><?php echo esc_html__('Save Admin UI', 'wp-pierre'); ?></button>
+                </div>
+            </div>
         </div>
 
         <div class="pierre-card">
-            <h2><?php echo esc_html__('Global System Status', 'wp-pierre'); ?></h2>
+            <h2><?php echo esc_html__('Plugin System Status', 'wp-pierre'); ?></h2>
             <?php if (isset($data['cron_status'])): ?>
             <div class="pierre-system-status">
                 <p><strong><?php echo esc_html__('Active:', 'wp-pierre'); ?></strong> 
@@ -393,5 +579,34 @@ $settings = $data['settings'] ?? [];
             </div>
         </div>
     </div>
+
+    <script>
+    (function(){
+        const btn = document.getElementById('pierre-save-admin-ui');
+        if (!btn) return;
+        btn.addEventListener('click', function(){
+            const selected = document.querySelector('input[name="menu_icon_choice"]:checked');
+            if (!selected) return;
+            const fd = new FormData();
+            fd.append('action','pierre_admin_save_settings');
+            fd.append('nonce', (window.pierreAdminL10n && window.pierreAdminL10n.nonce) ? window.pierreAdminL10n.nonce : '');
+            fd.append('menu_icon', selected.value);
+            const nameSel = document.getElementById('plugin_name_choice');
+            if (nameSel && nameSel.value) { fd.append('plugin_name', nameSel.value); }
+            btn.disabled = true;
+            const original = btn.textContent; btn.textContent = 'Saving...';
+            fetch((window.pierreAdminL10n && window.pierreAdminL10n.ajaxUrl) ? window.pierreAdminL10n.ajaxUrl : (window.ajaxurl || ''), { method:'POST', body: fd })
+              .then(r=>r.json())
+              .then(j=>{
+                const ok = j && j.success;
+                const msg = (j && (j.data?.message||j.message)) || (ok ? 'Saved.' : 'Failed.');
+                if (window.pierreNotice) { window.pierreNotice(ok ? 'success':'error', msg); } else { alert(msg); }
+                if (ok) { setTimeout(()=>location.reload(), 300); }
+              })
+              .catch(()=>{ if (window.pierreNotice) { window.pierreNotice('error','Network error'); } else { alert('Network error'); } })
+              .finally(()=>{ btn.disabled=false; btn.textContent=original; });
+        });
+    })();
+    </script>
 
 </div>

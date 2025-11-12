@@ -76,7 +76,7 @@ https://translate.wordpress.org/api/projects/wp-plugins/woocommerce/fr/default/
 
 **URL du webhook** : Configurée dans les réglages admin
 
-**Format** : `https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX`
+**Format** : `https://hooks.slack.com/services/[TEAM_ID]/[BOT_ID]/[TOKEN]`
 
 **Sécurité** :
 - URLs chiffrées dans la base de données

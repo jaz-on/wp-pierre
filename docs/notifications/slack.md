@@ -20,7 +20,7 @@ Configuration d'un webhook Slack global dans **Pierre → Settings → Global We
 
 **URL Format** :
 ```text
-https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+https://hooks.slack.com/services/[TEAM_ID]/[BOT_ID]/[TOKEN]
 ```
 
 ### Webhooks par Locale
@@ -177,7 +177,7 @@ Envoie un message de test pour vérifier la configuration.
 ```bash
 curl -X POST -H 'Content-type: application/json' \
   --data '{"text":"Pierre test webhook 🪨"}' \
-  https://hooks.slack.com/services/T000/B000/XXXX
+  https://hooks.slack.com/services/[TEAM_ID]/[BOT_ID]/[TOKEN]
 ```
 
 ## Personnalisation

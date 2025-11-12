@@ -33,7 +33,7 @@ class SlackNotifierReadyTest extends TestCase {
 
     public function test_ready_with_webhook(): void {
         global $___test_options;
-        $___test_options['pierre_settings'] = [ 'slack_webhook_url' => 'https://hooks.slack.com/services/T000/B000/XXX' ];
+        $___test_options['pierre_settings'] = [ 'slack_webhook_url' => 'https://hooks.slack.com/services/TEST_TEAM_ID/TEST_BOT_ID/TEST_TOKEN' ];
         $notifier = new SlackNotifier();
         $this->assertTrue($notifier->is_ready());
     }

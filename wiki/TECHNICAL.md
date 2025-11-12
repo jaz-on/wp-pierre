@@ -375,7 +375,7 @@ Test rapide via cURL:
 ```bash
 curl -X POST -H 'Content-type: application/json' \
   --data '{"text":"Pierre test webhook 🪨"}' \
-  https://hooks.slack.com/services/T000/B000/XXXX
+  https://hooks.slack.com/services/[TEAM_ID]/[BOT_ID]/[TOKEN]
 ```
 
 Blocks multi-sections (extrait):

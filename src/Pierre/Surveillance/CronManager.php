@@ -11,38 +11,20 @@
 
 namespace Pierre\Surveillance;
 
-use Pierre\Security\Encryption;
-use Pierre\Traits\StatusTrait;
-use Pierre\Logging\Logger;
-
 /**
  * Cron Manager class - Pierre's scheduling system! 🪨
  *
  * @since 1.0.0
  */
 class CronManager {
-	use StatusTrait;
-
-    /**
-     * Pierre's project watcher - he monitors projects! 🪨
-     *
-     * @var ProjectWatcher
-     */
+    /** @var ProjectWatcher */
     private ProjectWatcher $project_watcher;
-
-    /**
-     * Pierre's Slack notifier - he sends messages! 🪨
-     *
-     * @var \Pierre\Notifications\SlackNotifier
-     */
+    /** @var \Pierre\Notifications\SlackNotifier */
     private \Pierre\Notifications\SlackNotifier $slack_notifier;
-
-    /**
-     * Pierre's notification service - he manages notifications! 🪨
-     *
-     * @var \Pierre\Services\NotificationService
-     */
+    /** @var \Pierre\Services\NotificationService */
     private \Pierre\Services\NotificationService $notification_service;
+    /** @var \Pierre\Logging\Logger */
+    private \Pierre\Logging\Logger $logger;
 
     /**
      * Constructor with dependencies.
@@ -50,7 +32,8 @@ class CronManager {
     public function __construct(
         ?ProjectWatcher $project_watcher = null,
         ?\Pierre\Notifications\SlackNotifier $slack_notifier = null,
-        ?\Pierre\Services\NotificationService $notification_service = null
+        ?\Pierre\Services\NotificationService $notification_service = null,
+        ?\Pierre\Logging\Logger $logger = null
     ) {
         // Backward compatibility: allow parameterless construction in tests
         if ( $project_watcher ) {
@@ -65,9 +48,17 @@ class CronManager {
         $this->slack_notifier      = $slack_notifier ?? new \Pierre\Notifications\SlackNotifier();
         $this->notification_service = $notification_service ?? new \Pierre\Services\NotificationService(
             $this->slack_notifier,
-            new \Pierre\Notifications\MessageBuilder()
+            new \Pierre\Notifications\MessageBuilder(),
+            new \Pierre\Notifications\Digest()
         );
+        $this->logger = $logger ?? new \Pierre\Logging\Logger();
     }
+	/** Debug helper */
+	private function is_debug(): bool {
+		return defined( 'PIERRE_DEBUG' ) ? (bool) PIERRE_DEBUG : false; }
+	private function log_debug( string $m ): void {
+		if ( $this->is_debug() ) {
+			do_action( 'wp_pierre_debug', $m, array( 'source' => 'CronManager' ) ); } }
 
 	/**
 	 * Pierre's surveillance hook name - he needs to track it! 🪨
@@ -133,7 +124,7 @@ class CronManager {
 				$interval_slug,
 				self::SURVEILLANCE_HOOK
 			);
-			Logger::static_debug( 'Pierre scheduled his surveillance check! 🪨', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre scheduled his surveillance check! 🪨' );
 		}
 
 		// Pierre schedules his cleanup task! 🪨
@@ -144,7 +135,7 @@ class CronManager {
 				self::CLEANUP_INTERVAL,
 				self::CLEANUP_HOOK
 			);
-			Logger::static_debug( 'Pierre scheduled his cleanup task! 🪨', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre scheduled his cleanup task! 🪨' );
 		}
 
 		// Pierre schedules his locales refresh! 🪨
@@ -154,7 +145,7 @@ class CronManager {
 				self::WEEKLY_INTERVAL,
 				self::LOCALES_REFRESH_HOOK
 			);
-			Logger::static_debug( 'Pierre scheduled his locales refresh task! 🪨', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre scheduled his locales refresh task! 🪨' );
 		}
 
 		// Digest runs every 15 minutes to check due locales
@@ -166,7 +157,7 @@ class CronManager {
 				$interval_slug,
 				self::DIGEST_HOOK
 			);
-			Logger::static_debug( 'Pierre scheduled his digest task! 🪨', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre scheduled his digest task! 🪨' );
 		}
 
 		// Pierre hooks into his scheduled events! 🪨
@@ -175,7 +166,7 @@ class CronManager {
 		add_action( self::LOCALES_REFRESH_HOOK, array( $this, 'run_locales_refresh' ) );
 		add_action( self::DIGEST_HOOK, array( $this, 'run_digest' ) );
 
-		Logger::static_debug( 'Pierre scheduled all his surveillance events! 🪨', ['source' => 'CronManager'] );
+		$this->log_debug( 'Pierre scheduled all his surveillance events! 🪨' );
 	}
 
 	/**
@@ -189,21 +180,21 @@ class CronManager {
 		$timestamp = wp_next_scheduled( self::SURVEILLANCE_HOOK );
 		if ( $timestamp ) {
 			wp_unschedule_event( $timestamp, self::SURVEILLANCE_HOOK );
-			Logger::static_debug( 'Pierre cleared his surveillance check! 🪨', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre cleared his surveillance check! 🪨' );
 		}
 
 		// Pierre clears his cleanup task! 🪨
 		$timestamp = wp_next_scheduled( self::CLEANUP_HOOK );
 		if ( $timestamp ) {
 			wp_unschedule_event( $timestamp, self::CLEANUP_HOOK );
-			Logger::static_debug( 'Pierre cleared his cleanup task! 🪨', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre cleared his cleanup task! 🪨' );
 		}
 
 		// Pierre clears any orphaned events! 🪨
 		wp_clear_scheduled_hook( self::SURVEILLANCE_HOOK );
 		wp_clear_scheduled_hook( self::CLEANUP_HOOK );
 
-		Logger::static_debug( 'Pierre cleared all his scheduled events! 🪨', ['source' => 'CronManager'] );
+		$this->log_debug( 'Pierre cleared all his scheduled events! 🪨' );
 	}
 
 	/**
@@ -256,10 +247,7 @@ class CronManager {
 	}
 
 	/**
-	 * Map settings to interval slug.
-	 *
-	 * @since 1.0.0
-	 * @return string Interval slug (pierre_5min, pierre_15min, pierre_30min, pierre_60min, pierre_120min).
+	 * Map settings to interval slug
 	 */
 	private function get_selected_interval_slug(): string {
 		$settings = \Pierre\Settings\Settings::all();
@@ -303,9 +291,9 @@ class CronManager {
 			 * Allow admin layer to rebuild and persist locales cache.
 			 */
 			do_action( 'pierre_refresh_locales_cache' );
-			Logger::static_debug( 'Pierre triggered locales cache refresh! 🪨', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre triggered locales cache refresh! 🪨' );
 		} catch ( \Exception $e ) {
-			Logger::static_debug( 'Pierre encountered an error refreshing locales cache: ' . $e->getMessage() . ' 😢', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre encountered an error refreshing locales cache: ' . $e->getMessage() . ' 😢' );
 		}
 	}
 
@@ -319,7 +307,7 @@ class CronManager {
 	public function run_surveillance_check( bool $force = false ): void {
 		try {
 			$corr = function_exists('wp_generate_uuid4') ? wp_generate_uuid4() : (string) time();
-			Logger::static_debug( 'Pierre is running his surveillance check... 🪨', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre is running his surveillance check... 🪨' );
 			do_action( 'wp_pierre_debug', 'run_surveillance_check:start', array( 'source' => 'CronManager', 'corr_id' => $corr ) );
 			if ( ! $force ) {
 				$settings = \Pierre\Settings\Settings::all();
@@ -330,22 +318,22 @@ class CronManager {
 			$abort = (int) get_option( 'pierre_abort_run', 0 );
 			if ( $abort ) {
 				delete_option( 'pierre_abort_run' );
-				Logger::static_debug( 'Abort flag detected, stopping run.', ['source' => 'CronManager'] );
+				$this->log_debug( 'Abort flag detected, stopping run.' );
 				return; }
 			$start = microtime( true );
 
             // Pierre starts his surveillance! 🪨
             if ( $this->project_watcher->start_surveillance() ) {
-				Logger::static_debug( 'Pierre completed his surveillance check successfully! 🪨', ['source' => 'CronManager'] );
+				$this->log_debug( 'Pierre completed his surveillance check successfully! 🪨' );
 				update_option( 'pierre_last_surv_run', current_time( 'timestamp' ) );
 			} else {
-				Logger::static_debug( 'Pierre encountered issues during surveillance check! 😢', ['source' => 'CronManager'] );
+				$this->log_debug( 'Pierre encountered issues during surveillance check! 😢' );
 			}
 			$dur = max( 0, (int) round( ( microtime( true ) - $start ) * 1000 ) );
 			update_option( 'pierre_last_surv_duration_ms', $dur );
 			do_action( 'wp_pierre_debug', 'run_surveillance_check:end', array( 'source' => 'CronManager', 'corr_id' => $corr, 'duration_ms' => $dur ) );
 		} catch ( \Exception $e ) {
-			Logger::static_debug( 'Pierre encountered an error during surveillance: ' . $e->getMessage() . ' 😢', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre encountered an error during surveillance: ' . $e->getMessage() . ' 😢' );
 		}
 	}
 
@@ -357,21 +345,24 @@ class CronManager {
 	 */
 	public function run_cleanup_task(): void {
 		try {
-			Logger::static_debug( 'Pierre is running his cleanup task... 🪨', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre is running his cleanup task... 🪨' );
 
 			// Pierre cleans up old transients! 🪨
 			$this->cleanup_old_transients();
 
+			// Pierre cleans up old logs! 🪨
+			$this->cleanup_old_logs();
+
 			// Pierre cleans up old surveillance errors! 🪨
 			$this->cleanup_old_surveillance_errors();
 
-			Logger::static_debug( 'Pierre completed his cleanup task! 🪨', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre completed his cleanup task! 🪨' );
 			update_option( 'pierre_last_cleanup_run', time() );
 			// track duration if needed
 			// (callers may compute duration; here we keep timestamp only to keep it light)
 
 		} catch ( \Exception $e ) {
-			Logger::static_debug( 'Pierre encountered an error during cleanup: ' . $e->getMessage() . ' 😢', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre encountered an error during cleanup: ' . $e->getMessage() . ' 😢' );
 		}
 	}
 
@@ -402,7 +393,18 @@ class CronManager {
 		}
 
 		if ( ! empty( $old_transients ) ) {
-			Logger::static_debug( 'Pierre cleaned up ' . count( $old_transients ) . ' old transients! 🪨', ['source' => 'CronManager'] ); }
+			$this->log_debug( 'Pierre cleaned up ' . count( $old_transients ) . ' old transients! 🪨' ); }
+	}
+
+	/**
+	 * Pierre cleans up old logs! 🪨
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	private function cleanup_old_logs(): void {
+		// Pierre will implement log cleanup in future phases! 🪨
+		$this->log_debug( 'Pierre cleaned up old logs! 🪨' );
 	}
 
 	/**
@@ -438,7 +440,7 @@ class CronManager {
 			} else {
 				set_transient( 'pierre_last_surv_errors', $cleaned, 24 * HOUR_IN_SECONDS );
 			}
-			Logger::static_debug( 'Pierre cleaned up ' . $removed_count . ' old surveillance errors! 🪨', ['source' => 'CronManager'] );
+			$this->log_debug( 'Pierre cleaned up ' . $removed_count . ' old surveillance errors! 🪨' );
 		}
 	}
 
@@ -457,13 +459,13 @@ class CronManager {
 			$abort = (int) get_option( 'pierre_abort_run', 0 );
 			if ( $abort ) {
 				delete_option( 'pierre_abort_run' );
-				Logger::static_debug( 'Abort flag detected, stopping digest.', ['source' => 'CronManager'] );
+				$this->log_debug( 'Abort flag detected, stopping digest.' );
 				return; }
 			$locales_cfg = (array) ( $settings['locales'] ?? array() );
 			$global_cfg  = (array) ( $settings['global_webhook'] ?? array() );
 
 			// Collect active locales from watched projects (fallback)
-			$watched        = get_option( 'pierre_watched_projects', [] );
+			$watched        = get_option( 'pierre_watched_projects', array() );
 			$active_locales = array();
 			if ( is_array( $watched ) ) {
 				foreach ( $watched as $p ) {
@@ -491,21 +493,15 @@ class CronManager {
 							if ( isset( $it['project_data'] ) && is_array( $it['project_data'] ) ) {
 								$projects[] = $it['project_data']; }
 						}
-                        $raw_global_webhook = (string) ( $global_cfg['webhook_url'] ?? '' );
-                        if ( ! empty( $projects ) && ! empty( $raw_global_webhook ) ) {
-                            // Decrypt global webhook URL before using
-                            $decrypted = Encryption::decrypt( $raw_global_webhook );
-                            $global_webhook_url = ( $decrypted !== false ) ? $decrypted : $raw_global_webhook;
-                            if ( ! empty( $global_webhook_url ) ) {
-                                $max   = (int) apply_filters( 'pierre_digest_max_projects', 20 );
-                                $chunk = (int) apply_filters( 'pierre_digest_chunk_size', 20 );
-                                if ( $max > 0 && count( $projects ) > $max ) {
-                                    $projects = array_slice( $projects, 0, $max );
-                                }
-                                foreach ( array_chunk( $projects, max( 1, $chunk ) ) as $proj_chunk ) {
-                                    $message = $this->notification_service->build_bulk_update_message( $proj_chunk );
-                                    $this->notification_service->send_with_webhook_override( (string) ( $message['text'] ?? '' ), $global_webhook_url, $message );
-                                }
+                        if ( ! empty( $projects ) && ! empty( $global_cfg['webhook_url'] ) ) {
+                            $max   = (int) apply_filters( 'pierre_digest_max_projects', 20 );
+                            $chunk = (int) apply_filters( 'pierre_digest_chunk_size', 20 );
+                            if ( $max > 0 && count( $projects ) > $max ) {
+                                $projects = array_slice( $projects, 0, $max );
+                            }
+                            foreach ( array_chunk( $projects, max( 1, $chunk ) ) as $proj_chunk ) {
+                                $message = $this->notification_service->build_bulk_update_message( $proj_chunk );
+                                $this->notification_service->send_with_webhook_override( (string) ( $message['text'] ?? '' ), (string) $global_cfg['webhook_url'], $message );
                             }
 							do_action(
 								'wp_pierre_debug',
@@ -571,45 +567,12 @@ class CronManager {
                 delete_transient( $queue_key );
 			}
 		} catch ( \Exception $e ) {
-			Logger::static_error( 'Pierre encountered an error during digest: ' . $e->getMessage() . ' 😢', ['source' => 'CronManager'] );
+			error_log( 'Pierre encountered an error during digest: ' . $e->getMessage() . ' 😢' );
 		}
 		update_option( 'pierre_last_digest_run', time() );
 		$dur = max( 0, (int) round( ( microtime( true ) - $start ) * 1000 ) );
 		update_option( 'pierre_last_digest_duration_ms', $dur );
 		do_action( 'wp_pierre_debug', 'run_digest:end', array( 'source' => 'CronManager', 'corr_id' => $corr, 'duration_ms' => $dur ) );
-	}
-
-	/**
-	 * Send digest message for a locale.
-	 *
-	 * @param array  $message Formatted message array.
-	 * @param array  $settings Settings array.
-	 * @param string $locale Locale code.
-	 * @return void
-	 */
-	private function send_digest_message( array $message, array $settings, string $locale ): void {
-		$locale_cfg = (array) ( $settings['locales'][ $locale ] ?? array() );
-		$webhook   = (array) ( $locale_cfg['webhook'] ?? array() );
-
-		// Use locale webhook if configured, otherwise fallback to global.
-		$raw_webhook_url = (string) ( $webhook['webhook_url'] ?? '' );
-		if ( empty( $raw_webhook_url ) ) {
-			$global_cfg  = (array) ( $settings['global_webhook'] ?? array() );
-			$raw_webhook_url = (string) ( $global_cfg['webhook_url'] ?? '' );
-		}
-
-		// Decrypt webhook URL before using
-		if ( ! empty( $raw_webhook_url ) ) {
-			$decrypted = Encryption::decrypt( $raw_webhook_url );
-			$webhook_url = ( $decrypted !== false ) ? $decrypted : $raw_webhook_url;
-			if ( ! empty( $webhook_url ) ) {
-				$this->notification_service->send_with_webhook_override(
-					(string) ( $message['text'] ?? '' ),
-					$webhook_url,
-					$message
-				);
-			}
-		}
 	}
 
 	/**
@@ -681,24 +644,7 @@ class CronManager {
 	 * @since 1.0.0
 	 * @return array Array containing cron manager status information
 	 */
-	/**
-	 * Get status message.
-	 *
-	 * @since 1.0.0
-	 * @return string Status message
-	 */
-	protected function get_status_message(): string {
-		$next_surveillance = wp_next_scheduled( self::SURVEILLANCE_HOOK );
-		return 'Pierre\'s cron manager is ' . ( $next_surveillance ? 'active' : 'inactive' ) . '! 🪨';
-	}
-
-	/**
-	 * Get status details.
-	 *
-	 * @since 1.0.0
-	 * @return array Status details
-	 */
-	protected function get_status_details(): array {
+	public function get_status(): array {
 		$next_surveillance = wp_next_scheduled( self::SURVEILLANCE_HOOK );
 		$next_cleanup      = wp_next_scheduled( self::CLEANUP_HOOK );
 		$next_digest       = wp_next_scheduled( self::DIGEST_HOOK );
@@ -711,6 +657,7 @@ class CronManager {
 			'next_cleanup'           => $next_cleanup ? gmdate( 'Y-m-d H:i:s', $next_cleanup ) : null,
 			'next_digest'            => $next_digest ? gmdate( 'Y-m-d H:i:s', $next_digest ) : null,
 			'last_digest'            => $last_digest ? gmdate( 'Y-m-d H:i:s', $last_digest ) : null,
+			'message'                => 'Pierre\'s cron manager is ' . ( $next_surveillance ? 'active' : 'inactive' ) . '! 🪨',
 		);
 	}
 }

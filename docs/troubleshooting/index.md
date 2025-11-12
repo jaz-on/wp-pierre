@@ -1,8 +1,4 @@
 # Troubleshooting
 
-Problèmes connus et solutions.
-
-## Documentation
-
-- [Common Issues & Solutions](common-issues.md) - Problèmes fréquents et leurs solutions
+Problèmes connus et solutions. Contenu à compléter.
 
